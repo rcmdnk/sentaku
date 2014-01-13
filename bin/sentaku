@@ -1,0 +1,422 @@
+# Default values
+_SENTAKU_INPUT_FILE="$HOME/.sentaku_input"
+_SENTAKU_SEPARATOR=$'\n'
+_SENTAKU_MAX=20
+_SENTAKU_NOHEADER=0
+
+_sf_get_values () { # {{{
+  # Get variables
+  touch "$_s_file"
+  local orig_ifs=$IFS
+  IFS="$_s_s"
+  if [ $_s_stdin -eq 0 ];then
+    _s_inputs=($(cat "$_s_file"))
+  else
+    _s_inputs=($(cat -))
+  fi
+  IFS=$orig_ifs
+  _s_n=${#_s_inputs[@]}
+} # }}}
+
+_sf_push () { # {{{
+  # Set input
+  local input="$*"
+
+  # Ignore blank
+  if [ "$input" = "" ];then
+    return
+  fi
+
+  # Renew variables
+  _sf_get_values
+  local i=0
+  local j=1
+  echo -en "$input$_s_s" > $_s_file
+  while [ $i -lt $_s_n ] && [ $j -lt $_s_max ] ;do
+    local iuse=$i
+    ((i++))
+
+    # Remove duplications
+    if [ "$input" = "${_s_inputs[$iuse]}" ];then
+      continue
+    fi
+    echo -en "${_s_inputs[$iuse]}$_s_s" >> $_s_file
+    ((j++))
+  done
+} # }}}
+
+_sf_align_valuse () { # {{{
+  local n=${1:-0}
+  local v="${_s_inputs[$n]}"
+  echo -en "$v$_s_s" > $_s_file
+  local i=0
+  for((i=0; i<_s_n; i++));do
+    if [ ! $i -eq $n ];then
+      echo -en "${_s_inputs[$i]}$_s_s" >> $_s_file
+    fi
+  done
+  _sf_get_values
+} # }}}
+
+_sf_delete () { # {{{
+  local n=${1:-$((${#_s_inputs[@]}-1))}
+  unset _s_inputs[$n]
+  rm -f $_s_file
+  local v
+  for v in "${_s_inputs[@]}";do
+    echo -en "$v$_s_s" >> $_s_file
+  done
+  _sf_get_values
+} # }}}
+
+_sf_exit () { # {{{
+  # clear after selection
+  clear
+
+  # Show cursor
+  tput cnorm 2>/dev/null || tput vs 2>/dev/null
+
+  # Restore display
+  tput rmcup 2>/dev/null || tput te 2>/dev/null
+
+  # Enable echo input
+  stty echo
+
+  # Clean variables
+  unset _s_file
+  unset _s_s
+  unset _s_inputs
+  unset _s_n
+  unset _s_max
+  unset _s_header
+  unset _s_noheader
+  unset _s_lines
+  unset _s_cols
+  unset _s_max_show
+  unset _s_stdin
+} # }}}
+
+_sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
+  local show="$(echo ${_s_inputs[$3]}|tr '\n' ' '|sed 's/%/%%/g'|sed 's/\\/\\\\/g')"
+  tput cup $2 0
+  if [ $1 -eq 1 ];then
+    printf "\e[7m%3d: ${show: 0: $((_s_cols-5))}\e[m" $(($3+1))
+  else
+    printf "%3d: ${show: 0: $((_s_cols-5))}" $(($3+1))
+  fi
+  tput cup $2 0
+} # }}}
+
+_sf_printall () { # usage: _sf_printall offset select {{{
+  local offset=0
+  local select=0
+  if [ $# -gt 0 ];then
+    offset=$1
+    if [ $# -gt 1 ];then
+      select=$2
+    fi
+  fi
+
+  clear
+
+  # Header
+  if [ $_s_noheader != 1 ];then
+    echo "$_s_header"
+  fi
+
+  local i
+  for ((i=0; i<$((_s_max_show)); i++));do
+    if [ $((i+offset)) -eq $select ];then
+      _sf_printline 1 $((i+_s_ext_row)) $((i+offset))
+    else
+      _sf_printline 0 $((i+_s_ext_row)) $((i+offset))
+    fi
+  done
+} # }}}
+
+_sf_setheader () { # {{{
+  if [ $_s_noheader != 1 ];then
+    if [ $_s_stdin -eq 0 ];then
+      _s_header=" $_s_n values in total
+ [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
+ ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
+ d(delete), Enter(select), q/Esc(quit)
+"
+    else
+      _s_header=" $_s_n values in total
+ [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
+ ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
+Enter(select), q/Esc(quit)
+"
+    fi
+    _s_ext_row=$(echo "$_s_header"|wc -l)
+  else
+    _s_header=""
+    _s_ext_row=0
+  fi
+
+  _s_lines=$(tput lines)
+  _s_cols=$(tput cols)
+  _s_max_show=$_s_n
+  if [ $_s_n -gt $((_s_lines-_s_ext_row)) ];then
+    _s_max_show=$((_s_lines-_s_ext_row))
+  fi
+} # }}}
+
+_sentaku () { # {{{
+  # Set trap
+  trap _sf_exit 0
+
+  # Set variables
+  _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
+  _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
+  _s_inputs=()
+  _s_n=0
+  _s_max=${SENTAKU_MAX:-$SENTAKU_MAX}
+  _s_header=""
+  _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
+  _s_lines=0
+  _s_cols=0
+  _s_max_show=0
+  _s_stdin=0
+
+  # Get arguments
+  while [ $# -gt 0 ];do
+    case $1 in
+      "-i" ) _s_stdin=1;shift;;
+      "-f" )
+        _s_file=$2
+        if [ "$_s_file" = "" ];then
+          echo "ERROR: empty input was given with -i"
+          return 1
+        fi
+        shift 2
+        ;;
+      "-s" ) _s_s=$2;shift 2;;
+      "-n" ) _s_noheader=1;shift;;
+      "-h" ) shift;echo "$_s_help";return 0;
+        shift
+        ;;
+    esac
+  done
+
+
+  # Get values
+  _sf_get_values
+
+  # Check a number of clipboards
+  if [ $_s_n -eq 0 ];then
+    if [ $_s_stdin -eq 0 ];then
+      printf "No value in $_s_file\n\n"
+    else
+      printf "No value in stdin\n\n"
+    fi
+    sleep 1
+    return
+  fi
+
+  # Hide cursor
+  tput civis 2>/dev/null || tput vi 2>/dev/null
+
+  # Save current display
+  tput smcup 2>/dev/null || tput ti 2>/dev/null
+
+  # Hide any input
+  stty -echo
+
+  # First view
+  _sf_setheader
+  _sf_printall
+
+  # Select clipboard
+  local n=0
+  local n_offset=0
+  local cursor_r=$_s_ext_row
+  local g=0
+  local n_move=0
+  local align=1
+  if [ $_s_stdin -eq 1 ];then
+    align=0
+  fi
+  tput cup $cursor_r 0
+
+  local c
+  while : ;do
+    read -s -n 1 c
+    case $c in
+      j|$'\004'|$'\006' ) # j/^D/^F
+        if [ $c = $'\004' ];then
+          n_move=$((_s_max_show/2))
+        elif [ $c = $'\006' ];then
+          n_move=$((_s_max_show))
+        elif [ $n_move -eq 0 ];then
+          n_move=1
+        fi
+        local all=0
+        _sf_printline 0 $cursor_r $n
+        local i
+        for ((i=0; i<n_move; i++));do
+          if [ $n -eq $((_s_n-1)) ];then
+            :
+          elif [ $cursor_r -eq $((lines-1)) ];then
+            ((n_offset++));((n++))
+            all=1
+          else
+            ((cursor_r++));((n++))
+          fi
+        done
+        if [ $all -eq 1 ];then
+          _sf_printall $n_offset $n
+        else
+          _sf_printline 1 $cursor_r $n
+        fi
+        g=0
+        n_move=0
+        continue
+        ;;
+      k|$'\x15'|$'\002' ) # k/^U/^B
+        if [ $c = $'\x15' ];then
+          n_move=$((_s_max_show/2))
+        elif [ $c = $'\002' ];then
+          n_move=$((_s_max_show))
+        elif [ $n_move -eq 0 ];then
+          n_move=1
+        fi
+        local all=0
+        _sf_printline 0 $cursor_r $n
+        local i
+        for ((i=0; i<n_move; i++));do
+          if [ $cursor_r -ne $_s_ext_row ];then
+            ((cursor_r--));((n--))
+          elif [ $n_offset -gt 0 ];then
+            ((n_offset--));((n--))
+            all=1
+          else
+            :
+          fi
+        done
+        if [ $all -eq 1 ];then
+          _sf_printall $n_offset $n
+        else
+          _sf_printline 1 $cursor_r $n
+        fi
+        g=0
+        n_move=0
+        continue
+        ;;
+      g )
+        if [ $g -eq 0 ];then
+          g=1
+          continue
+        fi
+
+        if [ $n_move -eq 0 ];then
+          n=0
+          n_offset=0
+          cursor_r="$_s_ext_row"
+        elif [ $n_move -gt $_s_n ];then
+          :
+        elif [ $n_move -le $n_offset ];then
+          n=$((n_move-1))
+          n_offset=$n
+          cursor_r=$_s_ext_row
+        elif [ $((n_move)) -gt $((n_offset+_s_max_show)) ];then
+          n=$((n_move-1))
+          n_offset=$((n-_s_max_show+1))
+          cursor_r=$((lines-1))
+        else
+          n=$((n_move-1))
+          cursor_r=$((_s_ext_row+n-n_offset))
+        fi
+        _sf_printall $n_offset $n
+        n_move=0
+        g=0
+        continue
+        ;;
+      G )
+        if [ $n_move -eq 0 ];then
+          n=$((_s_n-1))
+          if [ $n -ge $_s_max_show ];then
+            n_offset=$((_s_n-_s_max_show))
+            cursor_r=$((lines-1))
+          else
+            n_offset=0
+            cursor_r=$((_s_ext_row+n))
+          fi
+        elif [ $n_move -gt $_s_n ];then
+          :
+        elif [ $n_move -le $n_offset ];then
+          n=$((n_move-1))
+          n_offset=$n
+          cursor_r=$_s_ext_row
+        elif [ $n_move -gt $((n_offset+_s_max_show)) ];then
+          n=$((n_move-1))
+          n_offset=$((n-_s_max_show+1))
+          cursor_r=$((lines-1))
+        else
+          n=$((n_move-1))
+          cursor_r=$((_s_ext_row+n-n_offset))
+        fi
+        _sf_printall $n_offset $n
+        n_move=0
+        continue
+        ;;
+      d )
+        if [ $_s_stdin -eq 1 ];then
+          continue
+        fi
+        _sf_delete $n
+        # Check a number of clipboards
+        if [ $_s_n -eq 0 ];then
+          clear
+          printf "No clipboards in $f_use\n\n"
+          sleep 1
+          align=0
+          break
+        fi
+        if [ $n -eq $_s_n ];then
+          if [ $n_offset -gt 0 ];then
+            ((n_offset--));((n--))
+          else
+            ((cursor_r--));((n--))
+          fi
+        fi
+        _sf_setheader
+        _sf_printall $n_offset $n
+        ;;
+      q|$'\01b' ) align=0; break;;
+      ""  ) break;;
+      [0-9])
+        if [ $n_move -gt 0 ];then
+          n_move="$n_move""$c"
+        else
+          n_move=$c
+        fi
+        continue
+        ;;
+      * ) continue;;
+    esac
+  done
+
+  # Align values
+  if [ $align -eq 1 ];then
+    _sf_align_valuse $n
+  fi
+
+  # Finalize
+  _sf_exit
+} # }}}
+
+alias sentaku="_sentaku"
+
+# Help
+_s_help="
+Usage: sentaku [-inh] [-f <file>] [-s <sep>]
+
+Arguments:
+   -i         Use stdin instead of input file
+   -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+   -n         Don not show header
+   -h         Print this HELP and exit
+"
