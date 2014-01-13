@@ -16,37 +16,14 @@ _sf_get_values () { # {{{
   _s_n=${#_s_inputs[@]}
 } # }}}
 
-_sf_push () { # {{{
-  # Set input
-  local input="$*"
-
-  # Ignore blank
-  [ "$input" = "" ] && return
-
-  # Renew variables
-  _sf_get_values
-  local i=0
-  local j=1
-  echo -en "$input$_s_s" > $_s_file
-  while [ $i -lt $_s_n ] && [ $j -lt $_s_max ] ;do
-    local iuse=$i
-    ((i++))
-
-    # Remove duplications
-    [ "$input" = "${_s_inputs[$iuse]}" ] && continue
-    echo -en "${_s_inputs[$iuse]}$_s_s" >> $_s_file
-    ((j++))
-  done
-} # }}}
-
 _sf_align_valuse () { # {{{
   local n=${1:-0}
   local v="${_s_inputs[$n]}"
-  echo -en "$v$_s_s" > $_s_file
+  printf "$v$_s_s" > "$_s_file"
   local i=0
   for((i=0; i<_s_n; i++));do
     if [ ! $i -eq $n ];then
-      echo -en "${_s_inputs[$i]}$_s_s" >> $_s_file
+      printf "${_s_inputs[$i]}$_s_s" >> "$_s_file"
     fi
   done
   _sf_get_values
@@ -55,10 +32,10 @@ _sf_align_valuse () { # {{{
 _sf_delete () { # {{{
   local n=${1:-$((${#_s_inputs[@]}-1))}
   unset _s_inputs[$n]
-  rm -f $_s_file
+  rm -f "$_s_file"
   local v
   for v in "${_s_inputs[@]}";do
-    echo -en "$v$_s_s" >> $_s_file
+    printf "$v$_s_s" >> "$_s_file"
   done
   _sf_get_values
 } # }}}
@@ -91,10 +68,22 @@ _sf_release () { # {{{
   unset _s_cols
   unset _s_max_show
   unset _s_stdin
+
+  unset _s_current_n
+  unset _s_n_offset
+  unset _s_cursor_r
+  unset _s_g
+  unset _s_n_move
+
+  if [ $_s_zsh_ksharrays -eq 1 ];then
+    unsetopt ksharrays
+  fi
+  unset _s_zsh_ksharrays
+  unset _s_help
 } # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
-  local show="$(echo ${_s_inputs[$3]}|tr '\n' ' '|sed 's/%/%%/g'|sed 's/\\/\\\\/g')"
+  local show="$(echo "${_s_inputs[$3]}"|tr '\n' ' '|sed 's/%/%%/g'|sed 's/\\/\\\\/g')"
   tput cup $2 0 >/dev/tty
   if [ $1 -eq 1 ];then
     printf "\e[7m%3d: ${show: 0: $((_s_cols-5))}\e[m" $(($3+1)) 1>&2
@@ -120,7 +109,7 @@ _sf_printall () { # usage: _sf_printall offset select {{{
   [ $_s_noheader != 1 ] && echo "$_s_header" 1>&2
 
   local i
-  for ((i=0; i<$((_s_max_show)); i++));do
+  for ((i=0; i<_s_max_show; i++));do
     if [ $((i+offset)) -eq $select ];then
       _sf_printline 1 $((i+_s_ext_row)) $((i+offset))
     else
@@ -150,8 +139,6 @@ Enter(select), q/Esc(quit)
     _s_ext_row=0
   fi
 
-  _s_lines=$(tput lines)
-  _s_cols=$(tput cols)
   _s_max_show=$_s_n
   if [ $_s_n -gt $((_s_lines-_s_ext_row)) ];then
     _s_max_show=$((_s_lines-_s_ext_row))
@@ -160,10 +147,78 @@ Enter(select), q/Esc(quit)
 
 _sf_execute () { # {{{
   local n=${1:-0}
-  echo ${_s_inputs[$1]}
+  echo "${_s_inputs[$1]}"
+} # }}}
+
+_sf_a () { # {{{
+  return 0
+} # }}}
+_sf_b () { # {{{
+  return 0
+} # }}}
+_sf_c () { # {{{
+  return 0
+} # }}}
+_sf_e () { # {{{
+  return 0
+} # }}}
+_sf_f () { # {{{
+  return 0
+} # }}}
+_sf_g () { # {{{
+  return 0
+} # }}}
+_sf_h () { # {{{
+  return 0
+} # }}}
+_sf_i () { # {{{
+  return 0
+} # }}}
+_sf_l () { # {{{
+  return 0
+} # }}}
+_sf_m () { # {{{
+  return 0
+} # }}}
+_sf_n () { # {{{
+  return 0
+} # }}}
+_sf_o () { # {{{
+  return 0
+} # }}}
+_sf_p () { # {{{
+  return 0
+} # }}}
+_sf_r () { # {{{
+  return 0
+} # }}}
+_sf_s () { # {{{
+  return 0
+} # }}}
+_sf_t () { # {{{
+  return 0
+} # }}}
+_sf_u () { # {{{
+  return 0
+} # }}}
+_sf_v () { # {{{
+  return 0
+} # }}}
+_sf_w () { # {{{
+  return 0
+} # }}}
+_sf_x () { # {{{
+  return 0
+} # }}}
+_sf_y () { # {{{
+  return 0
+} # }}}
+_sf_z () { # {{{
+  return 0
 } # }}}
 
 _sf_main () { # {{{
+
   # Set variables
   _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
   _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
@@ -176,6 +231,33 @@ _sf_main () { # {{{
   _s_cols=0
   _s_max_show=0
   _s_stdin=0
+  _s_zsh_ksharrays=0
+
+  _s_current_n=0
+  _s_n_offset=0
+  _s_cursor_r=0
+  _s_g=0
+  _s_n_move=0
+
+  # Help
+  _s_help=${_s_help:-"
+Usage: sentaku [-nh] [-f <file>] [-s <sep>]
+
+Arguments:
+   -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+   -n         Don not show header
+   -h         Print this HELP and exit
+"}
+
+  # Fix array for zsh
+  if [ "$ZSH_NAME" = "zsh" ];then
+    if setopt|grep -q ksharrays;then
+      _s_zsh_ksharrays=1
+      setopt ksharrays
+    fi
+  fi
+
 
   # Check std input
   [ ! -t 0 ] && _s_stdin=1
@@ -224,197 +306,265 @@ _sf_main () { # {{{
   tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
 
   # Hide any input
-  [ $_s_stdin -eq 0 ] && stty - echo
+  [ $_s_stdin -eq 0 ] && stty -echo
 
   # First view
+  _s_lines=$(tput lines)
+  _s_cols=$(tput cols)
   _sf_setheader
   _sf_printall
 
-  # Select clipboard
-  local n=0
-  local n_offset=0
-  local cursor_r=$_s_ext_row
-  local g=0
-  local n_move=0
+  # Select value
+  _s_current_n=0
+  _s_n_offset=0
+  _s_cursor_r=$_s_ext_row
+  _s_g=0
+  _s_n_move=0
   tput cup $cursor_r 0 >/dev/tty
 
   local c
   while : ;do
     read -s -n 1 c </dev/tty
     case $c in
-      j|$'\004'|$'\006' ) # j/^D/^F
-        if [ $c = $'\004' ];then
-          n_move=$((_s_max_show/2))
-        elif [ $c = $'\006' ];then
-          n_move=$((_s_max_show))
-        elif [ $n_move -eq 0 ];then
-          n_move=1
+      j|$'\x04'|$'\x06' ) # j/^D/^F
+        if [ $c = $'\x04' ];then
+          _s_n_move=$((_s_max_show/2))
+        elif [ $c = $'\x06' ];then
+          _s_n_move=$((_s_max_show))
+        elif [ $_s_n_move -eq 0 ];then
+          _s_n_move=1
         fi
         local all=0
-        _sf_printline 0 $cursor_r $n
+        _sf_printline 0 $_s_cursor_r $_s_current_n
         local i
-        for ((i=0; i<n_move; i++));do
-          if [ $n -eq $((_s_n-1)) ];then
+        for ((i=0; i<_s_n_move; i++));do
+          if [ $_s_current_n -eq $((_s_n-1)) ];then
             :
-          elif [ $cursor_r -eq $((lines-1)) ];then
-            ((n_offset++));((n++))
+          elif [ $_s_cursor_r -eq $((lines-1)) ];then
+            ((_s_n_offset++));((_s_current_n++))
             all=1
           else
-            ((cursor_r++));((n++))
+            ((_s_cursor_r++));((_s_current_n++))
           fi
         done
         if [ $all -eq 1 ];then
-          _sf_printall $n_offset $n
+          _sf_printall $_s_n_offset $_s_current_n
         else
-          _sf_printline 1 $cursor_r $n
+          _sf_printline 1 $_s_cursor_r $_s_current_n
         fi
-        g=0
-        n_move=0
+        _s_g=0
+        _s_n_move=0
         continue
         ;;
-      k|$'\x15'|$'\002' ) # k/^U/^B
+      k|$'\x15'|$'\x02' ) # k/^U/^B
         if [ $c = $'\x15' ];then
-          n_move=$((_s_max_show/2))
-        elif [ $c = $'\002' ];then
-          n_move=$((_s_max_show))
-        elif [ $n_move -eq 0 ];then
-          n_move=1
+          _s_n_move=$((_s_max_show/2))
+        elif [ $c = $'\x02' ];then
+          _s_n_move=$((_s_max_show))
+        elif [ $_s_n_move -eq 0 ];then
+          _s_n_move=1
         fi
         local all=0
-        _sf_printline 0 $cursor_r $n
+        _sf_printline 0 $_s_cursor_r $_s_current_n
         local i
-        for ((i=0; i<n_move; i++));do
-          if [ $cursor_r -ne $_s_ext_row ];then
-            ((cursor_r--));((n--))
-          elif [ $n_offset -gt 0 ];then
-            ((n_offset--));((n--))
+        for ((i=0; i<_s_n_move; i++));do
+          if [ $_s_cursor_r -ne $_s_ext_row ];then
+            ((_s_cursor_r--));((_s_current_n--))
+          elif [ $_s_n_offset -gt 0 ];then
+            ((_s_n_offset--));((_s_current_n--))
             all=1
           else
             :
           fi
         done
         if [ $all -eq 1 ];then
-          _sf_printall $n_offset $n
+          _sf_printall $_s_n_offset $_s_current_n
         else
-          _sf_printline 1 $cursor_r $n
+          _sf_printline 1 $_s_cursor_r $_s_current_n
         fi
-        g=0
-        n_move=0
+        _s_g=0
+        _s_n_move=0
         continue
         ;;
       g )
-        if [ $g -eq 0 ];then
-          g=1
+        if [ $_s_g -eq 0 ];then
+          _s_g=1
           continue
         fi
 
-        if [ $n_move -eq 0 ];then
-          n=0
-          n_offset=0
-          cursor_r="$_s_ext_row"
-        elif [ $n_move -gt $_s_n ];then
+        if [ $_s_n_move -eq 0 ];then
+          _s_current_n=0
+          _s_n_offset=0
+          _s_cursor_r="$_s_ext_row"
+        elif [ $_s_n_move -gt $_s_n ];then
           :
-        elif [ $n_move -le $n_offset ];then
-          n=$((n_move-1))
-          n_offset=$n
-          cursor_r=$_s_ext_row
-        elif [ $((n_move)) -gt $((n_offset+_s_max_show)) ];then
-          n=$((n_move-1))
-          n_offset=$((n-_s_max_show+1))
-          cursor_r=$((lines-1))
+        elif [ $_s_n_move -le $_s_n_offset ];then
+          _s_current_n=$((_s_n_move-1))
+          _s_n_offset=$_s_current_n
+          _s_cursor_r=$_s_ext_row
+        elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
+          _s_current_n=$((_s_n_move-1))
+          _s_n_offset=$((n-_s_max_show+1))
+          _s_cursor_r=$((lines-1))
         else
-          n=$((n_move-1))
-          cursor_r=$((_s_ext_row+n-n_offset))
+          _s_current_n=$((_s_n_move-1))
+          _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
         fi
-        _sf_printall $n_offset $n
-        n_move=0
-        g=0
+        _sf_printall $_s_n_offset $_s_current_n
+        _s_n_move=0
+        _s_g=0
         continue
         ;;
       G )
-        if [ $n_move -eq 0 ];then
+        if [ $_s_n_move -eq 0 ];then
           n=$((_s_n-1))
-          if [ $n -ge $_s_max_show ];then
-            n_offset=$((_s_n-_s_max_show))
-            cursor_r=$((lines-1))
+          if [ $_s_current_n -ge $_s_max_show ];then
+            _s_n_offset=$((_s_n-_s_max_show))
+            _s_cursor_r=$((lines-1))
           else
-            n_offset=0
-            cursor_r=$((_s_ext_row+n))
+            _s_n_offset=0
+            _s_cursor_r=$((_s_ext_row+_s_current_n))
           fi
-        elif [ $n_move -gt $_s_n ];then
+        elif [ $_s_n_move -gt $_s_n ];then
           :
-        elif [ $n_move -le $n_offset ];then
-          n=$((n_move-1))
-          n_offset=$n
-          cursor_r=$_s_ext_row
-        elif [ $n_move -gt $((n_offset+_s_max_show)) ];then
-          n=$((n_move-1))
-          n_offset=$((n-_s_max_show+1))
-          cursor_r=$((lines-1))
+        elif [ $_s_n_move -le $_s_n_offset ];then
+          _s_current_n=$((_s_n_move-1))
+          _s_n_offset=$_s_current_n
+          _s_cursor_r=$_s_ext_row
+        elif [ $_s_n_move -gt $((_s_n_offset+_s_max_show)) ];then
+          _s_current_n=$((_s_n_move-1))
+          _s_n_offset=$((_s_current_n-_s_max_show+1))
+          _s_cursor_r=$((lines-1))
         else
-          n=$((n_move-1))
-          cursor_r=$((_s_ext_row+n-n_offset))
+          _s_current_n=$((_s_n_move-1))
+          _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
         fi
-        _sf_printall $n_offset $n
-        n_move=0
+        _sf_printall $_s_n_offset $_s_current_n
+        _s_n_move=0
         continue
         ;;
       d )
         [ $_s_stdin -eq 1 ] && continue
-        _sf_delete $n
+        _sf_delete $_s_current_n
         # Check a number of clipboards
         if [ $_s_n -eq 0 ];then
           clear >/dev/tty
           printf "No clipboards in $f_use\n\n" 1>&2
           sleep 1
-          n=-1
+          _s_current_n=-1
           break
         fi
-        if [ $n -eq $_s_n ];then
-          if [ $n_offset -gt 0 ];then
-            ((n_offset--));((n--))
+        if [ $_s_current_n -eq $_s_n ];then
+          if [ $_s_n_offset -gt 0 ];then
+            ((_s_n_offset--));((_s_current_n--))
           else
-            ((cursor_r--));((n--))
+            ((_s_cursor_r--));((_s_current_n--))
           fi
         fi
         _sf_setheader
-        _sf_printall $n_offset $n
+        _sf_printall $_s_n_offset $_s_current_n
         ;;
       q|$'\01b' ) n=-1; break;;
-      ""  ) break;;
+      ""|$'\n' ) break;;
       [0-9])
-        [ $n_move -gt 0 ] && n_move="$n_move""$c" || n_move=$c
+        [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$c" || _s_n_move=$c
         continue
         ;;
+      a ) _sf_a;;
+      b ) _sf_b;;
+      c ) _sf_c;;
+      e ) _sf_e;;
+      f ) _sf_f;;
+      g ) _sf_g;;
+      h ) _sf_h;;
+      i ) _sf_i;;
+      l ) _sf_l;;
+      m ) _sf_m;;
+      n ) _sf_n;;
+      o ) _sf_o;;
+      p ) _sf_p;;
+      r ) _sf_r;;
+      s ) _sf_s;;
+      t ) _sf_t;;
+      u ) _sf_u;;
+      v ) _sf_v;;
+      w ) _sf_w;;
+      x ) _sf_x;;
+      y ) _sf_y;;
+      z ) _sf_z;;
       * ) continue;;
     esac
   done
 
   # Align values
-  [ $_s_stdin -eq 0 -a $n -ge 0 ] && _sf_align_valuse $n
+  [ $_s_stdin -eq 0 -a $_s_current_n -ge 0 ] && _sf_align_valuse $_s_current_n
 
   # Clear (Show cursor, Restore display, Enable echo input)
   _sf_clear
 
   # Execution for selected value
-  [ $n -ge 0 ] && _sf_execute $n
+  [ $_s_current_n -ge 0 ] && _sf_execute $_s_current_n
 
   # Release variables
   _sf_release
 } # }}}
 
-alias sentaku="_sf_main"
+_sf_push () { # {{{
+  # Set variables
+  _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
+  _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
+  _s_inputs=()
+  _s_n=0
+  _s_max=${SENTAKU_MAX:-$SENTAKU_MAX}
+  _s_header=""
+  _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
+  _s_lines=0
+  _s_cols=0
+  _s_max_show=0
+  _s_stdin=0
+  _s_zsh_ksharrays=0
 
-# Help
-_s_help="
-Usage: sentaku [-nh] [-f <file>] [-s <sep>]
+  # Fix array for zsh
+  if [ "$ZSH_NAME" = "zsh" ];then
+    if setopt|grep -q ksharrays;then
+      _s_zsh_ksharrays=1
+      setopt ksharrays
+    fi
+  fi
 
-Arguments:
-   -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
-   -n         Don not show header
-   -h         Print this HELP and exit
-"
+  # Check std input
+  [ ! -t 0 ] && _s_stdin=1
+
+  # Set trap
+  trap "_sf_clear;_sf_release" 1 2 3 15
+
+  # Set input
+  local input="$*"
+  if [ $_s_stdin -eq 1 ];then
+    input=$(cat -)
+  fi
+
+  # Ignore blank
+  [ "$input" = "" ] && return
+
+  # Renew variables
+  _sf_get_values
+  local i=0
+  local j=1
+  printf "$input$_s_s" > "$_s_file"
+  while [ $i -lt $_s_n ] && [ $j -lt $_s_max ] ;do
+    local iuse=$i
+    ((i++))
+
+    # Remove duplications
+    [ "$input" = "${_s_inputs[$iuse]}" ] && continue
+    printf "${_s_inputs[$iuse]}$_s_s" >> "$_s_file"
+    ((j++))
+  done
+
+  # Release variables
+  _sf_release
+} # }}}
 
 # Execute if stdin is available
 if [ ! -t 0 ];then
