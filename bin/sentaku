@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Default values
 _SENTAKU_INPUT_FILE="$HOME/.sentaku_input"
 _SENTAKU_SEPARATOR=$'\n'
@@ -9,11 +11,7 @@ _sf_get_values () { # {{{
   touch "$_s_file"
   local orig_ifs=$IFS
   IFS="$_s_s"
-  if [ $_s_stdin -eq 0 ];then
-    _s_inputs=($(cat "$_s_file"))
-  else
-    _s_inputs=($(cat -))
-  fi
+  [ $_s_stdin -eq 0 ] && _s_inputs=($(cat "$_s_file")) || _s_inputs=($(cat -))
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
 } # }}}
@@ -23,9 +21,7 @@ _sf_push () { # {{{
   local input="$*"
 
   # Ignore blank
-  if [ "$input" = "" ];then
-    return
-  fi
+  [ "$input" = "" ] && return
 
   # Renew variables
   _sf_get_values
@@ -37,9 +33,7 @@ _sf_push () { # {{{
     ((i++))
 
     # Remove duplications
-    if [ "$input" = "${_s_inputs[$iuse]}" ];then
-      continue
-    fi
+    [ "$input" = "${_s_inputs[$iuse]}" ] && continue
     echo -en "${_s_inputs[$iuse]}$_s_s" >> $_s_file
     ((j++))
   done
@@ -69,20 +63,23 @@ _sf_delete () { # {{{
   _sf_get_values
 } # }}}
 
-_sf_exit () { # {{{
+_sf_clear () { # {{{
   # clear after selection
-  clear
+  clear >/dev/tty
 
   # Show cursor
-  tput cnorm 2>/dev/null || tput vs 2>/dev/null
+  tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
   # Restore display
-  tput rmcup 2>/dev/null || tput te 2>/dev/null
+  tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
 
   # Enable echo input
-  stty echo
+  [ $_s_stdin -eq 0 ] && stty echo
 
-  # Clean variables
+} # }}}
+
+_sf_release () { # {{{
+  # Release variables
   unset _s_file
   unset _s_s
   unset _s_inputs
@@ -98,13 +95,13 @@ _sf_exit () { # {{{
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   local show="$(echo ${_s_inputs[$3]}|tr '\n' ' '|sed 's/%/%%/g'|sed 's/\\/\\\\/g')"
-  tput cup $2 0
+  tput cup $2 0 >/dev/tty
   if [ $1 -eq 1 ];then
-    printf "\e[7m%3d: ${show: 0: $((_s_cols-5))}\e[m" $(($3+1))
+    printf "\e[7m%3d: ${show: 0: $((_s_cols-5))}\e[m" $(($3+1)) 1>&2
   else
-    printf "%3d: ${show: 0: $((_s_cols-5))}" $(($3+1))
+    printf "%3d: ${show: 0: $((_s_cols-5))}" $(($3+1)) 1>&2
   fi
-  tput cup $2 0
+  tput cup $2 0 >/dev/tty
 } # }}}
 
 _sf_printall () { # usage: _sf_printall offset select {{{
@@ -117,12 +114,10 @@ _sf_printall () { # usage: _sf_printall offset select {{{
     fi
   fi
 
-  clear
+  clear >/dev/tty
 
   # Header
-  if [ $_s_noheader != 1 ];then
-    echo "$_s_header"
-  fi
+  [ $_s_noheader != 1 ] && echo "$_s_header" 1>&2
 
   local i
   for ((i=0; i<$((_s_max_show)); i++));do
@@ -163,10 +158,12 @@ Enter(select), q/Esc(quit)
   fi
 } # }}}
 
-_sentaku () { # {{{
-  # Set trap
-  trap _sf_exit 0
+_sf_execute () { # {{{
+  local n=${1:-0}
+  echo ${_s_inputs[$1]}
+} # }}}
 
+_sf_main () { # {{{
   # Set variables
   _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
   _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
@@ -180,21 +177,26 @@ _sentaku () { # {{{
   _s_max_show=0
   _s_stdin=0
 
+  # Check std input
+  [ ! -t 0 ] && _s_stdin=1
+
+  # Set trap
+  trap "_sf_clear;_sf_release" 1 2 3 15
+
   # Get arguments
   while [ $# -gt 0 ];do
     case $1 in
-      "-i" ) _s_stdin=1;shift;;
       "-f" )
         _s_file=$2
         if [ "$_s_file" = "" ];then
-          echo "ERROR: empty input was given with -i"
+          echo "ERROR: empty input was given with -i" 1>&2
           return 1
         fi
         shift 2
         ;;
       "-s" ) _s_s=$2;shift 2;;
       "-n" ) _s_noheader=1;shift;;
-      "-h" ) shift;echo "$_s_help";return 0;
+      "-h" ) shift;echo "$_s_help" 1>&2;return 0;
         shift
         ;;
     esac
@@ -207,22 +209,22 @@ _sentaku () { # {{{
   # Check a number of clipboards
   if [ $_s_n -eq 0 ];then
     if [ $_s_stdin -eq 0 ];then
-      printf "No value in $_s_file\n\n"
+      printf "No value in $_s_file\n\n" 1>&2
     else
-      printf "No value in stdin\n\n"
+      printf "No value in stdin\n\n" 1>&2
     fi
     sleep 1
     return
   fi
 
   # Hide cursor
-  tput civis 2>/dev/null || tput vi 2>/dev/null
+  tput civis >/dev/tty 2>/dev/null || tput vi >/dev/tty 2>/dev/null
 
   # Save current display
-  tput smcup 2>/dev/null || tput ti 2>/dev/null
+  tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
 
   # Hide any input
-  stty -echo
+  [ $_s_stdin -eq 0 ] && stty - echo
 
   # First view
   _sf_setheader
@@ -234,15 +236,11 @@ _sentaku () { # {{{
   local cursor_r=$_s_ext_row
   local g=0
   local n_move=0
-  local align=1
-  if [ $_s_stdin -eq 1 ];then
-    align=0
-  fi
-  tput cup $cursor_r 0
+  tput cup $cursor_r 0 >/dev/tty
 
   local c
   while : ;do
-    read -s -n 1 c
+    read -s -n 1 c </dev/tty
     case $c in
       j|$'\004'|$'\006' ) # j/^D/^F
         if [ $c = $'\004' ];then
@@ -362,16 +360,14 @@ _sentaku () { # {{{
         continue
         ;;
       d )
-        if [ $_s_stdin -eq 1 ];then
-          continue
-        fi
+        [ $_s_stdin -eq 1 ] && continue
         _sf_delete $n
         # Check a number of clipboards
         if [ $_s_n -eq 0 ];then
-          clear
-          printf "No clipboards in $f_use\n\n"
+          clear >/dev/tty
+          printf "No clipboards in $f_use\n\n" 1>&2
           sleep 1
-          align=0
+          n=-1
           break
         fi
         if [ $n -eq $_s_n ];then
@@ -384,14 +380,10 @@ _sentaku () { # {{{
         _sf_setheader
         _sf_printall $n_offset $n
         ;;
-      q|$'\01b' ) align=0; break;;
+      q|$'\01b' ) n=-1; break;;
       ""  ) break;;
       [0-9])
-        if [ $n_move -gt 0 ];then
-          n_move="$n_move""$c"
-        else
-          n_move=$c
-        fi
+        [ $n_move -gt 0 ] && n_move="$n_move""$c" || n_move=$c
         continue
         ;;
       * ) continue;;
@@ -399,24 +391,32 @@ _sentaku () { # {{{
   done
 
   # Align values
-  if [ $align -eq 1 ];then
-    _sf_align_valuse $n
-  fi
+  [ $_s_stdin -eq 0 -a $n -ge 0 ] && _sf_align_valuse $n
 
-  # Finalize
-  _sf_exit
+  # Clear (Show cursor, Restore display, Enable echo input)
+  _sf_clear
+
+  # Execution for selected value
+  [ $n -ge 0 ] && _sf_execute $n
+
+  # Release variables
+  _sf_release
 } # }}}
 
-alias sentaku="_sentaku"
+alias sentaku="_sf_main"
 
 # Help
 _s_help="
-Usage: sentaku [-inh] [-f <file>] [-s <sep>]
+Usage: sentaku [-nh] [-f <file>] [-s <sep>]
 
 Arguments:
-   -i         Use stdin instead of input file
    -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
    -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
    -n         Don not show header
    -h         Print this HELP and exit
 "
+
+# Execute if stdin is available
+if [ ! -t 0 ];then
+  _sf_main
+fi
