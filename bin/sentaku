@@ -18,7 +18,7 @@ function _sf_nth () { # {{{
   else
     echo ${1}th
   fi
-} # }}
+} # }}}
 
 _sf_get_values () { # {{{
   # Get variables
@@ -113,9 +113,17 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   fi
   if [ ${#show} -gt $n_show ];then
     if [ $_s_showlast -eq 0 ];then
-      printf "$num${show: 0: $n_show}" >/dev/tty
+      if [ "$ZSH_NAME" = "zsh" ];then # need for zsh version < 5
+        printf "$num${show[0,$((n_show-1))]}" >/dev/tty
+      else
+        printf "$num${show: 0: $n_show}" >/dev/tty
+      fi
     else
-      printf "$num${show: $((${#show}-$n_show))}" >/dev/tty
+      if [ "$ZSH_NAME" = "zsh" ];then # need for zsh version < 5
+        printf "$num${show[$((${#show}-$n_show)),-1]}" >/dev/tty
+      else
+        printf "$num${show: $((${#show}-$n_show))}" >/dev/tty
+      fi
     fi
   else
     printf "$num${show}" >/dev/tty
