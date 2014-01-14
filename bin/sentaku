@@ -21,7 +21,7 @@ _sf_align_valuse () { # {{{
   local v="${_s_inputs[$n]}"
   printf "$v$_s_s" > "$_s_file"
   local i=0
-  for((i=0; i<_s_n; i++));do
+  for ((i=0; i<_s_n; i++));do
     if [ ! $i -eq $n ];then
       printf "${_s_inputs[$i]}$_s_s" >> "$_s_file"
     fi
@@ -68,12 +68,14 @@ _sf_release () { # {{{
   unset _s_cols
   unset _s_max_show
   unset _s_stdin
+  unset _s_align
 
   unset _s_current_n
   unset _s_n_offset
   unset _s_cursor_r
   unset _s_g
   unset _s_n_move
+
 
   if [ $_s_zsh_ksharrays -eq 1 ];then
     unsetopt ksharrays
@@ -108,7 +110,7 @@ _sf_printall () { # usage: _sf_printall offset select {{{
   # Header
   [ $_s_noheader != 1 ] && echo "$_s_header" 1>&2
 
-  local i
+  local i=0
   for ((i=0; i<_s_max_show; i++));do
     if [ $((i+offset)) -eq $select ];then
       _sf_printline 1 $((i+_s_ext_row)) $((i+offset))
@@ -231,13 +233,15 @@ _sf_main () { # {{{
   _s_cols=0
   _s_max_show=0
   _s_stdin=0
-  _s_zsh_ksharrays=0
+  _s_align=0
 
   _s_current_n=0
   _s_n_offset=0
   _s_cursor_r=0
   _s_g=0
   _s_n_move=0
+
+  _s_zsh_ksharrays=0
 
   # Help
   _s_help=${_s_help:-"
@@ -246,24 +250,24 @@ Usage: sentaku [-nh] [-f <file>] [-s <sep>]
 Arguments:
    -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
    -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
-   -n         Don not show header
+   -n         No header is shown
+   -a         Align input list (set selected one to the first)
    -h         Print this HELP and exit
 "}
 
   # Fix array for zsh
   if [ "$ZSH_NAME" = "zsh" ];then
-    if setopt|grep -q ksharrays;then
+    if ! setopt|grep -q ksharrays;then
       _s_zsh_ksharrays=1
       setopt ksharrays
     fi
   fi
 
-
   # Check std input
   [ ! -t 0 ] && _s_stdin=1
 
   # Set trap
-  trap "_sf_clear;_sf_release" 1 2 3 15
+  trap "_sf_clear;_sf_release;return 1" 1 2 3 15
 
   # Get arguments
   while [ $# -gt 0 ];do
@@ -278,9 +282,9 @@ Arguments:
         ;;
       "-s" ) _s_s=$2;shift 2;;
       "-n" ) _s_noheader=1;shift;;
-      "-h" ) shift;echo "$_s_help" 1>&2;return 0;
-        shift
-        ;;
+      "-a" ) _s_alisgn=1;shift;;
+      "-h" ) echo "$_s_help" 1>&2;return 0;;
+      * ) echo "$_s_help" 1>&2;return 1;;
     esac
   done
 
@@ -324,7 +328,11 @@ Arguments:
 
   local c
   while : ;do
-    read -s -n 1 c </dev/tty
+    if [ "$ZSH_NAME" = "zsh" ];then
+      read -s -k 1 c </dev/tty
+    else
+      read -s -n 1 c </dev/tty
+    fi
     case $c in
       j|$'\x04'|$'\x06' ) # j/^D/^F
         if [ $c = $'\x04' ];then
@@ -336,7 +344,7 @@ Arguments:
         fi
         local all=0
         _sf_printline 0 $_s_cursor_r $_s_current_n
-        local i
+        local i=0
         for ((i=0; i<_s_n_move; i++));do
           if [ $_s_current_n -eq $((_s_n-1)) ];then
             :
@@ -366,7 +374,7 @@ Arguments:
         fi
         local all=0
         _sf_printline 0 $_s_cursor_r $_s_current_n
-        local i
+        local i=0
         for ((i=0; i<_s_n_move; i++));do
           if [ $_s_cursor_r -ne $_s_ext_row ];then
             ((_s_cursor_r--));((_s_current_n--))
@@ -415,9 +423,9 @@ Arguments:
         _s_g=0
         continue
         ;;
-      G )
+      "G" )
         if [ $_s_n_move -eq 0 ];then
-          n=$((_s_n-1))
+          _s_current_n=$((_s_n-1))
           if [ $_s_current_n -ge $_s_max_show ];then
             _s_n_offset=$((_s_n-_s_max_show))
             _s_cursor_r=$((lines-1))
@@ -441,6 +449,7 @@ Arguments:
         fi
         _sf_printall $_s_n_offset $_s_current_n
         _s_n_move=0
+        _s_g=0
         continue
         ;;
       d )
@@ -464,7 +473,7 @@ Arguments:
         _sf_setheader
         _sf_printall $_s_n_offset $_s_current_n
         ;;
-      q|$'\01b' ) n=-1; break;;
+      q|$'\01b' ) _s_current_n=-1; break;;
       ""|$'\n' ) break;;
       [0-9])
         [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$c" || _s_n_move=$c
@@ -496,14 +505,16 @@ Arguments:
     esac
   done
 
-  # Align values
-  [ $_s_stdin -eq 0 -a $_s_current_n -ge 0 ] && _sf_align_valuse $_s_current_n
-
   # Clear (Show cursor, Restore display, Enable echo input)
   _sf_clear
 
-  # Execution for selected value
-  [ $_s_current_n -ge 0 ] && _sf_execute $_s_current_n
+  if [ $_s_current_n -ge 0 ];then
+    # Execution for selected value
+    _sf_execute $_s_current_n
+
+    # Align values
+    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_valuse $_s_current_n
+  fi
 
   # Release variables
   _sf_release
