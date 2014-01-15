@@ -4,7 +4,9 @@
 
 . sentaku -n
 
+# User Default Variables
 _SENTAKU_INPUT_FILE="$HOME/.my_input"
+_SENTAKU_SEPARATOR=$'\x07'
 
 _sf_a () {
   clear >/dev/tty
