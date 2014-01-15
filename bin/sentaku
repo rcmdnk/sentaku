@@ -101,22 +101,22 @@ _sf_clear () { # {{{
   # clear after selection
   clear >/dev/tty
 
-  # Show cursor
-  tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
-
   # Restore display
   tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
+
+} # }}}
+
+_sf_finalize_more () { # {{{
+  :
+} # }}}
+
+_sf_finalize () { # {{{
+  # Show cursor
+  tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
   # Enable echo input
   [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty echo
 
-} # }}}
-
-_sf_release_more () { # {{{
-  :
-} # }}}
-
-_sf_release () { # {{{
   # Release variables
   unset _s_file
   unset _s_s
@@ -146,7 +146,7 @@ _sf_release () { # {{{
   [ "x$_s_zsh_ksharrays" != "x" ] && [ $_s_zsh_ksharrays -eq 1 ] && unsetopt ksharrays
   unset _s_zsh_ksharrays
 
-  _sf_release_more
+  _sf_finalize_more
 } # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
@@ -604,8 +604,8 @@ Arguments:
   [ ! -t 0 ] && _s_stdin=1
 
   # Set trap
-  trap "return 1" 1 2 3 15
-  trap "_sf_clear;_sf_release" 0
+  trap "_sf_clear;return 1" 1 2 3 15
+  trap "_sf_finalize" 0
 
   # Get arguments
   _sf_check_args $*
@@ -744,8 +744,8 @@ Arguments:
     [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_valuse $_s_current_n
   fi
 
-  # Release variables
-  _sf_release
+  # Finalization
+  _sf_finalize
 } # }}}
 
 _sf_push () { # {{{
@@ -776,7 +776,7 @@ _sf_push () { # {{{
 
   # Set trap
   trap "return 1" 1 2 3 15
-  trap "_sf_release" 0
+  trap "_sf_finalize" 0
 
   # Set input
   local input="$*"
@@ -802,8 +802,8 @@ _sf_push () { # {{{
     ((j++))
   done
 
-  # Release variables
-  _sf_release
+  # Finalization
+  _sf_finalize
 } # }}}
 
 # Execute if stdin is available
