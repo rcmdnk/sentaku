@@ -289,15 +289,15 @@ _sf_g () { # {{{
   elif [ $_s_n_move -gt $_s_n ];then
     :
   elif [ $_s_n_move -le $_s_n_offset ];then
-    _s_current_n=$((_s_n_move-1))
+    _s_current_n=$((_s_n_move))
     _s_n_offset=$_s_current_n
     _s_cursor_r=$_s_ext_row
   elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
-    _s_current_n=$((_s_n_move-1))
+    _s_current_n=$((_s_n_move))
     _s_n_offset=$((n-_s_max_show+1))
     _s_cursor_r=$((lines-1))
   else
-    _s_current_n=$((_s_n_move-1))
+    _s_current_n=$((_s_n_move))
     _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
   fi
   _sf_printall
@@ -404,15 +404,15 @@ _sf_G () { # {{{
   elif [ $_s_n_move -gt $_s_n ];then
     :
   elif [ $_s_n_move -le $_s_n_offset ];then
-    _s_current_n=$((_s_n_move-1))
+    _s_current_n=$((_s_n_move))
     _s_n_offset=$_s_current_n
     _s_cursor_r=$_s_ext_row
   elif [ $_s_n_move -gt $((_s_n_offset+_s_max_show)) ];then
-    _s_current_n=$((_s_n_move-1))
+    _s_current_n=$((_s_n_move))
     _s_n_offset=$((_s_current_n-_s_max_show+1))
     _s_cursor_r=$((lines-1))
   else
-    _s_current_n=$((_s_n_move-1))
+    _s_current_n=$((_s_n_move))
     _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
   fi
   _sf_printall
