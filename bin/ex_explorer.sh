@@ -2,7 +2,7 @@
 
 # Example to make menu program
 
-. ./sentaku -n
+. sentaku -n
 
 # New variable
 _s_a=0
@@ -123,7 +123,7 @@ _sf_setheader () { # {{{
       if [ "$ZSH_NAME" = "zsh" ];then
         curdir=${curdir[$((${#curdir}-${_s_cols}+1)),-1]}
       else
-        curdir=${show: $((${#curdir}-$_s_cols+1)): $((_s_cols-1))}
+        curdir=${curdir: $((${#curdir}-${_s_cols}+1))}
       fi
     fi
     if [ $_s_cols -ge 66 ];then

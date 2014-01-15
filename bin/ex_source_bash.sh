@@ -2,7 +2,7 @@
 
 # Example to make new scripts with sentaku functions
 
-. ./sentaku -n
+. sentaku -n
 
 _SENTAKU_INPUT_FILE="$HOME/.my_input"
 
