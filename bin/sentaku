@@ -110,7 +110,7 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   local num=""
   if [ $_s_nonumber -eq 0 ];then
     n_show=$((_s_cols-5))
-    num=$(printf "%3d: " $(($3+1)))
+    num=$(printf "%3d: " $3)
   fi
   if [ ${#show} -gt $n_show ];then
     if [ $_s_showlast -eq 0 ];then
