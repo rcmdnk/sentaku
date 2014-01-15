@@ -9,14 +9,17 @@ _SENTAKU_INPUT_FILE="$HOME/.my_input"
 _sf_a () {
   clear >/dev/tty
   echo "in function a" >/dev/tty
-  sleep 3
+  echo "Check Shell" >/dev/tty
+  echo "BASH_VERSION: $BASH_VERSION" >/dev/tty
+  echo "ZSH_VERSION: $ZSH_VERSION" >/dev/tty
+  local dummy=$(_sf_read)
   _sf_printall
 }
 _sf_l () {
   clear >/dev/tty
   pwd >/dev/tty
   ls >/dev/tty
-  read -s -n 1 c </dev/tty
+  local dummy=$(_sf_read)
   _sf_printall
 }
 

@@ -2,7 +2,7 @@
 
 # Example to make menu program
 
-. ./sentaku -n
+. sentaku -n
 
 
 _SENTAKU_NOHEADER=1
