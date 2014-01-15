@@ -4,11 +4,11 @@
 _SENTAKU_INPUT_FILE="$HOME/.sentaku_input"
 _SENTAKU_SEPARATOR=$'\n'
 _SENTAKU_MAX=20
-_SENTAKU_NOHEADER=1
+_SENTAKU_NOHEADER=0
 _SENTAKU_NONUMBER=0
 _SENTAKU_SHOWLAST=0
 
-function _sf_nth () { # {{{
+_sf_nth () { # {{{
   if [ $1 -eq 1 ];then
     echo 1st
   elif [ $1 -eq 2 ];then
@@ -18,6 +18,50 @@ function _sf_nth () { # {{{
   else
     echo ${1}th
   fi
+} # }}}
+
+_sf_read () { # can be used as dummy wait, too {{{
+  local c
+  if [ "$ZSH_NAME" = "zsh" ];then
+    read -s -k 1 c </dev/tty
+  else
+    read -s -n 1 c </dev/tty
+  fi
+  echo "$c"
+} # }}}
+
+_sf_check_args () { # {{{
+  # Get arguments
+  while [ $# -gt 0 ];do
+    case $1 in
+      "-f" )
+        _s_file=$2
+        if [ "$_s_file" = "" ];then
+          echo "ERROR: empty input was given with -i" >/dev/tty
+          local dummy=$(_sf_read)
+          return 1
+        fi
+        shift 2
+        ;;
+      "-s" ) _s_s=$2;shift 2;;
+      "-H" ) _s_noheader=1;shift;;
+      "-N" ) _s_nonumber=1;shift;;
+      "-l" ) _s_showlast=1;shift;;
+      "-a" ) _s_align=1;shift;;
+      "-d" ) _s_delete=1;shift;;
+      "-h" )
+        echo "$_s_help" >/dev/tty
+        local dummy=$(_sf_read)
+        return 0
+        ;;
+      * )
+        echo "$_s_help" >/dev/tty
+        local dummy=$(_sf_read)
+        return 1
+        ;;
+    esac
+  done
+  return 10
 } # }}}
 
 _sf_get_values () { # {{{
@@ -68,6 +112,10 @@ _sf_clear () { # {{{
 
 } # }}}
 
+_sf_release_more () { # {{{
+  :
+} # }}}
+
 _sf_release () { # {{{
   # Release variables
   unset _s_file
@@ -98,6 +146,7 @@ _sf_release () { # {{{
   [ "x$_s_zsh_ksharrays" != "x" ] && [ $_s_zsh_ksharrays -eq 1 ] && unsetopt ksharrays
   unset _s_zsh_ksharrays
 
+  _sf_release_more
 } # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
@@ -136,6 +185,8 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
 } # }}}
 
 _sf_printall () { # usage: _sf_printall offset select {{{
+  _sf_setview
+
   local offset=${1-$_s_n_offset}
   local select=${2-$_s_current_n}
 
@@ -155,24 +206,45 @@ _sf_printall () { # usage: _sf_printall offset select {{{
 } # }}}
 
 _sf_setheader () { # {{{
+  _s_header=""
   if [ $_s_noheader != 1 ];then
     if [ $_s_stdin -eq 0 -a $_s_delete -eq 1 ];then
-      _s_header=" $_s_n values in total
+      if [ $_s_cols -ge 66 ];then
+        _s_header=" $_s_n values in total
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
  d(delete), Enter(select), q/Esc(quit)
 "
+      elif [ $_s_cols -ge 40 ];then
+        _s_header=" $_s_n values in total
+ vim-like updown, e.g)j:up, k:down, gg/G
+ d(delete), Enter(select), q/Esc(quit)
+"
+      fi
+
     else
-      _s_header=" $_s_n values in total
+      if [ $_s_cols -ge 66 ];then
+        _s_header=" $_s_n values in total
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
  Enter(select), q/Esc(quit)
 "
+      else
+        _s_header=" $_s_n values in total
+ vim-like updown, e.g)j:up, k:down, gg/G
+ Enter(select), q/Esc(quit)
+"
+      fi
     fi
-    _s_ext_row=$(echo "$_s_header"|wc -l)
-  else
-    _s_header=""
+  fi
+}  # }}}
+
+_sf_setview () { # {{{
+  _sf_setheader
+  if [ "$_s_header" = "" ];then
     _s_ext_row=0
+  else
+    _s_ext_row=$(echo "$_s_header"|wc -l)
   fi
 
   _s_max_show=$_s_n
@@ -193,7 +265,7 @@ _sf_move_up () { # {{{
   for ((i=0; i<_s_n_move; i++));do
     if [ $_s_current_n -eq $((_s_n-1)) ];then
       :
-    elif [ $_s_cursor_r -eq $((lines-1)) ];then
+    elif [ $_s_cursor_r -eq $((_s_lines-1)) ];then
       ((_s_n_offset++));((_s_current_n++))
       all=1
     else
@@ -257,7 +329,7 @@ _sf_d () { # {{{
   if [ $_s_n -eq 0 ];then
     clear >/dev/tty
     printf "No clipboards in $f_use\n\n" >/dev/tty
-    sleep 1
+    local dummy=$(_sf_read)
     _s_current_n=-1
     break
   fi
@@ -268,7 +340,6 @@ _sf_d () { # {{{
       ((_s_cursor_r--));((_s_current_n--))
     fi
   fi
-  _sf_setheader
   _sf_printall
 } # }}}
 _sf_e () { # {{{
@@ -295,7 +366,7 @@ _sf_g () { # {{{
   elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
     _s_current_n=$((_s_n_move))
     _s_n_offset=$((n-_s_max_show+1))
-    _s_cursor_r=$((lines-1))
+    _s_cursor_r=$((_s_lines-1))
   else
     _s_current_n=$((_s_n_move))
     _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
@@ -344,11 +415,7 @@ _sf_s () { # {{{
   echo "$(_sf_nth $((_s_current_n+1))) value:" >/dev/tty
   echo >/dev/tty
   echo "${_s_inputs[$_s_current_n]}" >/dev/tty
-  if [ "$ZSH_NAME" = "zsh" ];then
-    read -s -k 1 c </dev/tty
-  else
-    read -s -n 1 c </dev/tty
-  fi
+  local dummy=$(_sf_read)
   _sf_printall
 } # }}}
 _sf_t () { # {{{
@@ -396,7 +463,7 @@ _sf_G () { # {{{
     _s_current_n=$((_s_n-1))
     if [ $_s_current_n -ge $_s_max_show ];then
       _s_n_offset=$((_s_n-_s_max_show))
-      _s_cursor_r=$((lines-1))
+      _s_cursor_r=$((_s_lines-1))
     else
       _s_n_offset=0
       _s_cursor_r=$((_s_ext_row+_s_current_n))
@@ -410,7 +477,7 @@ _sf_G () { # {{{
   elif [ $_s_n_move -gt $((_s_n_offset+_s_max_show)) ];then
     _s_current_n=$((_s_n_move))
     _s_n_offset=$((_s_current_n-_s_max_show+1))
-    _s_cursor_r=$((lines-1))
+    _s_cursor_r=$((_s_lines-1))
   else
     _s_current_n=$((_s_n_move))
     _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
@@ -511,7 +578,7 @@ _sf_main () { # {{{
 
   # Help
   _s_help=${_s_help:-"
-Usage: sentaku [-nh] [-f <file>] [-s <sep>]
+Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 
 Arguments:
    -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
@@ -541,27 +608,11 @@ Arguments:
   trap "_sf_clear;_sf_release" 0
 
   # Get arguments
-  while [ $# -gt 0 ];do
-    case $1 in
-      "-f" )
-        _s_file=$2
-        if [ "$_s_file" = "" ];then
-          echo "ERROR: empty input was given with -i" >/dev/tty
-          return 1
-        fi
-        shift 2
-        ;;
-      "-s" ) _s_s=$2;shift 2;;
-      "-H" ) _s_noheader=0;shift;;
-      "-N" ) _s_nonumber=1;shift;;
-      "-l" ) _s_showlast=1;shift;;
-      "-a" ) _s_align=1;shift;;
-      "-d" ) _s_delete=1;shift;;
-      "-h" ) echo "$_s_help" >/dev/tty;return 0;;
-      * ) echo "$_s_help" >/dev/tty;return 1;;
-    esac
-  done
-
+  _sf_check_args $*
+  local ret=$?
+  if [ $ret -ne 10 ];then
+    return $ret
+  fi
 
   # Get values
   _sf_get_values
@@ -573,7 +624,7 @@ Arguments:
     else
       printf "No value in stdin\n\n" >/dev/tty
     fi
-    sleep 1
+    local dummy=$(_sf_read)
     return
   fi
 
@@ -589,7 +640,6 @@ Arguments:
   # First view
   _s_lines=$(tput lines)
   _s_cols=$(tput cols)
-  _sf_setheader
   _sf_printall
 
   # Select value
@@ -601,13 +651,8 @@ Arguments:
   _s_break=0
   tput cup $cursor_r 0 >/dev/tty
 
-  local c
   while : ;do
-    if [ "$ZSH_NAME" = "zsh" ];then
-      read -s -k 1 c </dev/tty
-    else
-      read -s -n 1 c </dev/tty
-    fi
+    local c=$(_sf_read)
     case $c in
       $'\x04'|$'\x06' ) # ^D/^F
         if [ $c = $'\x04' ];then
