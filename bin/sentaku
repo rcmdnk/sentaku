@@ -49,6 +49,11 @@ _sf_check_args () { # {{{
       "-l" ) _s_showlast=1;shift;;
       "-a" ) _s_align=1;shift;;
       "-d" ) _s_delete=1;shift;;
+      "-p" )
+        shift
+        _sf_push $*
+        return 0
+        ;;
       "-h" )
         echo "$_s_help" >/dev/tty
         local dummy=$(_sf_read)
@@ -64,10 +69,10 @@ _sf_check_args () { # {{{
   return 10
 } # }}}
 
-_sf_get_values () { # {{{
-  local stdin=$_stdin
+_sf_get_values () { # _sf_get_values [<is_stdin>] {{{
+  local stdin=$_s_stdin
   if [ $# -gt 0 ];then
-    [ "$1" = "-f" ] && stdin=0
+    stdin=$1
   fi
   # Get values
   touch "$_s_file"
@@ -91,15 +96,18 @@ _sf_get_values () { # {{{
 
 _sf_align_values () { # {{{
   local n=${1:-0}
+  local is_get=${2:-1}
   local v="${_s_inputs[$n]}"
   printf "$v$_s_s" > "$_s_file"
   local i=0
   for ((i=0; i<_s_n && i<_s_max; i++));do
-    if [ ! $i -eq $n ];then
+    if [ ! $i -eq $n -a "${_s_inputs[$i]}" != "$v" ];then
       printf "${_s_inputs[$i]}$_s_s" >> "$_s_file"
     fi
   done
-  _sf_get_values
+  if [ $is_get -eq 1 ];then
+    _sf_get_values
+  fi
 } # }}}
 
 _sf_delete () { # {{{
@@ -160,6 +168,7 @@ Arguments:
    -l         Show last words instead of starting words for longer lines
    -a         Align input list (set selected one to the first)
    -d         Enable Delete in selection mode
+   -p         Push words to the file
    -n         Don't run functions, to just source this file
    -h         Print this HELP and exit
 "}
@@ -619,6 +628,34 @@ _sf_Z () { # {{{
   :
 } # }}}
 
+_sf_push () { # {{{
+  # Set trap
+  trap "_sf_clear;return 1" 1 2 3 15
+  trap "_sf_finalize" 0
+
+  # Initializatoin
+  _sf_initialize
+
+  # Set input
+  local input="$*"
+  shift $#
+  if [ $_s_stdin -eq 1 ];then
+    input=$(cat -)
+  fi
+
+  # Ignore blank
+  [ "$input" = "" ] && return
+
+  # Renew values
+  _sf_get_values 0
+  _s_inputs=("$input" "${_s_inputs[@]}")
+  _s_n=${#_s_inputs[@]}
+  _sf_align_values 0 0
+
+  # Finalization
+  _sf_finalize
+} # }}}
+
 _sf_main () { # {{{
   # Check only source or not
   if [ $# -ge 1 -a "$1" = "-n" ];then
@@ -762,32 +799,6 @@ _sf_main () { # {{{
     # Align values
     [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n
   fi
-
-  # Finalization
-  _sf_finalize
-} # }}}
-
-_sf_push () { # {{{
-  # Set trap
-  trap "_sf_clear;return 1" 1 2 3 15
-  trap "_sf_finalize" 0
-
-  # Initializatoin
-  _sf_initialize
-
-  # Set input
-  local input="$*"
-  if [ $_s_stdin -eq 1 ];then
-    input=$(cat -)
-  fi
-
-  # Ignore blank
-  [ "$input" = "" ] && return
-
-  # Renew values
-  _sf_get_values -f
-  _s_inpouts=("$input" "${_s_inputs[@]}")
-  _sf_align_values 0
 
   # Finalization
   _sf_finalize
