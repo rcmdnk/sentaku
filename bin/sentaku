@@ -65,16 +65,20 @@ _sf_check_args () { # {{{
 } # }}}
 
 _sf_get_values () { # {{{
+  local stdin=$_stdin
+  if [ $# -gt 0 ];then
+    [ "$1" = "-f" ] && stdin=0
+  fi
   # Get values
   touch "$_s_file"
   local orig_ifs=$IFS
   IFS="$_s_s"
-  [ $_s_stdin -eq 0 ] && _s_inputs=($(cat "$_s_file")) || _s_inputs=($(cat -))
+  [ $stdin -eq 0 ] && _s_inputs=($(cat "$_s_file")) || _s_inputs=($(cat -))
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
 
   if [ $_s_n -eq 0 ];then
-    if [ $_s_stdin -eq 0 ];then
+    if [ $stdin -eq 0 ];then
       printf "No value in $_s_file\n\n" >/dev/tty
     else
       printf "No value in stdin\n\n" >/dev/tty
@@ -85,12 +89,12 @@ _sf_get_values () { # {{{
   return 0
 } # }}}
 
-_sf_align_valuse () { # {{{
+_sf_align_values () { # {{{
   local n=${1:-0}
   local v="${_s_inputs[$n]}"
   printf "$v$_s_s" > "$_s_file"
   local i=0
-  for ((i=0; i<_s_n; i++));do
+  for ((i=0; i<_s_n && i<_s_max; i++));do
     if [ ! $i -eq $n ];then
       printf "${_s_inputs[$i]}$_s_s" >> "$_s_file"
     fi
@@ -123,7 +127,7 @@ _sf_initialize () { # {{{
   _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
   _s_inputs=()
   _s_n=0
-  _s_max=${SENTAKU_MAX:-$SENTAKU_MAX}
+  _s_max=${SENTAKU_MAX:-$_SENTAKU_MAX}
   _s_header=""
   _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
@@ -621,8 +625,10 @@ _sf_main () { # {{{
     return 0
   fi
 
-  # Set trap for finalize
+  # Set trap
+  trap "_sf_clear;return 1" 1 2 3 15
   trap "_sf_finalize" 0
+
 
   # Initializatoin
   _sf_initialize
@@ -646,9 +652,6 @@ _sf_main () { # {{{
 
   # Save current display
   tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
-
-  # Set trap for clear
-  trap "_sf_clear;return 1" 1 2 3 15
 
   # Hide any input
   [ $_s_stdin -eq 0 ] && stty -echo
@@ -757,7 +760,7 @@ _sf_main () { # {{{
     _sf_execute $_s_current_n
 
     # Align values
-    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_valuse $_s_current_n
+    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n
   fi
 
   # Finalization
@@ -765,34 +768,12 @@ _sf_main () { # {{{
 } # }}}
 
 _sf_push () { # {{{
-  # Set values
-  _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
-  _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
-  _s_inputs=()
-  _s_n=0
-  _s_max=${SENTAKU_MAX:-$SENTAKU_MAX}
-  _s_header=""
-  _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
-  _s_lines=0
-  _s_cols=0
-  _s_max_show=0
-  _s_stdin=0
-  _s_zsh_ksharrays=0
-
-  # Fix array for zsh
-  if [ "$ZSH_NAME" = "zsh" ];then
-    if setopt|grep -q ksharrays;then
-      _s_zsh_ksharrays=1
-      setopt ksharrays
-    fi
-  fi
-
-  # Check std input
-  [ ! -t 0 ] && _s_stdin=1
-
   # Set trap
-  trap "return 1" 1 2 3 15
+  trap "_sf_clear;return 1" 1 2 3 15
   trap "_sf_finalize" 0
+
+  # Initializatoin
+  _sf_initialize
 
   # Set input
   local input="$*"
@@ -804,19 +785,9 @@ _sf_push () { # {{{
   [ "$input" = "" ] && return
 
   # Renew values
-  _sf_get_values
-  local i=0
-  local j=1
-  printf "$input$_s_s" > "$_s_file"
-  while [ $i -lt $_s_n ] && [ $j -lt $_s_max ] ;do
-    local iuse=$i
-    ((i++))
-
-    # Remove duplications
-    [ "$input" = "${_s_inputs[$iuse]}" ] && continue
-    printf "${_s_inputs[$iuse]}$_s_s" >> "$_s_file"
-    ((j++))
-  done
+  _sf_get_values -f
+  _s_inpouts=("$input" "${_s_inputs[@]}")
+  _sf_align_values 0
 
   # Finalization
   _sf_finalize
