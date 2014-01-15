@@ -686,7 +686,7 @@ _sf_main () { # {{{
         fi
         _sf_move_down
         ;;
-      $'\01b' ) _sf_quit;; # Esc
+      $'\x1b' ) _sf_quit;; # Esc
       ""|$'\n' ) _sf_select;; # Enter/Space
       [0-9])
         [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$c" || _s_n_move=$c
