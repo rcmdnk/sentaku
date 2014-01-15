@@ -7,4 +7,6 @@ bbb
 ccc"
 #select=$(echo "$list"|./sentaku)
 select=$(echo "$list"|./ex_source_bash.sh)
-echo $select is selected
+if [ "x$select" != "x" ];then
+  echo $select is selected
+fi

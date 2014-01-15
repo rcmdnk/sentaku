@@ -64,7 +64,7 @@ _sf_clear () { # {{{
   tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
 
   # Enable echo input
-  [ "$_s_stdin" != "" ] && [ $_s_stdin -eq 0 ] && stty echo
+  [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty echo
 
 } # }}}
 
@@ -91,10 +91,11 @@ _sf_release () { # {{{
   unset _s_cursor_r
   unset _s_g
   unset _s_n_move
+  unset _s_break
 
   unset _s_help
 
-  [ $_s_zsh_ksharrays -eq 1 ] && unsetopt ksharrays
+  [ "x$_s_zsh_ksharrays" != "x" ] && [ $_s_zsh_ksharrays -eq 1 ] && unsetopt ksharrays
   unset _s_zsh_ksharrays
 
 } # }}}
@@ -185,71 +186,295 @@ _sf_execute () { # {{{
   echo "${_s_inputs[$1]}"
 } # }}}
 
+_sf_move_up () { # {{{
+  local all=0
+  _sf_printline 0 $_s_cursor_r $_s_current_n
+  local i=0
+  for ((i=0; i<_s_n_move; i++));do
+    if [ $_s_current_n -eq $((_s_n-1)) ];then
+      :
+    elif [ $_s_cursor_r -eq $((lines-1)) ];then
+      ((_s_n_offset++));((_s_current_n++))
+      all=1
+    else
+      ((_s_cursor_r++));((_s_current_n++))
+    fi
+  done
+  if [ $all -eq 1 ];then
+    _sf_printall
+  else
+    _sf_printline 1 $_s_cursor_r $_s_current_n
+  fi
+  _s_g=0
+  _s_n_move=0
+} # }}}
+
+_sf_move_down () { # {{{
+  local all=0
+  _sf_printline 0 $_s_cursor_r $_s_current_n
+  local i=0
+  for ((i=0; i<_s_n_move; i++));do
+    if [ $_s_cursor_r -ne $_s_ext_row ];then
+      ((_s_cursor_r--));((_s_current_n--))
+    elif [ $_s_n_offset -gt 0 ];then
+      ((_s_n_offset--));((_s_current_n--))
+      all=1
+    else
+      :
+    fi
+  done
+  if [ $all -eq 1 ];then
+    _sf_printall
+  else
+    _sf_printline 1 $_s_cursor_r $_s_current_n
+  fi
+  _s_g=0
+  _s_n_move=0
+} # }}}
+
+_sf_quit () { # {{{
+  _s_current_n=-1
+  _s_break=1
+} # }}}
+
+_sf_select () { # {{{
+  _s_break=1
+} # }}}
+
 _sf_a () { # {{{
-  return 0
+  :
 } # }}}
 _sf_b () { # {{{
-  return 0
+  :
 } # }}}
 _sf_c () { # {{{
-  return 0
+  :
+} # }}}
+_sf_d () { # {{{
+  [ $_s_stdin -eq 1 -o $_s_delete -eq 0 ] && continue
+  _sf_delete $_s_current_n
+  # Check a number of clipboards
+  if [ $_s_n -eq 0 ];then
+    clear >/dev/tty
+    printf "No clipboards in $f_use\n\n" >/dev/tty
+    sleep 1
+    _s_current_n=-1
+    break
+  fi
+  if [ $_s_current_n -eq $_s_n ];then
+    if [ $_s_n_offset -gt 0 ];then
+      ((_s_n_offset--));((_s_current_n--))
+    else
+      ((_s_cursor_r--));((_s_current_n--))
+    fi
+  fi
+  _sf_setheader
+  _sf_printall
 } # }}}
 _sf_e () { # {{{
-  return 0
+  :
 } # }}}
 _sf_f () { # {{{
-  return 0
+  :
 } # }}}
 _sf_g () { # {{{
-  return 0
+  if [ $_s_g -eq 0 ];then
+    _s_g=1
+    return
+  fi
+  if [ $_s_n_move -eq 0 ];then
+    _s_current_n=0
+    _s_n_offset=0
+    _s_cursor_r="$_s_ext_row"
+  elif [ $_s_n_move -gt $_s_n ];then
+    :
+  elif [ $_s_n_move -le $_s_n_offset ];then
+    _s_current_n=$((_s_n_move-1))
+    _s_n_offset=$_s_current_n
+    _s_cursor_r=$_s_ext_row
+  elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
+    _s_current_n=$((_s_n_move-1))
+    _s_n_offset=$((n-_s_max_show+1))
+    _s_cursor_r=$((lines-1))
+  else
+    _s_current_n=$((_s_n_move-1))
+    _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
+  fi
+  _sf_printall
+  _s_n_move=0
+  _s_g=0
 } # }}}
 _sf_h () { # {{{
-  return 0
+  :
 } # }}}
 _sf_i () { # {{{
-  return 0
+  :
+} # }}}
+_sf_j () { # {{{
+  [ $_s_n_move -eq 0 ] && _s_n_move=1
+  _sf_move_up
+} # }}}
+_sf_k () { # {{{
+  [ $_s_n_move -eq 0 ] && _s_n_move=1
+  _sf_move_down
 } # }}}
 _sf_l () { # {{{
-  return 0
+  :
 } # }}}
 _sf_m () { # {{{
-  return 0
+  :
 } # }}}
 _sf_n () { # {{{
-  return 0
+  :
 } # }}}
 _sf_o () { # {{{
-  return 0
+  :
 } # }}}
 _sf_p () { # {{{
-  return 0
+  :
+} # }}}
+_sf_q () { # {{{
+  _sf_quit
 } # }}}
 _sf_r () { # {{{
-  return 0
+  :
 } # }}}
 _sf_s () { # {{{
-  return 0
+  clear >/dev/tty
+  echo "$(_sf_nth $((_s_current_n+1))) value:" >/dev/tty
+  echo >/dev/tty
+  echo "${_s_inputs[$_s_current_n]}" >/dev/tty
+  if [ "$ZSH_NAME" = "zsh" ];then
+    read -s -k 1 c </dev/tty
+  else
+    read -s -n 1 c </dev/tty
+  fi
+  _sf_printall
 } # }}}
 _sf_t () { # {{{
-  return 0
+  :
 } # }}}
 _sf_u () { # {{{
-  return 0
+  :
 } # }}}
 _sf_v () { # {{{
-  return 0
+  :
 } # }}}
 _sf_w () { # {{{
-  return 0
+  :
 } # }}}
 _sf_x () { # {{{
-  return 0
+  :
 } # }}}
 _sf_y () { # {{{
-  return 0
+  :
 } # }}}
 _sf_z () { # {{{
-  return 0
+  :
+} # }}}
+
+_sf_A () { # {{{
+  :
+} # }}}
+_sf_B () { # {{{
+  :
+} # }}}
+_sf_C () { # {{{
+  :
+} # }}}
+_sf_D () { # {{{
+  :
+} # }}}
+_sf_E () { # {{{
+  :
+} # }}}
+_sf_F () { # {{{
+  :
+} # }}}
+_sf_G () { # {{{
+  if [ $_s_n_move -eq 0 ];then
+    _s_current_n=$((_s_n-1))
+    if [ $_s_current_n -ge $_s_max_show ];then
+      _s_n_offset=$((_s_n-_s_max_show))
+      _s_cursor_r=$((lines-1))
+    else
+      _s_n_offset=0
+      _s_cursor_r=$((_s_ext_row+_s_current_n))
+    fi
+  elif [ $_s_n_move -gt $_s_n ];then
+    :
+  elif [ $_s_n_move -le $_s_n_offset ];then
+    _s_current_n=$((_s_n_move-1))
+    _s_n_offset=$_s_current_n
+    _s_cursor_r=$_s_ext_row
+  elif [ $_s_n_move -gt $((_s_n_offset+_s_max_show)) ];then
+    _s_current_n=$((_s_n_move-1))
+    _s_n_offset=$((_s_current_n-_s_max_show+1))
+    _s_cursor_r=$((lines-1))
+  else
+    _s_current_n=$((_s_n_move-1))
+    _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
+  fi
+  _sf_printall
+  _s_n_move=0
+  _s_g=0
+} # }}}
+_sf_H () { # {{{
+  :
+} # }}}
+_sf_I () { # {{{
+  :
+} # }}}
+_sf_J () { # {{{
+  :
+} # }}}
+_sf_K () { # {{{
+  :
+} # }}}
+_sf_L () { # {{{
+  :
+} # }}}
+_sf_M () { # {{{
+  :
+} # }}}
+_sf_N () { # {{{
+  :
+} # }}}
+_sf_O () { # {{{
+  :
+} # }}}
+_sf_P () { # {{{
+  :
+} # }}}
+_sf_Q () { # {{{
+  :
+} # }}}
+_sf_R () { # {{{
+  :
+} # }}}
+_sf_S () { # {{{
+  :
+} # }}}
+_sf_T () { # {{{
+  :
+} # }}}
+_sf_U () { # {{{
+  :
+} # }}}
+_sf_V () { # {{{
+  :
+} # }}}
+_sf_W () { # {{{
+  :
+} # }}}
+_sf_X () { # {{{
+  :
+} # }}}
+_sf_Y () { # {{{
+  :
+} # }}}
+_sf_Z () { # {{{
+  :
 } # }}}
 
 _sf_main () { # {{{
@@ -280,6 +505,7 @@ _sf_main () { # {{{
   _s_cursor_r=0
   _s_g=0
   _s_n_move=0
+  _s_break=0
 
   _s_zsh_ksharrays=0
 
@@ -311,7 +537,8 @@ Arguments:
   [ ! -t 0 ] && _s_stdin=1
 
   # Set trap
-  trap "_sf_clear;_sf_release;return 1" 1 2 3 15
+  trap "return 1" 1 2 3 15
+  trap "_sf_clear;_sf_release" 0
 
   # Get arguments
   while [ $# -gt 0 ];do
@@ -371,6 +598,7 @@ Arguments:
   _s_cursor_r=$_s_ext_row
   _s_g=0
   _s_n_move=0
+  _s_break=0
   tput cup $cursor_r 0 >/dev/tty
 
   local c
@@ -381,160 +609,24 @@ Arguments:
       read -s -n 1 c </dev/tty
     fi
     case $c in
-      j|$'\x04'|$'\x06' ) # j/^D/^F
+      $'\x04'|$'\x06' ) # ^D/^F
         if [ $c = $'\x04' ];then
           _s_n_move=$((_s_max_show/2))
         elif [ $c = $'\x06' ];then
           _s_n_move=$((_s_max_show))
-        elif [ $_s_n_move -eq 0 ];then
-          _s_n_move=1
         fi
-        local all=0
-        _sf_printline 0 $_s_cursor_r $_s_current_n
-        local i=0
-        for ((i=0; i<_s_n_move; i++));do
-          if [ $_s_current_n -eq $((_s_n-1)) ];then
-            :
-          elif [ $_s_cursor_r -eq $((lines-1)) ];then
-            ((_s_n_offset++));((_s_current_n++))
-            all=1
-          else
-            ((_s_cursor_r++));((_s_current_n++))
-          fi
-        done
-        if [ $all -eq 1 ];then
-          _sf_printall
-        else
-          _sf_printline 1 $_s_cursor_r $_s_current_n
-        fi
-        _s_g=0
-        _s_n_move=0
-        continue
+        _sf_move_up
         ;;
-      k|$'\x15'|$'\x02' ) # k/^U/^B
+      $'\x15'|$'\x02' ) # k/^U/^B
         if [ $c = $'\x15' ];then
           _s_n_move=$((_s_max_show/2))
         elif [ $c = $'\x02' ];then
           _s_n_move=$((_s_max_show))
-        elif [ $_s_n_move -eq 0 ];then
-          _s_n_move=1
         fi
-        local all=0
-        _sf_printline 0 $_s_cursor_r $_s_current_n
-        local i=0
-        for ((i=0; i<_s_n_move; i++));do
-          if [ $_s_cursor_r -ne $_s_ext_row ];then
-            ((_s_cursor_r--));((_s_current_n--))
-          elif [ $_s_n_offset -gt 0 ];then
-            ((_s_n_offset--));((_s_current_n--))
-            all=1
-          else
-            :
-          fi
-        done
-        if [ $all -eq 1 ];then
-          _sf_printall
-        else
-          _sf_printline 1 $_s_cursor_r $_s_current_n
-        fi
-        _s_g=0
-        _s_n_move=0
-        continue
+        _sf_move_down
         ;;
-      g )
-        if [ $_s_g -eq 0 ];then
-          _s_g=1
-          continue
-        fi
-
-        if [ $_s_n_move -eq 0 ];then
-          _s_current_n=0
-          _s_n_offset=0
-          _s_cursor_r="$_s_ext_row"
-        elif [ $_s_n_move -gt $_s_n ];then
-          :
-        elif [ $_s_n_move -le $_s_n_offset ];then
-          _s_current_n=$((_s_n_move-1))
-          _s_n_offset=$_s_current_n
-          _s_cursor_r=$_s_ext_row
-        elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
-          _s_current_n=$((_s_n_move-1))
-          _s_n_offset=$((n-_s_max_show+1))
-          _s_cursor_r=$((lines-1))
-        else
-          _s_current_n=$((_s_n_move-1))
-          _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
-        fi
-        _sf_printall
-        _s_n_move=0
-        _s_g=0
-        continue
-        ;;
-      "G" )
-        if [ $_s_n_move -eq 0 ];then
-          _s_current_n=$((_s_n-1))
-          if [ $_s_current_n -ge $_s_max_show ];then
-            _s_n_offset=$((_s_n-_s_max_show))
-            _s_cursor_r=$((lines-1))
-          else
-            _s_n_offset=0
-            _s_cursor_r=$((_s_ext_row+_s_current_n))
-          fi
-        elif [ $_s_n_move -gt $_s_n ];then
-          :
-        elif [ $_s_n_move -le $_s_n_offset ];then
-          _s_current_n=$((_s_n_move-1))
-          _s_n_offset=$_s_current_n
-          _s_cursor_r=$_s_ext_row
-        elif [ $_s_n_move -gt $((_s_n_offset+_s_max_show)) ];then
-          _s_current_n=$((_s_n_move-1))
-          _s_n_offset=$((_s_current_n-_s_max_show+1))
-          _s_cursor_r=$((lines-1))
-        else
-          _s_current_n=$((_s_n_move-1))
-          _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
-        fi
-        _sf_printall
-        _s_n_move=0
-        _s_g=0
-        continue
-        ;;
-      d )
-        [ $_s_stdin -eq 1 -o $_s_delete -eq 0 ] && continue
-        _sf_delete $_s_current_n
-        # Check a number of clipboards
-        if [ $_s_n -eq 0 ];then
-          clear >/dev/tty
-          printf "No clipboards in $f_use\n\n" >/dev/tty
-          sleep 1
-          _s_current_n=-1
-          break
-        fi
-        if [ $_s_current_n -eq $_s_n ];then
-          if [ $_s_n_offset -gt 0 ];then
-            ((_s_n_offset--));((_s_current_n--))
-          else
-            ((_s_cursor_r--));((_s_current_n--))
-          fi
-        fi
-        _sf_setheader
-        _sf_printall
-        ;;
-      s )
-        clear >/dev/tty
-        echo "$(_sf_nth $((_s_current_n+1))) value:" >/dev/tty
-        echo >/dev/tty
-        echo "${_s_inputs[$_s_current_n]}" >/dev/tty
-        if [ "$ZSH_NAME" = "zsh" ];then
-          read -s -k 1 c </dev/tty
-        else
-          read -s -n 1 c </dev/tty
-        fi
-        _sf_printall
-        continue
-        ;;
-      q|$'\01b' ) _s_current_n=-1; break;;
-      ""|$'\n' ) break;;
+      $'\01b' ) _sf_quit;; # Esc
+      ""|$'\n' ) _sf_select;; # Enter/Space
       [0-9])
         [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$c" || _s_n_move=$c
         continue
@@ -542,22 +634,22 @@ Arguments:
       a ) _sf_a;;
       b ) _sf_b;;
       c ) _sf_c;;
-      #d ) _sf_d;;
+      d ) _sf_d;;
       e ) _sf_e;;
       f ) _sf_f;;
-      #g ) _sf_g;;
+      g ) _sf_g;;
       h ) _sf_h;;
       i ) _sf_i;;
-      #j ) _sf_j;;
-      #k ) _sf_k;;
+      j ) _sf_j;;
+      k ) _sf_k;;
       l ) _sf_l;;
       m ) _sf_m;;
       n ) _sf_n;;
       o ) _sf_o;;
       p ) _sf_p;;
-      #q ) _sf_q;;
+      q ) _sf_q;;
       r ) _sf_r;;
-      #s ) _sf_s;;
+      s ) _sf_s;;
       t ) _sf_t;;
       u ) _sf_u;;
       v ) _sf_v;;
@@ -565,8 +657,35 @@ Arguments:
       x ) _sf_x;;
       y ) _sf_y;;
       z ) _sf_z;;
+      A ) _sf_A;;
+      B ) _sf_B;;
+      C ) _sf_C;;
+      D ) _sf_D;;
+      E ) _sf_E;;
+      F ) _sf_F;;
+      G ) _sf_G;;
+      H ) _sf_H;;
+      I ) _sf_I;;
+      J ) _sf_J;;
+      K ) _sf_K;;
+      L ) _sf_L;;
+      M ) _sf_M;;
+      N ) _sf_N;;
+      O ) _sf_O;;
+      P ) _sf_P;;
+      Q ) _sf_Q;;
+      R ) _sf_R;;
+      S ) _sf_S;;
+      T ) _sf_T;;
+      U ) _sf_U;;
+      V ) _sf_V;;
+      W ) _sf_W;;
+      X ) _sf_X;;
+      Y ) _sf_Y;;
+      Z ) _sf_Z;;
       * ) continue;;
     esac
+    [ $_s_break -eq 1 ] && break
   done
 
   # Clear (Show cursor, Restore display, Enable echo input)
@@ -611,7 +730,8 @@ _sf_push () { # {{{
   [ ! -t 0 ] && _s_stdin=1
 
   # Set trap
-  trap "_sf_clear;_sf_release" 1 2 3 15
+  trap "return 1" 1 2 3 15
+  trap "_sf_release" 0
 
   # Set input
   local input="$*"
@@ -642,6 +762,7 @@ _sf_push () { # {{{
 } # }}}
 
 # Execute if stdin is available
-if [ ! -t 0 ];then
+#if [ ! -t 0 ];then
+if [ -p /dev/stdin ];then
   _sf_main $*
 fi
