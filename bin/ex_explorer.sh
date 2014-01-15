@@ -93,7 +93,7 @@ _sf_check_args () { # {{{
  return 10
 } # }}}
 
-_sf_finalize_more () { # {{{
+_sf_finalize_user () { # {{{
   unset _s_a
 } # }}}
 

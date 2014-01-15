@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Default values
+# Default variables
 _SENTAKU_INPUT_FILE="$HOME/.sentaku_input"
 _SENTAKU_SEPARATOR=$'\n'
 _SENTAKU_MAX=20
@@ -65,13 +65,24 @@ _sf_check_args () { # {{{
 } # }}}
 
 _sf_get_values () { # {{{
-  # Get variables
+  # Get values
   touch "$_s_file"
   local orig_ifs=$IFS
   IFS="$_s_s"
   [ $_s_stdin -eq 0 ] && _s_inputs=($(cat "$_s_file")) || _s_inputs=($(cat -))
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
+
+  if [ $_s_n -eq 0 ];then
+    if [ $_s_stdin -eq 0 ];then
+      printf "No value in $_s_file\n\n" >/dev/tty
+    else
+      printf "No value in stdin\n\n" >/dev/tty
+    fi
+    local dummy=$(_sf_read)
+    return 1
+  fi
+  return 0
 } # }}}
 
 _sf_align_valuse () { # {{{
@@ -106,7 +117,65 @@ _sf_clear () { # {{{
 
 } # }}}
 
-_sf_finalize_more () { # {{{
+_sf_initialize () { # {{{
+  # Set variables
+  _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
+  _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
+  _s_inputs=()
+  _s_n=0
+  _s_max=${SENTAKU_MAX:-$SENTAKU_MAX}
+  _s_header=""
+  _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
+  _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
+  _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
+  _s_lines=0
+  _s_cols=0
+  _s_max_show=0
+  _s_stdin=0
+  _s_align=0
+  _s_delete=0
+
+  _s_current_n=0
+  _s_n_offset=0
+  _s_cursor_r=0
+  _s_g=0
+  _s_n_move=0
+  _s_break=0
+
+  _s_zsh_ksharrays=0
+
+  # Help
+  _s_help=${_s_help:-"
+Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
+
+Arguments:
+   -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+   -H         Header is shown at selection mode
+   -N         No nubmers are shown
+   -l         Show last words instead of starting words for longer lines
+   -a         Align input list (set selected one to the first)
+   -d         Enable Delete in selection mode
+   -n         Don't run functions, to just source this file
+   -h         Print this HELP and exit
+"}
+
+  # Fix array for zsh
+  if [ "$ZSH_NAME" = "zsh" ];then
+    if ! setopt|grep -q ksharrays;then
+      _s_zsh_ksharrays=1
+      setopt ksharrays
+    fi
+  fi
+
+  # Check std input
+  [ ! -t 0 ] && _s_stdin=1
+
+  # User initialization
+  _sf_initialize_user
+} # }}}
+
+_sf_initialize_user () { # {{{
   :
 } # }}}
 
@@ -146,7 +215,11 @@ _sf_finalize () { # {{{
   [ "x$_s_zsh_ksharrays" != "x" ] && [ $_s_zsh_ksharrays -eq 1 ] && unsetopt ksharrays
   unset _s_zsh_ksharrays
 
-  _sf_finalize_more
+  _sf_finalize_user
+} # }}}
+
+_sf_finalize_user () { # {{{
+  :
 } # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
@@ -325,13 +398,11 @@ _sf_c () { # {{{
 _sf_d () { # {{{
   [ $_s_stdin -eq 1 -o $_s_delete -eq 0 ] && continue
   _sf_delete $_s_current_n
-  # Check a number of clipboards
-  if [ $_s_n -eq 0 ];then
-    clear >/dev/tty
-    printf "No clipboards in $f_use\n\n" >/dev/tty
-    local dummy=$(_sf_read)
+  local ret=$?
+  if [ $ret -ne 0 ];then
     _s_current_n=-1
-    break
+    _s_break=1
+    return $ret
   fi
   if [ $_s_current_n -eq $_s_n ];then
     if [ $_s_n_offset -gt 0 ];then
@@ -550,62 +621,11 @@ _sf_main () { # {{{
     return 0
   fi
 
-  # Set variables
-  _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
-  _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
-  _s_inputs=()
-  _s_n=0
-  _s_max=${SENTAKU_MAX:-$SENTAKU_MAX}
-  _s_header=""
-  _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
-  _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
-  _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
-  _s_lines=0
-  _s_cols=0
-  _s_max_show=0
-  _s_stdin=0
-  _s_align=0
-  _s_delete=0
-
-  _s_current_n=0
-  _s_n_offset=0
-  _s_cursor_r=0
-  _s_g=0
-  _s_n_move=0
-  _s_break=0
-
-  _s_zsh_ksharrays=0
-
-  # Help
-  _s_help=${_s_help:-"
-Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
-
-Arguments:
-   -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
-   -H         Header is shown at selection mode
-   -N         No nubmers are shown
-   -l         Show last words instead of starting words for longer lines
-   -a         Align input list (set selected one to the first)
-   -d         Enable Delete in selection mode
-   -n         Don't run functions, to just source this file
-   -h         Print this HELP and exit
-"}
-
-  # Fix array for zsh
-  if [ "$ZSH_NAME" = "zsh" ];then
-    if ! setopt|grep -q ksharrays;then
-      _s_zsh_ksharrays=1
-      setopt ksharrays
-    fi
-  fi
-
-  # Check std input
-  [ ! -t 0 ] && _s_stdin=1
-
-  # Set trap
-  trap "_sf_clear;return 1" 1 2 3 15
+  # Set trap for finalize
   trap "_sf_finalize" 0
+
+  # Initializatoin
+  _sf_initialize
 
   # Get arguments
   _sf_check_args $*
@@ -616,16 +636,9 @@ Arguments:
 
   # Get values
   _sf_get_values
-
-  # Check a number of clipboards
-  if [ $_s_n -eq 0 ];then
-    if [ $_s_stdin -eq 0 ];then
-      printf "No value in $_s_file\n\n" >/dev/tty
-    else
-      printf "No value in stdin\n\n" >/dev/tty
-    fi
-    local dummy=$(_sf_read)
-    return
+  local ret=$?
+  if [ $ret -ne 0 ];then
+    return $ret
   fi
 
   # Hide cursor
@@ -633,6 +646,9 @@ Arguments:
 
   # Save current display
   tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
+
+  # Set trap for clear
+  trap "_sf_clear;return 1" 1 2 3 15
 
   # Hide any input
   [ $_s_stdin -eq 0 ] && stty -echo
@@ -749,7 +765,7 @@ Arguments:
 } # }}}
 
 _sf_push () { # {{{
-  # Set variables
+  # Set values
   _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
   _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
   _s_inputs=()
@@ -787,7 +803,7 @@ _sf_push () { # {{{
   # Ignore blank
   [ "$input" = "" ] && return
 
-  # Renew variables
+  # Renew values
   _sf_get_values
   local i=0
   local j=1
