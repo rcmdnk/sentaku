@@ -130,13 +130,15 @@ _sf_setheader () { # {{{
       _s_header=" $curdir
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
- s(show detail), Enter(select, move to the directory), q/Esc(quit)
+ s(show detail), d(delete), l(open with less), v(open with vim)
+ Enter(select, move to the directory), q/Esc(quit)
 "
-    elif [ $_s_cols -ge 40 ];then
+    elif [ $_s_cols -ge 42 ];then
       _s_header=" $curdir
  vim-like updown, e.g)j:up, k:down, gg/G
- s(show detail), q/Esc(quit),
- Enter(select, move to the directory),
+ s(show detail), d(delete),
+ l(open with less), v(open with vim)
+ Enter(move to the directory), q/Esc(quit)
 "
     fi
   fi
