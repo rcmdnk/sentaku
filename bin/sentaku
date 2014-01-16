@@ -69,10 +69,14 @@ _sf_check_args () { # {{{
   return 10
 } # }}}
 
-_sf_get_values () { # _sf_get_values [<is_stdin>] {{{
+_sf_get_values () { # _sf_get_values [<is_stdin>] [<is_check>] {{{
   local stdin=$_s_stdin
+  local check=1
   if [ $# -gt 0 ];then
     stdin=$1
+  fi
+  if [ $# -gt 1 ];then
+    check=$2
   fi
   # Get values
   touch "$_s_file"
@@ -82,7 +86,7 @@ _sf_get_values () { # _sf_get_values [<is_stdin>] {{{
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
 
-  if [ $_s_n -eq 0 ];then
+  if [ $check -eq 1 -a $_s_n -eq 0 ];then
     if [ $stdin -eq 0 ];then
       printf "No value in $_s_file\n\n" >/dev/tty
     else
@@ -647,7 +651,7 @@ _sf_push () { # {{{
   [ "$input" = "" ] && return
 
   # Renew values
-  _sf_get_values 0
+  _sf_get_values 0 0
   _s_inputs=("$input" "${_s_inputs[@]}")
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
