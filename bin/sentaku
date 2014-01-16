@@ -295,6 +295,17 @@ _sf_printall () { # usage: _sf_printall offset select {{{
   done
 } # }}}
 
+_sf_echo () { # {{{
+  clear >/dev/tty
+  echo "$*" >/dev/tty
+  local dummy=$(_sf_read)
+} # }}}
+
+_sf_echo_printall () { # {{{
+  _sf_echo "$*"
+  _sf_printall
+} # }}}
+
 _sf_setheader () { # {{{
   _s_header=""
   if [ $_s_noheader != 1 ];then
@@ -403,6 +414,42 @@ _sf_select () { # {{{
   _s_break=1
 } # }}}
 
+_sf_n_move_inc () { # {{{
+  local n=${$1-0}
+  [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$n" || _s_n_move=$n
+} # }}}
+
+_sf_0 () { # {{{
+  _sf_n_move_inc 0
+} # }}}
+_sf_1 () { # {{{
+  _sf_n_move_inc 1
+} # }}}
+_sf_2 () { # {{{
+  _sf_n_move_inc 2
+} # }}}
+_sf_3 () { # {{{
+  _sf_n_move_inc 3
+} # }}}
+_sf_4 () { # {{{
+  _sf_n_move_inc 4
+} # }}}
+_sf_5 () { # {{{
+  _sf_n_move_inc 5
+} # }}}
+_sf_6 () { # {{{
+  _sf_n_move_inc 6
+} # }}}
+_sf_7 () { # {{{
+  _sf_n_move_inc 7
+} # }}}
+_sf_8 () { # {{{
+  _sf_n_move_inc 8
+} # }}}
+_sf_9 () { # {{{
+  _sf_n_move_inc 9
+} # }}}
+
 _sf_a () { # {{{
   :
 } # }}}
@@ -499,12 +546,9 @@ _sf_r () { # {{{
   :
 } # }}}
 _sf_s () { # {{{
-  clear >/dev/tty
-  echo "$(_sf_nth $((_s_current_n))) value:" >/dev/tty
-  echo >/dev/tty
-  echo "${_s_inputs[$_s_current_n]}" >/dev/tty
-  local dummy=$(_sf_read)
-  _sf_printall
+  _sf_echo_printall "$(_sf_nth $((_s_current_n))) value:
+
+${_s_inputs[$_s_current_n]}"
 } # }}}
 _sf_t () { # {{{
   :
@@ -732,10 +776,16 @@ _sf_main () { # {{{
         ;;
       $'\x1b' ) _sf_quit;; # Esc
       ""|$'\n' ) _sf_select;; # Enter/Space
-      [0-9])
-        [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$c" || _s_n_move=$c
-        continue
-        ;;
+      0 ) _sf_0;;
+      1 ) _sf_1;;
+      2 ) _sf_2;;
+      3 ) _sf_3;;
+      4 ) _sf_4;;
+      5 ) _sf_5;;
+      6 ) _sf_6;;
+      7 ) _sf_7;;
+      8 ) _sf_8;;
+      9 ) _sf_9;;
       a ) _sf_a;;
       b ) _sf_b;;
       c ) _sf_c;;

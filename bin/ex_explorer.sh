@@ -79,13 +79,11 @@ _sf_check_args () { # {{{
       "-N" ) _s_nonumber=1;shift;;
       "-l" ) _s_showlast=1;shift;;
       "-h" )
-        echo "$_s_help" >/dev/tty
-        local dummy=$(_sf_read)
+        _sf_echo "$_s_help"
         return 0
         ;;
       * )
-        echo "$_s_help" >/dev/tty
-        local dummy=$(_sf_read)
+        _sf_echo "$_s_help"
         return 1
         ;;
     esac
@@ -108,9 +106,7 @@ _sf_select () { # {{{
    _sf_get_values
    _sf_printall
  else
-   clear
-   echo "${_s_inputs[$_s_current_n]} is not a directory" >/dev/tty
-   local dummy=$(_sf_read)
+   _sf_echo "${_s_inputs[$_s_current_n]} is not a directory"
    _sf_printall
  fi
 } # }}}
@@ -160,16 +156,12 @@ _sf_d () {
   if [ $yes -eq 1 ];then
     rm -rf ${_s_inputs[$_s_current_n]}
   fi
-  sleep 2
   _sf_get_values
   _sf_printall
 }
 
 _sf_s () { # {{{
-  clear >/dev/tty
-  ls -l "${_s_inputs[$_s_current_n]}" >/dev/tty
-  local dummy=$(_sf_read)
-  _sf_printall
+  _sf_echo_printall $(ls -l "${_s_inputs[$_s_current_n]}")
 } # }}}
 
 _sf_l () { # {{{
