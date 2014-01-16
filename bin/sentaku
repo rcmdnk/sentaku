@@ -8,131 +8,6 @@ _SENTAKU_NOHEADER=0
 _SENTAKU_NONUMBER=0
 _SENTAKU_SHOWLAST=0
 
-_sf_nth () { # {{{
-  if [ $1 -eq 1 ];then
-    echo 1st
-  elif [ $1 -eq 2 ];then
-    echo 2nd
-  elif [ $1 -eq 3 ];then
-    echo 3rd
-  else
-    echo ${1}th
-  fi
-} # }}}
-
-_sf_read () { # can be used as dummy wait, too {{{
-  local c
-  if [ "$ZSH_NAME" = "zsh" ];then
-    read -s -k 1 c </dev/tty
-  else
-    read -s -n 1 c </dev/tty
-  fi
-  echo "$c"
-} # }}}
-
-_sf_check_args () { # {{{
-  # Get arguments
-  while [ $# -gt 0 ];do
-    case $1 in
-      "-f" )
-        _s_file=$2
-        if [ "$_s_file" = "" ];then
-          echo "ERROR: empty input was given with -i" >/dev/tty
-          local dummy=$(_sf_read)
-          return 1
-        fi
-        shift 2
-        ;;
-      "-s" ) _s_s=$2;shift 2;;
-      "-H" ) _s_noheader=1;shift;;
-      "-N" ) _s_nonumber=1;shift;;
-      "-l" ) _s_showlast=1;shift;;
-      "-a" ) _s_align=1;shift;;
-      "-d" ) _s_delete=1;shift;;
-      "-p" )
-        shift
-        _sf_push $*
-        return 0
-        ;;
-      "-h" )
-        echo "$_s_help" >/dev/tty
-        local dummy=$(_sf_read)
-        return 0
-        ;;
-      * )
-        echo "$_s_help" >/dev/tty
-        local dummy=$(_sf_read)
-        return 1
-        ;;
-    esac
-  done
-  return 10
-} # }}}
-
-_sf_get_values () { # _sf_get_values [<is_stdin>] [<is_check>] {{{
-  local stdin=$_s_stdin
-  local check=1
-  if [ $# -gt 0 ];then
-    stdin=$1
-  fi
-  if [ $# -gt 1 ];then
-    check=$2
-  fi
-  # Get values
-  touch "$_s_file"
-  local orig_ifs=$IFS
-  IFS="$_s_s"
-  [ $stdin -eq 0 ] && _s_inputs=($(cat "$_s_file")) || _s_inputs=($(cat -))
-  IFS=$orig_ifs
-  _s_n=${#_s_inputs[@]}
-
-  if [ $check -eq 1 -a $_s_n -eq 0 ];then
-    if [ $stdin -eq 0 ];then
-      printf "No value in $_s_file\n\n" >/dev/tty
-    else
-      printf "No value in stdin\n\n" >/dev/tty
-    fi
-    local dummy=$(_sf_read)
-    return 1
-  fi
-  return 0
-} # }}}
-
-_sf_align_values () { # {{{
-  local n=${1:-0}
-  local is_get=${2:-1}
-  local v="${_s_inputs[$n]}"
-  printf "$v$_s_s" > "$_s_file"
-  local i=0
-  for ((i=0; i<_s_n && i<_s_max; i++));do
-    if [ ! $i -eq $n -a "${_s_inputs[$i]}" != "$v" ];then
-      printf "${_s_inputs[$i]}$_s_s" >> "$_s_file"
-    fi
-  done
-  if [ $is_get -eq 1 ];then
-    _sf_get_values
-  fi
-} # }}}
-
-_sf_delete () { # {{{
-  local n=${1:-$((${#_s_inputs[@]}-1))}
-  rm -f "$_s_file"
-  local i
-  for ((i=0; i<$_s_n; i++));do
-    [ $i -ne $n ] && echo "${_s_inputs[$i]}$_s_s" >> "$_s_file"
-  done
-  _sf_get_values
-} # }}}
-
-_sf_clear () { # {{{
-  # clear after selection
-  clear >/dev/tty
-
-  # Restore display
-  tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
-
-} # }}}
-
 _sf_initialize () { # {{{
   # Set variables
   _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
@@ -178,7 +53,7 @@ Arguments:
 "}
 
   # Fix array for zsh
-  if [ "$ZSH_NAME" = "zsh" ];then
+  if [ "x$ZSH_VERSION" != "x" ];then
     if ! setopt|grep -q ksharrays;then
       _s_zsh_ksharrays=1
       setopt ksharrays
@@ -239,6 +114,146 @@ _sf_finalize_user () { # {{{
   :
 } # }}}
 
+_sf_execute () { # {{{
+  local n=${1:-0}
+  echo "${_s_inputs[$1]}"
+} # }}}
+
+_sf_clear () { # {{{
+  # clear after selection
+  clear >/dev/tty
+
+  # Restore display
+  tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
+
+} # }}}
+
+_sf_nth () { # {{{
+  if [ $1 -eq 1 ];then
+    echo 1st
+  elif [ $1 -eq 2 ];then
+    echo 2nd
+  elif [ $1 -eq 3 ];then
+    echo 3rd
+  else
+    echo ${1}th
+  fi
+} # }}}
+
+_sf_read () { # can be used as dummy wait, too {{{
+  local c
+  if [ "x$ZSH_VERSION" != "x" ];then
+    read -s -k 1 c </dev/tty
+  else
+    read -s -n 1 c </dev/tty
+  fi
+  echo "$c"
+} # }}}
+
+_sf_check_args () { # {{{
+  # Get arguments
+  while [ $# -gt 0 ];do
+    case $1 in
+      "-f" )
+        _s_file=$2
+        if [ "$_s_file" = "" ];then
+          echo "ERROR: empty input was given with -i" >/dev/tty
+          local dummy=$(_sf_read)
+          return 1
+        fi
+        shift 2
+        ;;
+      "-s" ) _s_s=$2;shift 2;;
+      "-H" ) _s_noheader=1;shift;;
+      "-N" ) _s_nonumber=1;shift;;
+      "-l" ) _s_showlast=1;shift;;
+      "-a" ) _s_align=1;shift;;
+      "-d" ) _s_delete=1;shift;;
+      "-p" )
+        shift
+        _sf_push $*
+        return 0
+        ;;
+      "-h" )
+        echo "$_s_help" >/dev/tty
+        local dummy=$(_sf_read)
+        return 0
+        ;;
+      * )
+        echo "$_s_help" >/dev/tty
+        local dummy=$(_sf_read)
+        return 1
+        ;;
+    esac
+  done
+  return 10
+} # }}}
+
+_sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
+  local stdin=$_s_stdin
+  local check=1
+  if [ $# -gt 0 ];then
+    stdin=$1
+  fi
+  if [ $# -gt 1 ];then
+    check=$2
+  fi
+  # Get values
+  touch "$_s_file"
+  local orig_ifs=$IFS
+  IFS="$_s_s"
+  [ $stdin -eq 0 ] && _s_inputs=($(cat "$_s_file")) || _s_inputs=($(cat -))
+  IFS=$orig_ifs
+  if [ "x$ZSH_VERSION" != "x" ];then
+    # Fix array for ZSH
+    # Zsh's array add additional empty value to array if IFS is in the end of file.
+    if [ ${#_s_inputs[@]} -gt 0 ];then
+      local last="${_s_inputs[$((${#_s_inputs[@]}-1))]}"
+      if [ "${#last}" -eq 0 ];then
+        _s_inputs=(${_s_inputs[0,$((${#_s_inputs[@]}-2))]})
+      fi
+    fi
+  fi
+  _s_n=${#_s_inputs[@]}
+
+  if [ $check -eq 1 -a $_s_n -eq 0 ];then
+    if [ $stdin -eq 0 ];then
+      printf "No value in $_s_file\n\n" >/dev/tty
+    else
+      printf "No value in stdin\n\n" >/dev/tty
+    fi
+    local dummy=$(_sf_read)
+    return 1
+  fi
+  return 0
+} # }}}
+
+_sf_align_values () { # _sf_align_values [<n> [<is_get>]]{{{
+  local n=${1:-0}
+  local is_get=${2:-1}
+  local v="${_s_inputs[$n]}"
+  printf "$v$_s_s" > "$_s_file"
+  local i=0
+  for ((i=0; i<_s_n && i<_s_max; i++));do
+    if [ ! $i -eq $n -a "${_s_inputs[$i]}" != "$v" ];then
+      printf "${_s_inputs[$i]}$_s_s" >> "$_s_file"
+    fi
+  done
+  if [ $is_get -eq 1 ];then
+    _sf_get_values
+  fi
+} # }}}
+
+_sf_delete () { # {{{
+  local n=${1:-$((${#_s_inputs[@]}-1))}
+  rm -f "$_s_file"
+  local i
+  for ((i=0; i<$_s_n; i++));do
+    [ $i -ne $n ] && echo "${_s_inputs[$i]}$_s_s" >> "$_s_file"
+  done
+  _sf_get_values
+} # }}}
+
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   local show="$(echo "${_s_inputs[$3]}"|tr '\n' '\n'|sed 's/\n$//' |sed 's/%/%%/g'|sed 's/\\/\\\\/g')"
   tput cup $2 0 >/dev/tty
@@ -253,13 +268,13 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   fi
   if [ ${#show} -gt $n_show ];then
     if [ $_s_showlast -eq 0 ];then
-      if [ "$ZSH_NAME" = "zsh" ];then # need for zsh version < 5
+      if [ "x$ZSH_VERSION" != "x" ];then # need for zsh version < 5
         printf "$num${show[0,$((n_show-1))]}" >/dev/tty
       else
         printf "$num${show: 0: $n_show}" >/dev/tty
       fi
     else
-      if [ "$ZSH_NAME" = "zsh" ];then # need for zsh version < 5
+      if [ "x$ZSH_VERSION" != "x" ];then # need for zsh version < 5
         printf "$num${show[$((${#show}-$n_show)),-1]}" >/dev/tty
       else
         printf "$num${show: $((${#show}-$n_show))}" >/dev/tty
@@ -352,11 +367,6 @@ _sf_setview () { # {{{
   if [ $_s_n -gt $((_s_lines-_s_ext_row)) ];then
     _s_max_show=$((_s_lines-_s_ext_row))
   fi
-} # }}}
-
-_sf_execute () { # {{{
-  local n=${1:-0}
-  echo "${_s_inputs[$1]}"
 } # }}}
 
 _sf_move_up () { # {{{
@@ -863,3 +873,4 @@ _sf_main () { # {{{
 if [ -p /dev/stdin ];then
   _sf_main $*
 fi
+
