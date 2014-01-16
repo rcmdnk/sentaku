@@ -255,7 +255,13 @@ _sf_delete () { # {{{
 } # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
-  local show="$(echo "${_s_inputs[$3]}"|tr '\n' '\n'|sed 's/\n$//' |sed 's/%/%%/g'|sed 's/\\/\\\\/g')"
+  local show="$(\
+    echo "${_s_inputs[$3]}"|\
+    awk -F\n -v ORS="\\\n" '{print}' |\
+    sed 's/\\n$//' |\
+    sed 's/%/%%/g'|\
+    sed 's/\\/\\\\/g'\
+  )"
   tput cup $2 0 >/dev/tty
   if [ $1 -eq 1 ];then
     printf "\e[7m" >/dev/tty
