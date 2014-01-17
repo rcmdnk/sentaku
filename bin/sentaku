@@ -26,6 +26,7 @@ _sf_initialize () { # {{{
   _s_align=0
   _s_delete=0
 
+  _s_ext_row=0
   _s_current_n=0
   _s_n_offset=0
   _s_cursor_r=0
@@ -33,7 +34,11 @@ _sf_initialize () { # {{{
   _s_n_move=0
   _s_break=0
 
+  _s_read=""
+
   _s_zsh_ksharrays=0
+
+  _s_ret=0
 
   # Help
   _s_help=${_s_help:-"
@@ -95,6 +100,7 @@ _sf_finalize () { # {{{
   unset _s_align
   unset _s_delete
 
+  unset _s_ext_row
   unset _s_current_n
   unset _s_n_offset
   unset _s_cursor_r
@@ -102,12 +108,18 @@ _sf_finalize () { # {{{
   unset _s_n_move
   unset _s_break
 
+  unset _s_read
+
   unset _s_help
 
   [ "x$_s_zsh_ksharrays" != "x" ] && [ $_s_zsh_ksharrays -eq 1 ] && unsetopt ksharrays
   unset _s_zsh_ksharrays
 
   _sf_finalize_user
+
+  local ret=$_s_ret
+  unset _s_ret
+  return $ret
 } # }}}
 
 _sf_finalize_user () { # {{{
@@ -125,7 +137,6 @@ _sf_clear () { # {{{
 
   # Restore display
   tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
-
 } # }}}
 
 _sf_nth () { # {{{
@@ -141,17 +152,15 @@ _sf_nth () { # {{{
 } # }}}
 
 _sf_read () { # {{{
-  local c
   if [ "x$ZSH_VERSION" != "x" ];then
-    read -s -k 1 c </dev/tty
+    read -s -k 1 _s_read </dev/tty
   else
-    read -s -n 1 c </dev/tty
+    read -s -n 1 _s_read </dev/tty
   fi
-  echo "$c"
 } # }}}
 
 _sf_wait () { # {{{
-  local dummy=$(_sf_read)
+  _sf_read
 } # }}}
 
 _sf_check_args () { # {{{
@@ -426,6 +435,7 @@ _sf_move_down () { # {{{
 } # }}}
 
 _sf_quit () { # {{{
+  [ $# -gt 0 ] && _s_ret=$1
   _s_current_n=-1
   _s_break=1
 } # }}}
@@ -731,9 +741,8 @@ _sf_main () { # {{{
   fi
 
   # Set trap
-  trap "_sf_clear;return 1" 1 2 3 15
-  trap "_sf_finalize" 0
-
+  #trap "_sf_echo at HUP;_sf_clear;_sf_finalize;[ -z "$PS1" ] && exit 1 || return 1" 1 2 3 15
+  trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" 1 2 3 15
 
   # Initializatoin
   _sf_initialize
@@ -776,8 +785,8 @@ _sf_main () { # {{{
   tput cup $cursor_r 0 >/dev/tty
 
   while : ;do
-    local c=$(_sf_read)
-    case $c in
+    _sf_read
+    case $_s_read in
       $'\x04'|$'\x06' ) # ^D/^F
         if [ $c = $'\x04' ];then
           _s_n_move=$((_s_max_show/2))
@@ -883,4 +892,3 @@ _sf_main () { # {{{
 if [ -p /dev/stdin ];then
   _sf_main $*
 fi
-

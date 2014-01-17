@@ -40,6 +40,12 @@ If you want to install other directory, do like:
 Or, simply download scripts and set where you like.
 
 
+# To do
+
+Fix error at trap for subshell case (ex_pipe.sh case)
+
+    stty: tcsetattr: Input/output error
+
 # License
 
 The MIT License (MIT)

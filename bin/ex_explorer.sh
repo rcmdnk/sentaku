@@ -145,11 +145,11 @@ _sf_d () {
   local yes=0
   while : ;do
     echo "Delete ${_s_inputs[$_s_current_n]}?: (y/n)"
-    local ret=$(_sf_read)
-    if [ "$ret" = "y" ];then
+    _sf_read
+    if [ "$_s_read" = "y" ];then
       yes=1
       break
-    elif [ "$ret" = "n" ];then
+    elif [ "$_s_read" = "n" ];then
       break
     fi
   done
