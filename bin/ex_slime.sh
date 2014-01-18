@@ -19,10 +19,10 @@ ITEM"
 your_name="アレフ"
 your_name_en="Alef"
 your_hp=30
-your_wepon="ロトの剣"
-your_wepon_en="Erdrick's Sword"
-your_wepon_power=(6 10)
-your_wepon_miss=10
+your_weapon="ロトの剣"
+your_weapon_en="Erdrick's Sword"
+your_weapon_power=(6 10)
+your_weapon_miss=10
 your_spell="ホイミ"
 your_spell_en="Heal"
 your_mp=6
@@ -36,7 +36,7 @@ slime_hp=40
 slime_power=(1 15)
 slime_power_miss=10
 
-sudden_death=20
+sudden_death=5
 
 _s_help="
 Usage: ex_slime.sh [-je]
@@ -71,26 +71,30 @@ _sf_setheader () { # {{{
 
 $_s_message
 
- $_s_your_name HP: $_s_your_hp MP: $_s_your_mp
+$_s_your_info
 "
 } # }}}
 
 _sf_sudden_death () { # {{{
+  _s_your_hp=0
   if [ $_s_lang = "ja" ];then
-    local death="
+    _s_message="\e[41m
 ＿人人人人人人＿
 ＞　突然の死　＜
 ￣Y^Y^Y^Y^Y^Y^￣
+\e[m
 "
   else
-    local death="
+    _s_message="\e[41m
 _/\/\/\/\/\/\/\_
 > Sudden Death <
  \/\/\/\/\/\/\/
+\e[m
 "
   fi
-  _sf_echo "$death"
-  _sf_quit 1
+  _sf_setheader
+  _sf_echo "$_s_header"
+  _sf_lose
 } # }}}
 
 _sf_execute () { # {{{
@@ -120,8 +124,8 @@ _sf_check_args () { # {{{
     _s_message=" A $slime_name_en Draws Near! $_s_command
 "
     _s_your_name="${your_name_en}"
-    _s_wepon=$your_wepon_en
-    _s_wepon_message="Wepon: $_s_wepon"
+    _s_weapon=$your_weapon_en
+    _s_weapon_message="Weapon: $_s_weapon"
     _s_spell="$your_spell_en"
     _s_spell_message="Spell: $_s_spell"
     _s_item_message="No Item"
@@ -165,6 +169,7 @@ _sf_initialize_user () { # {{{
   _s_spell_message="魔法: $_s_spell"
   _s_item_message="何も持ってない"
   _s_command=" コマンド:"
+  _s_your_info=" $_s_your_name HP: $_s_your_hp MP: $_s_your_mp"
   _s_message=" ${slime_name}があらわれた! $_s_command
 "
   _s_fight_command=" ${_s_your_name}の攻撃!"
@@ -192,28 +197,32 @@ _sf_finzlize_user () { # {{{
 } # }}}
 
 _sf_win () { # {{{
-  local you_win="
- __     __          __          ___       _
+  _s_message="\e[5;42m
+ __     __          __          ___       _ 
  \ \   / /          \ \        / (_)     | |
   \ \_/ /__  _   _   \ \  /\  / / _ _ __ | |
    \   / _ \| | | |   \ \/  \/ / | |  _ \| |
     | | (_) | |_| |    \  /\  /  | | | | |_|
     |_|\___/ \__,_|     \/  \/   |_|_| |_(_)
+\e[m
 "
-  _sf_echo "$you_win"
+  _sf_setheader
+  _sf_echo "$_s_header"
   _sf_quit 0
 } # }}}
 
 _sf_lose () { # {{{
-  local you_lose="
- __     __           _                    _
+  _s_message="\e[5;44m
+ __     __           _                    _ 
  \ \   / /          | |                  | |
   \ \_/ /__  _   _  | |     ___  ___  ___| |
    \   / _ \| | | | | |    / _ \/ __|/ _ \ |
     | | (_) | |_| | | |___| (_) \__ \  __/_|
     |_|\___/ \__,_| |______\___/|___/\___(_)
+\e[m
 "
-  _sf_echo "$you_lose"
+  _sf_setheader
+  _sf_echo "$_s_header"
   _sf_quit 1
 } # }}}
 
@@ -233,7 +242,7 @@ _sf_rand () { # _sf_rand min max [miss] {{{
 
 _sf_attacks () { # your_min your_max your_miss slime_min slime_max slime_miss {{{
   _s_your_attack=$(_sf_rand $1 $2 $3)
-  _s_slime_attack=$(_sf_rand $4 $5 $3)
+  _s_slime_attack=$(_sf_rand $4 $5 $6)
 } # }}}
 
 _sf_your_attack () { # {{{
@@ -258,7 +267,14 @@ _sf_slime_attack () { # {{{
     return
   fi
   _s_your_hp=$((_s_your_hp-_s_slime_attack))
-  [ $_s_your_hp -lt 0 ] && _s_your_hp=0
+  if [ $_s_your_hp -lt 0 ];then
+    _s_your_hp=0
+    _s_your_info=" \e[34m$_s_your_name HP: $_s_your_hp MP: $_s_your_mp\e[m"
+  elif [ $_s_your_hp -lt 10 ];then
+    _s_your_info=" \e[31m$_s_your_name HP: $_s_your_hp MP: $_s_your_mp\e[m"
+  else
+    _s_your_info=" $_s_your_name HP: $_s_your_hp MP: $_s_your_mp"
+  fi
   _s_message_tmp="$1 $_s_slime_attack $_s_damage"
 } # }}}
 
@@ -347,7 +363,7 @@ _sf_command_reset () { # {{{
 
 _sf_0 () { # FIGHT {{{
   local first=$((RANDOM%2))
-  _sf_attacks ${your_weapon_power[0]} ${your_weapon_power[1]} $your_weapon_miss\
+  _sf_attacks ${your_weapon_power[0]} ${your_weapon_power[1]} $your_weapon_miss \
               ${slime_power[0]} ${slime_power[1]} $slime_power_miss
   _sf_message $first "$_s_fight_command" 1 "$_s_slime_fight" 1
 } # }}}
