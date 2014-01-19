@@ -1,8 +1,9 @@
 #!/bin/sh
 
 # Example to make menu program
-
 . sentaku -n
+
+_SENTAKU_SEPARATOR=$'\n'
 
 # New variable
 _s_a=0
@@ -21,12 +22,14 @@ Arguments:
 
 _sf_get_values () { # {{{
   # Get variables
-  local inputs
+  local orig_ifs=$IFS
+  IFS="$_s_s"
   if [ $_s_a -eq 1 ];then
     _s_inputs=($(ls -a))
   else
     _s_inputs=(".." $(ls))
   fi
+  IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
 } # }}}
 

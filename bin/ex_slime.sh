@@ -7,34 +7,35 @@
 _SENTAKU_NOHEADER=0
 _SENTAKU_NONUMBER=0
 
-menu="戦う
+_MENU="戦う
 魔法
 逃げる
 アイテム"
-menu_en="FIGHT
+_MENU_EN="FIGHT
 SPELL
 RUN
 ITEM"
 
-your_name="アレフ"
-your_name_en="Alef"
-your_hp=30
-your_weapon="ロトの剣"
-your_weapon_en="Erdrick's Sword"
-your_weapon_power=(6 10)
-your_weapon_miss=10
-your_spell="ホイミ"
-your_spell_en="Heal"
-your_mp=6
-your_heal=(10 17)
-heal_mp=4
-slime_name="スライム"
-slime_name_en="Slime"
-slime_min_hp=10
-slime_max_hp=40
-slime_hp=40
-slime_power=(1 15)
-slime_power_miss=10
+_YOUR_NAME="アレフ"
+_YOUR_NAME_EN="Alef"
+_YOUR_HP=30
+_YOUR_WEAPON="ロトの剣"
+_YOUR_WEAPON_EN="Erdrick's Sword"
+_YOUR_WEAPON_POWER=(6 10)
+_YOUR_WEAPON_MISS=10
+_YOUR_MP=6
+_YOUR_SPELLS=("ホイミ" "ギラ")
+_YOUR_SPELLS_EN=("Heal" "Hurt")
+_YOUR_SPELLS_MP=(4 2)
+_YOUR_HURT=(5 15)
+_YOUR_HEAL=(10 17)
+_SLIME_NAME="スライム"
+_SLIME_NAME_EN="Slime"
+_SLIME_MIN_HP=10
+_SLIME_MAX_HP=40
+_SLIME_HP=40
+_SLIME_POWER=(1 15)
+_SLIME_POWER_MISS=10
 
 sudden_death=5
 
@@ -121,20 +122,23 @@ _sf_check_args () { # {{{
   done
   if [ $_s_lang = "en" ];then
     _s_command=" Command:"
-    _s_message=" A $slime_name_en Draws Near! $_s_command
+    _s_message=" A $_SLIME_NAME_EN Draws Near! $_s_command
 "
-    _s_your_name="${your_name_en}"
-    _s_weapon=$your_weapon_en
+    _s_your_name="${_YOUR_NAME_EN}"
+    _s_weapon=$_YOUR_WEAPON_EN
     _s_weapon_message="Weapon: $_s_weapon"
-    _s_spell="$your_spell_en"
-    _s_spell_message="Spell: $_s_spell"
+    _s_your_spells=("${_YOUR_SPELLS_EN[@]}")
+    _s_spell_message="Spell: $(for i in ${#$_YOUR_SPELLS_EN};do \
+      echo -n " $_YOUR_SPELLS_EN[$i]}: MP ${_YOUR_SPELLS_MP[$i]}";done)"
+    _s_spells_message="Spell: ${_s_spells[@]}"
     _s_item_message="No Item"
     _s_fight_command=" ${_s_your_name} attacks!"
-    _s_spell_command=" ${_s_your_name} casts $_s_spell!"
+    _sf_spell_command () { echo " ${_s_your_name} casts $1!";}
     _s_run_command=" Failed to escape!"
     _s_item_command=" No Item!"
-    _s_slime_fight=" The $slime_name_en attacks!"
-    _s_damage=" damage!"
+    _s_slime_fight=" The $_SLIME_NAME_EN attacks!"
+    _s_damage="damage!"
+    _sf_cured () { echo "HP ${1} cured!";}
     _s_failed=" Failed!"
     _s_nomp=" No MP remained!"
     _s_attacks="
@@ -147,40 +151,42 @@ $_s_command"
 
 _sf_get_values () { # {{{
   if [ $_s_lang = "ja" ];then
-    _s_inputs=($(echo $menu))
+    _s_inputs=($(echo $_MENU))
   else
-    _s_inputs=($(echo $menu_en))
+    _s_inputs=($(echo $_MENU_EN))
   fi
   _s_n=${#_s_inputs[@]}
 } # }}}
 
 _sf_initialize_user () { # {{{
-  _s_your_hp=$your_hp
-  _s_your_mp=$your_mp
-  _s_slime_hp=$((slime_min_hp+RANDOM%(slime_max_hp-slime_min_hp+1)))
-  slime_hp=$_s_slime_hp
+  _s_your_hp=$_YOUR_HP
+  _s_your_hp_max=$_YOUR_HP
+  _s_your_mp=$_YOUR_MP
+  _s_slime_hp=$((_SLIME_MIN_HP+RANDOM%(_SLIME_MAXHP-_SLIME_MIN_HP+1)))
+  _s_slime_this_max_hp=$_s_slime_hp
   [ $_s_slime_hp -eq 0 ] && _s_slime_hp=1
   _s_lang="ja"
 
-  _s_your_name=$your_name
-  _s_weapon=$your_weapon
+  _s_your_name="$_YOUR_NAME"
+  _s_weapon="$_YOUR_WEAPON"
   _s_weapon_message="武器: $_s_weapon"
-  _s_spell="$your_spell"
-  _s_spell_message="魔法: $_s_spell"
+  _s_your_spells=("${_YOUR_SPELLS[@]}")
+  _s_spell_message="魔法: $(for i in ${#$_YOUR_SPELLS};do \
+    echo -n " $_YOUR_SPELLS[$i]}: MP ${_YOUR_SPELLS_MP[$i]}";done)"
   _s_item_message="何も持ってない"
   _s_command=" コマンド:"
   _s_your_info=" $_s_your_name HP: $_s_your_hp MP: $_s_your_mp"
-  _s_message=" ${slime_name}があらわれた! $_s_command
+  _s_message=" ${_SLIME_NAME}があらわれた! $_s_command
 "
   _s_fight_command=" ${_s_your_name}の攻撃!"
-  _s_spell_command=" ${_s_your_name}は${_s_spell}を唱えた!"
+  _sf_spell_command () { echo " ${_s_your_name}は${1}を唱えた!";}
   _s_run_command=" 逃げだした! しかし回りこまれた!"
   _s_item_command=" アイテムを持ってない!"
-  _s_slime_fight=" ${slime_name}の攻撃!"
-  _s_damage=" のダメージ!"
+  _s_slime_fight=" ${_SLIME_NAME}の攻撃!"
+  _s_damage="のダメージ!"
+  _sf_cured () { echo "HP ${1} 回復!";}
   _s_failed=" かわされた!"
   _s_nomp=" しかしMPがたりない!"
-  _s_menu="$menu_ja"
   _s_attacks="
 
 $_s_command"
@@ -256,9 +262,10 @@ _sf_your_attack () { # {{{
 } # }}}
 
 _sf_your_heal () { # {{{
+  local cur_hp=$_s_your_hp
   _s_your_hp=$((_s_your_hp+_s_your_heal))
-  [ $_s_your_hp -gt $your_hp ] && _s_your_hp=$your_hp
-  _s_message_tmp="$1"
+  [ $_s_your_hp -gt $_s_your_hp_max ] && _s_your_hp=$_s_your_hp_max
+  _s_message_tmp="$1 $(_sf_cured $((_s_your_hp-cur_hp)))"
 } # }}}
 
 _sf_slime_attack () { # {{{
@@ -279,9 +286,11 @@ _sf_slime_attack () { # {{{
 } # }}}
 
 _sf_slime_heal () { # {{{
+  local cur_hp=$_s_slime_hp
   _s_slime_hp=$((_s_slime_hp+_s_slime_heal))
-  [ $_s_slime_hp -gt $slime_hp ] && _s_slime_hp=$slime_hp
+  [ $_s_slime_hp -gt $_s_slime_this_max_hp ] && _s_slime_hp=$_s_slime_this_max_hp
   _s_message_tmp="$1"
+  _s_message_tmp="$1 $(_sf_cured $((_s_slime_hp-cur_hp)))"
 } # }}}
 
 _sf_check_hp () { # {{{
@@ -291,8 +300,8 @@ _sf_check_hp () { # {{{
 
 _sf_new_message () { # {{{
   _s_message="$1"
-  _sf_printall
-  _sf_wait
+  _sf_setview
+  _sf_echo "${_s_header}"
 } # }}}
 
 _sf_message () { # is_you_first your_message is_attack slime_message is_attack {{{
@@ -300,7 +309,7 @@ _sf_message () { # is_you_first your_message is_attack slime_message is_attack {
   if [ $1 -eq 0 ];then
     _s_first_message=$4
   fi
-  _sf_new_message="$_s_first_message
+  _sf_new_message "$_s_first_message
 "
 
   if [ $1 -eq 1 -a "$3" -eq 1 ] || [ $1 -eq 0 -a "$5" -eq 1 ] ;then
@@ -321,6 +330,14 @@ _sf_message () { # is_you_first your_message is_attack slime_message is_attack {
       _sf_slime_heal "$4"
     fi
     _s_first_message=$_s_message_tmp
+    _sf_new_message "$_s_first_message
+"
+  elif [ $1 -eq 1 -a "$3" -eq 3 ] || [ $1 -eq 0 -a "$5" -eq 3 ] ;then
+    if [ $1 -eq 1 ];then
+      _s_first_message="$2 $_s_nomp"
+    else
+      _s_first_message="$4 $_s_nomp"
+    fi
     _sf_new_message "$_s_first_message
 "
   fi
@@ -351,6 +368,14 @@ $_s_second_message"
     _s_second_message=$_s_message_tmp
     _sf_new_message "$_s_first_message
 $_s_second_message"
+  elif [ $1 -eq 0 -a "$3" -eq 3 ] || [ $1 -eq 1 -a "$5" -eq 3 ] ;then
+    if [ $1 -eq 1 ];then
+      _s_second_message="$4 $_s_nomp"
+    else
+      _s_second_message="$2 $_s_nomp"
+    fi
+    _sf_new_message "$_s_first_message
+$_s_second_message"
   fi
   _sf_command_reset
 } # }}}
@@ -363,24 +388,64 @@ _sf_command_reset () { # {{{
 
 _sf_0 () { # FIGHT {{{
   local first=$((RANDOM%2))
-  _sf_attacks ${your_weapon_power[0]} ${your_weapon_power[1]} $your_weapon_miss \
-              ${slime_power[0]} ${slime_power[1]} $slime_power_miss
+  _sf_attacks ${_YOUR_WEAPON_POWER[0]} ${_YOUR_WEAPON_POWER[1]} $_YOUR_WEAPON_MISS \
+              ${_SLIME_POWER[0]} ${_SLIME_POWER[1]} $_SLIME_POWER_MISS
   _sf_message $first "$_s_fight_command" 1 "$_s_slime_fight" 1
 } # }}}
 
 _sf_1 () { # SPELL {{{
   local first=$((RANDOM%2))
-  local y_m=$_s_spell_command
-  if [ $_s_your_mp -lt $heal_mp ];then
-    _s_your_heal=0
-    y_m="$_s_spell_command $_s_nomp"
-  else
-    _s_your_heal=$(_sf_rand ${your_heal[0]} ${your_heal[1]})
-    _s_your_mp=$((_s_your_mp-heal_mp))
+  local spell=$(_sf_spell)
+  _sf_hide
+  local is_attack=2
+  if [ "$spell" = "${_s_your_spells[0]}" ];then
+    local s_m=$(_sf_spell_command "$spell")
+    if [ $_s_your_mp -lt ${_YOUR_SPELLS_MP[0]} ];then
+      _s_your_heal=0
+      is_attack=3
+    else
+      _s_your_heal=$(_sf_rand ${_YOUR_HEAL[0]} ${_YOUR_HEAL[1]})
+      _s_your_mp=$((_s_your_mp-${_YOUR_SPELLS_MP[0]}))
+    fi
+    _sf_attacks 0 0 0\
+                ${_SLIME_POWER[0]} ${_SLIME_POWER[1]} $_SLIME_POWER_MISS
+    _sf_message $first "$s_m" $is_attack "$_s_slime_fight" 1
+  elif [ "$spell" = "${_s_your_spells[1]}" ];then
+    local s_m=$(_sf_spell_command "$spell")
+    local min=0
+    local max=0
+    local miss=0
+    if [ $_s_your_mp -lt ${_YOUR_SPELLS_MP[1]} ];then
+      is_attack=3
+    else
+      is_attack=1
+      min=${_YOUR_HURT[0]}
+      max=${_YOUR_HURT[1]}
+      _s_your_mp=$((_s_your_mp-${_YOUR_SPELLS_MP[1]}))
+    fi
+    _sf_attacks $min $max $miss\
+                ${_SLIME_POWER[0]} ${_SLIME_POWER[1]} $_SLIME_POWER_MISS
+    _sf_message $first "$s_m" $is_attack "$_s_slime_fight" 1
   fi
-  _sf_attacks 0 0 0\
-              ${slime_power[0]} ${slime_power[1]} $slime_power_miss
-  _sf_message $first "$y_m" 2 "$_s_slime_fight" 1
+  _sf_command_reset
+} # }}}
+
+_sf_spell () { # {{{
+  local header="$_s_header"
+
+  . sentaku -n
+
+  spells="${_s_your_spells[@]}"
+
+  _sf_execute () {
+    echo "${_s_inputs[$_s_current_n]}"
+  }
+
+  _sf_setheader () {
+    _s_header="$header"
+  }
+
+  echo "${_s_your_spells[@]}"| _sf_main
 } # }}}
 
 _sf_2 () { # RUN {{{
