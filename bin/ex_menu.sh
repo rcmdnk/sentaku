@@ -106,4 +106,4 @@ d: echo ddd
   echo "$menu" | _sf_main
 } # }}}
 
-echo "$menu" | _sf_main $*
+echo "$menu" | _sf_main "$@"

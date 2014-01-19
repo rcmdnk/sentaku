@@ -516,4 +516,4 @@ _sf_select () { # {{{
   fi
 } # }}}
 
-_sf_main $*
+_sf_main "$@"

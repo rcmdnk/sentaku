@@ -203,7 +203,7 @@ _sf_check_args () { # {{{
       "-d" ) _s_delete=1;shift;;
       "-p" )
         shift
-        _sf_push $*
+        _sf_push "$@"
         return 0
         ;;
       "-h" )
@@ -361,18 +361,18 @@ _sf_printall () { # usage: _sf_printall offset select {{{
 
 _sf_echo () { # {{{
   clear >/dev/tty
-  printf "$*""\n" >/dev/tty
+  printf "$@""\n" >/dev/tty
   _sf_wait
 } # }}}
 
 _sf_echo_debug () { # {{{
   if [ $_SENTAKU_DEBUG -gt 0 ];then
-    _sf_echo "$*"
+    _sf_echo "$@"
   fi
 } # }}}
 
 _sf_echo_printall () { # {{{
-  _sf_echo "$*"
+  _sf_echo "$@"
   _sf_printall
 } # }}}
 
@@ -751,7 +751,7 @@ _sf_push () { # {{{
   _sf_initialize
 
   # Set input
-  local input="$*"
+  local input="$@"
   shift $#
   if [ $_s_stdin -eq 1 ];then
     input=$(cat -)
@@ -784,7 +784,7 @@ _sf_main () { # {{{
   _sf_initialize
 
   # Get arguments
-  _sf_check_args $*
+  _sf_check_args "$@"
   local ret=$?
   if [ $ret -ne 10 ];then
     return $ret
@@ -918,5 +918,5 @@ _sf_main () { # {{{
 # Execute if stdin is available
 #if [ ! -t 0 ];then
 if [ -p /dev/stdin ];then
-  _sf_main $*
+  _sf_main "$@"
 fi

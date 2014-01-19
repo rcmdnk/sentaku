@@ -18,4 +18,4 @@ _sf_l () {
   _sf_echo_printall "$(pwd;ls)"
 }
 
-_sf_main $*
+_sf_main "$@"

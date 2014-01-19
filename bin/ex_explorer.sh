@@ -178,5 +178,5 @@ _sf_v () { # {{{
   _sf_quit
 } # }}}
 
-echo "$menu" | _sf_main $*
+echo "$menu" | _sf_main "$@"
 
