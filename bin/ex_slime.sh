@@ -48,8 +48,11 @@ Arguments:
    -h   Print this HELP and exit
 "
 
-_sf_setheader () { # {{{
-  local slime="
+_sf_setheader_mine () { # {{{
+  local slime=""
+  local message="$_s_message"
+  if [ $_s_lines -ge 28 ];then
+    slime="
               66
               66
               66
@@ -66,14 +69,19 @@ _sf_setheader () { # {{{
   66666600000000000000666666
     666666666666666666666
 "
-  slime="$(echo "$slime"|sed 's/\([0-9]\)/\\e[4\1m \\e[m/g')"
-  _s_header="$slime
+    slime="$(echo "$slime"|sed 's/\([0-9]\)/\\e[4\1m \\e[m/g')"
+    message="${slime}
 
-
-$_s_message
+${_s_message}"
+  fi
+  _s_header="${message}
 
 $_s_your_info
 "
+} # }}}
+
+_sf_setheader () { # {{{
+  _sf_setheader_mine
 } # }}}
 
 _sf_sudden_death () { # {{{
@@ -89,7 +97,7 @@ _sf_sudden_death () { # {{{
     _s_message="\e[41m
 _/\/\/\/\/\/\/\_
 > Sudden Death <
- \/\/\/\/\/\/\/
+ \/\/\/\/\/\/\/ 
 \e[m
 "
   fi
@@ -128,8 +136,8 @@ _sf_check_args () { # {{{
     _s_weapon=$_YOUR_WEAPON_EN
     _s_weapon_message="Weapon: $_s_weapon"
     _s_your_spells=("${_YOUR_SPELLS_EN[@]}")
-    _s_spell_message="Spell: $(for i in ${#$_YOUR_SPELLS_EN};do \
-      echo -n " $_YOUR_SPELLS_EN[$i]}: MP ${_YOUR_SPELLS_MP[$i]}";done)"
+    _s_spell_message="Spell: $(for i in ${#_YOUR_SPELLS_EN};do \
+      echo " ${_YOUR_SPELLS_EN[$i]}: MP ${_YOUR_SPELLS_MP[$i]} Required";done)"
     _s_spells_message="Spell: ${_s_spells[@]}"
     _s_item_message="No Item"
     _s_fight_command=" ${_s_your_name} attacks!"
@@ -171,8 +179,9 @@ _sf_initialize_user () { # {{{
   _s_weapon="$_YOUR_WEAPON"
   _s_weapon_message="武器: $_s_weapon"
   _s_your_spells=("${_YOUR_SPELLS[@]}")
-  _s_spell_message="魔法: $(for i in ${#$_YOUR_SPELLS};do \
-    echo -n " $_YOUR_SPELLS[$i]}: MP ${_YOUR_SPELLS_MP[$i]}";done)"
+  _s_spell_message="魔法:
+$(for ((i=0; i<${#_s_your_spells[@]}; i++));do \
+    echo " ${_YOUR_SPELLS[$i]}: 消費MP ${_YOUR_SPELLS_MP[$i]}";done)"
   _s_item_message="何も持ってない"
   _s_command=" コマンド:"
   _s_your_info=" $_s_your_name HP: $_s_your_hp MP: $_s_your_mp"
@@ -274,6 +283,10 @@ _sf_slime_attack () { # {{{
     return
   fi
   _s_your_hp=$((_s_your_hp-_s_slime_attack))
+  _s_message_tmp="$1 $_s_slime_attack $_s_damage"
+} # }}}
+
+_sf_your_info () { # {{{
   if [ $_s_your_hp -lt 0 ];then
     _s_your_hp=0
     _s_your_info=" \e[34m$_s_your_name HP: $_s_your_hp MP: $_s_your_mp\e[m"
@@ -282,9 +295,7 @@ _sf_slime_attack () { # {{{
   else
     _s_your_info=" $_s_your_name HP: $_s_your_hp MP: $_s_your_mp"
   fi
-  _s_message_tmp="$1 $_s_slime_attack $_s_damage"
 } # }}}
-
 _sf_slime_heal () { # {{{
   local cur_hp=$_s_slime_hp
   _s_slime_hp=$((_s_slime_hp+_s_slime_heal))
@@ -300,6 +311,7 @@ _sf_check_hp () { # {{{
 
 _sf_new_message () { # {{{
   _s_message="$1"
+  _sf_your_info
   _sf_setview
   _sf_echo "${_s_header}"
 } # }}}
@@ -431,8 +443,6 @@ _sf_1 () { # SPELL {{{
 } # }}}
 
 _sf_spell () { # {{{
-  local header="$_s_header"
-
   . sentaku -n
 
   spells="${_s_your_spells[@]}"
@@ -442,7 +452,17 @@ _sf_spell () { # {{{
   }
 
   _sf_setheader () {
-    _s_header="$header"
+    _sf_setheader_mine
+  }
+
+  _sf_s () {
+    local i
+    for((i=0; i<${#_s_your_spells[@]}; i++));do
+      if [ $_s_current_n -eq $i ];then
+        _sf_new_message " ${_YOUR_SPELLS[$i]}: 消費MP ${_YOUR_SPELLS_MP[$i]}"
+      fi
+      _sf_command_reset
+    done
   }
 
   echo "${_s_your_spells[@]}"| _sf_main

@@ -116,7 +116,7 @@ _sf_select () { # {{{
 
 _sf_setheader () { # {{{
   _s_header=""
-  if [ $_s_noheader != 1 ];then
+  if [ $_s_noheader != 1 -a $_s_lines -gt 10 ];then
     local curdir=$(pwd)
     if [ $((${#curdir}+1)) -gt $_s_cols ];then
       if [ "$ZSH_NAME" = "zsh" ];then

@@ -5,7 +5,7 @@
 . sentaku -n
 
 _SENTAKU_SEPARATOR=$'\n'
-_SENTAKU_NONUMBER=1
+_SENTAKU_NOHEADER=1
 _SENTAKU_NONUMBER=1
 
 menu="a: Keyboard Input
@@ -15,47 +15,58 @@ d: date
 e: more
 "
 
+_sf_initialize_user () {
+  _s_selected=""
+}
+
 _sf_execute () {
-  local n=${1:-0}
-  if [ $n -eq 0 ];then
-    # Save current display
-    tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
-    echo "Enter words: " >/dev/tty
-    read word </dev/tty
-    # Restore display
-    tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
-    echo "$word"
-  elif [ $n -eq 1 ];then
-    ls
-  elif [ $n -eq 2 ];then
-    pwd
-  elif [ $n -eq 3 ];then
-    date
-  elif [ $n -eq 4 ];then
-    local more_ret=$(_sf_more)
-    echo "$more_ret"
-  fi
+  echo "$_s_selected"
 }
 
 _sf_a () {
-  _s_current_n=0
+  # clear after selection
+  clear >/dev/tty
+
+  echo "Enter words: " >/dev/tty
+  # Show cursor
+  tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
+  read _s_selected </dev/tty
+
   _s_break=1
 }
 _sf_b () {
-  _s_current_n=1
+  _s_selected=$(ls)
   _s_break=1
 }
 _sf_c () {
-  _s_current_n=2
+  _s_selected=$(pwd)
   _s_break=1
 }
 _sf_d () {
-  _s_current_n=3
+  _s_selected=$(date)
   _s_break=1
 }
 _sf_e () {
-  _s_current_n=4
-  _s_break=1
+  _s_selected=$(_sf_more)
+  if [ "$_s_selected" != "" ];then
+    _s_break=1
+  else
+    _sf_printall
+  fi
+}
+
+_sf_select () {
+  if [ $_s_current_n -eq 0 ];then
+    _sf_a
+  elif [ $_s_current_n -eq 1 ];then
+    _sf_b
+  elif [ $_s_current_n -eq 2 ];then
+    _sf_c
+  elif [ $_s_current_n -eq 3 ];then
+    _sf_d
+  elif [ $_s_current_n -eq 4 ];then
+    _sf_e
+  fi
 }
 
 _sf_more () { # {{{
@@ -66,14 +77,14 @@ _sf_more () { # {{{
   _SENTAKU_NOHEADER=1
   _SENTAKU_NONUMBER=1
 
-  menu="a: aaa
-b: bbb
-c: ccc
-d: ddd
+  menu="a: echo aaa
+b: echo bbb
+c: echo ccc
+d: echo ddd
 "
 
   _sf_execute () {
-    echo ${_s_inputs[$_s_current_n]: 3}
+    echo ${_s_inputs[$_s_current_n]: 7}
   }
 
   _sf_a () {
@@ -95,4 +106,4 @@ d: ddd
   echo "$menu" | _sf_main
 } # }}}
 
-echo "$menu" | _sf_main
+echo "$menu" | _sf_main $*
