@@ -327,6 +327,9 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
 } # }}}
 
 _sf_printall () { # usage: _sf_printall offset select {{{
+  _s_lines=$(tput lines)
+  _s_cols=$(tput cols)
+
   _sf_setview
 
   local offset=${1-$_s_n_offset}
@@ -360,7 +363,7 @@ _sf_echo_printall () { # {{{
 
 _sf_setheader () { # {{{
   _s_header=""
-  if [ $_s_noheader != 1 ];then
+  if [ $_s_noheader != 1 -o $_s_lines -ge 10 ];then
     if [ $_s_stdin -eq 0 -a $_s_delete -eq 1 ];then
       if [ $_s_cols -ge 66 ];then
         _s_header=" $_s_n values in total
@@ -783,8 +786,6 @@ _sf_main () { # {{{
   _sf_hide
 
   # First view
-  _s_lines=$(tput lines)
-  _s_cols=$(tput cols)
   _sf_printall
 
   # Select value

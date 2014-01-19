@@ -162,7 +162,7 @@ _sf_initialize_user () { # {{{
   _s_your_hp=$_YOUR_HP
   _s_your_hp_max=$_YOUR_HP
   _s_your_mp=$_YOUR_MP
-  _s_slime_hp=$((_SLIME_MIN_HP+RANDOM%(_SLIME_MAXHP-_SLIME_MIN_HP+1)))
+  _s_slime_hp=$((_SLIME_MIN_HP+RANDOM%(_SLIME_MAX_HP-_SLIME_MIN_HP+1)))
   _s_slime_this_max_hp=$_s_slime_hp
   [ $_s_slime_hp -eq 0 ] && _s_slime_hp=1
   _s_lang="ja"
@@ -203,7 +203,7 @@ _sf_finzlize_user () { # {{{
 } # }}}
 
 _sf_win () { # {{{
-  _s_message="\e[5;42m
+  _s_message="\e[1;5;35;42m
  __     __          __          ___       _ 
  \ \   / /          \ \        / (_)     | |
   \ \_/ /__  _   _   \ \  /\  / / _ _ __ | |
@@ -218,7 +218,7 @@ _sf_win () { # {{{
 } # }}}
 
 _sf_lose () { # {{{
-  _s_message="\e[5;44m
+  _s_message="\e[1;5;31;44m
  __     __           _                    _ 
  \ \   / /          | |                  | |
   \ \_/ /__  _   _  | |     ___  ___  ___| |
@@ -453,7 +453,7 @@ _sf_2 () { # RUN {{{
     _sf_sudden_death
   else
     _sf_attacks 0 0 0\
-                ${slime_power[0]} ${slime_power[1]} $slime_power_miss
+                ${_SLIME_POWER[0]} ${_SLIME_POWER[1]} $_SLIME_POWER_MISS
     _sf_message 1 "$_s_run_command" 0 "$_s_slime_fight" 1
   fi
 } # }}}
