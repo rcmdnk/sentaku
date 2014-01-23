@@ -12,6 +12,7 @@ _SENTAKU_DEBUG=0
 _sf_initialize () { # {{{
   # Set variables
   _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
+  _s_use_file=0
   _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
   _s_inputs=()
   _s_n=0
@@ -47,16 +48,31 @@ Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 
 Arguments:
    -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+   -F <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+              and use the list in the file for sentaku window instead of pipe's input.
    -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
               If <sep> is \"line\", \$'\\n' is set as a separator.
-   -H         Header is shown at selection mode
-   -N         No nubmers are shown
-   -l         Show last words instead of starting words for longer lines
-   -a         Align input list (set selected one to the first)
-   -d         Enable Delete in selection mode
-   -p         Push words to the file
+   -H         Header is shown at sentaku window.
+   -N         No nubmers are shown.
+   -l         Show last words instead of starting words for longer lines.
+   -a         Align input list (set selected one to the first).
+   -d         Enable Delete at sentaku window.
+   -m         Execute main function even if it is not after pipe.
+   -p         Push words to the file.
    -n         Don't run functions, to just source this file
    -h         Print this HELP and exit
+
+Key operation at sentaku window:
+   n(any number) Set number. Multi digit can be used (13, 320, etc...).
+                 Used/reset by other key.
+   j/k        Up/Down (if n is given, n-th up/n-th down).
+   ^U/^D      Half page down/Half page down.
+   ^B/^F      Page up/Page down.
+   gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
+   d          Delete current candidate. (in case you use input file.)
+   s          Show detail of current candidate.
+   q/Esc      Quit.
+   Ener/Space Select and Quit.
 "}
 
   # Fix array for zsh
@@ -87,6 +103,7 @@ _sf_finalize () { # {{{
 
   # Release variables
   unset _s_file
+  unset _s_use_file
   unset _s_s
   unset _s_inputs
   unset _s_n
@@ -116,6 +133,12 @@ _sf_finalize () { # {{{
 
   [ "x$_s_zsh_ksharrays" != "x" ] && [ $_s_zsh_ksharrays -eq 1 ] && unsetopt ksharrays
   unset _s_zsh_ksharrays
+
+  unset _s_is_noexec
+  unset _s_is_help
+  unset _s_is_file
+  unset _s_is_main
+  unset _s_is_push
 
   _sf_finalize_user
 
@@ -182,9 +205,9 @@ _sf_check_args () { # {{{
     case $1 in
       "-f" )
         _s_file=$2
+        _s_use_file=1
         if [ "$_s_file" = "" ];then
           echo "ERROR: empty input was given with -i" >/dev/tty
-          _sf_wait
           return 1
         fi
         shift 2
@@ -208,12 +231,10 @@ _sf_check_args () { # {{{
         ;;
       "-h" )
         echo "$_s_help" >/dev/tty
-        _sf_wait
         return 0
         ;;
       * )
         echo "$_s_help" >/dev/tty
-        _sf_wait
         return 1
         ;;
     esac
@@ -234,7 +255,11 @@ _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
   touch "$_s_file"
   local orig_ifs=$IFS
   IFS="$_s_s"
-  [ $stdin -eq 0 ] && _s_inputs=($(cat "$_s_file")) || _s_inputs=($(cat -))
+  if [ $stdin -eq 0 -o $_s_use_file -eq 1 ];then
+    _s_inputs=($(cat "$_s_file"))
+  else
+    _s_inputs=($(cat -))
+  fi
   IFS=$orig_ifs
   if [ "x$ZSH_VERSION" != "x" ];then
     # Fix array for ZSH
@@ -249,7 +274,7 @@ _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
   _s_n=${#_s_inputs[@]}
 
   if [ $check -eq 1 -a $_s_n -eq 0 ];then
-    if [ $stdin -eq 0 ];then
+    if [ $stdin -eq 0 -o $_s_use_file -eq 1 ];then
       printf "No value in $_s_file\n\n" >/dev/tty
     else
       printf "No value in stdin\n\n" >/dev/tty
@@ -378,36 +403,36 @@ _sf_echo_printall () { # {{{
 
 _sf_setheader () { # {{{
   _s_header=""
-  if [ $_s_noheader != 1 -a $_s_lines -ge 10 ];then
-    if [ $_s_stdin -eq 0 -a $_s_delete -eq 1 ];then
-      if [ $_s_cols -ge 66 ];then
-        _s_header=" $_s_n values in total
- [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
- ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
- d(delete), Enter(select), q/Esc(quit)
+  if [ $_s_noheader = 1 -o $_s_lines -lt 10 ];then
+    return
+  elif [ $_s_delete -eq 1 ];then
+    if [ $_s_cols -ge 66 ];then
+      _s_header=" $_s_n values in total
+ [n]n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
+ ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
+ d(dete), Enter(select), q/Esc(quit)
 "
-      elif [ $_s_cols -ge 40 ];then
-        _s_header=" $_s_n values in total
- vim-like updown, e.g)j:up, k:down, gg/G
- d(delete), Enter(select), q/Esc(quit)
+    elif [ $_s_cols -ge 40 ];then
+      _s_header=" $_s_n values in total
+ vimike updown, e.g)j:up, k:down, gg/G
+ d(dete), Enter(select), q/Esc(quit)
 "
-      fi
-
+    fi
+  else
+    if [ $_s_cols -ge 66 ];then
+      _s_header=" $_s_n values in total
+ [j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
+ ^Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
+ Eer(select), q/Esc(quit)
+"
     else
-      if [ $_s_cols -ge 66 ];then
-        _s_header=" $_s_n values in total
- [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
- ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
- Enter(select), q/Esc(quit)
+      _s_header=" $_s_n values in total
+ v-like updown, e.g)j:up, k:down, gg/G
+ Eer(select), q/Esc(quit)
 "
-      else
-        _s_header=" $_s_n values in total
- vim-like updown, e.g)j:up, k:down, gg/G
- Enter(select), q/Esc(quit)
-"
-      fi
     fi
   fi
+  
 }  # }}}
 
 _sf_setview () { # {{{
@@ -743,6 +768,9 @@ _sf_Z () { # {{{
 } # }}}
 
 _sf_push () { # {{{
+
+  _sf_echo_debug "_sf_push start"
+
   # Set trap
   trap "_sf_clear;return 1" 1 2 3 15
   trap "_sf_finalize" 0
@@ -766,15 +794,15 @@ _sf_push () { # {{{
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
 
+  echo "$input" is stored in $_s_file
+
   # Finalization
   _sf_finalize
 } # }}}
 
 _sf_main () { # {{{
-  # Check only source or not
-  if [ $# -ge 1 -a "$1" = "-n" ];then
-    return 0
-  fi
+
+  _sf_echo_debug "_sf_main start"
 
   # Set trap
   trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" 1 2 3 15
@@ -914,8 +942,42 @@ _sf_main () { # {{{
   _sf_finalize
 } # }}}
 
-# Execute if stdin is available
+_s_is_noexec=0
+_s_is_help=0
+_s_is_file=0
+_s_is_main=0
+_s_is_push=0
+# {{{
+_sf_check_args_first () {
+  if [ "$*" = "-h" ];then
+    _s_is_noexec=1
+  elif [ "$1" = "-n" ];then
+    _s_is_push=1
+  elif [ "$1" = "-m" ];then
+    _s_is_main=1
+  elif [ "$1" = "-p" ];then
+    _s_is_push=1
+  elif echo "$*"|grep "\-F ";then
+    _s_is_file=1
+  fi
+} # }}}
+
+_sf_check_args_first "$@"
+
+# Execute if stdin is available, or any of help/file/push is on
 #if [ ! -t 0 ];then
-if [ -p /dev/stdin ];then
-  _sf_main "$@"
+if [ $_s_is_noexec -eq 0 ];then
+  if [ $_s_is_main -eq 1 ];then
+    shift
+  fi
+  if [ -p /dev/stdin ] || [ $_s_is_help -eq 1 ] || [ $_s_is_file -eq 1 ] || [ $_s_is_main -eq 1 ];then
+    _sf_main "$@"
+  fi
 fi
+
+# Clean up
+unset _s_is_noexec
+unset _s_is_help
+unset _s_is_file
+unset _s_is_main
+unset _s_is_push

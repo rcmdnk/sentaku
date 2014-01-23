@@ -14,7 +14,7 @@ Usage: ex_explorer.sh [-aHNl] [-f <file>] [-s <sep>]
 
 Arguments:
    -a         Show
-   -H         Header is shown at selection mode
+   -H         Header is shown at sentaku window
    -N         No nubmers are shown
    -l         Show last words instead of starting words for longer lines
    -h         Print this HELP and exit
