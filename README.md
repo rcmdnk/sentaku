@@ -177,12 +177,9 @@ Usage:
 * ./ex_slime.sh -e # English
 
 
+* Demo:
 
-# To do
-
-Fix error at trap for subshell case (ex_pipe.sh case)
-
-    stty: tcsetattr: Input/output error
+[![slime](http://rcmdnk.github.io/images/post/20140123_slime.jpg)](http://asciinema.org/a/7340)
 
 # License
 

@@ -135,7 +135,7 @@ _sf_check_args () { # {{{
     _s_your_spells=("${_YOUR_SPELLS_EN[@]}")
     _s_spell_message="Spell:
 $(for ((i=0; i<${#_s_your_spells[@]}; i++));do \
-      echo " ${_YOUR_SPELLS_EN[$i]}: MP ${_YOUR_SPELLS_MP[$i]} Required";done)"
+      echo " ${_s_your_spells[$i]}: MP ${_YOUR_SPELLS_MP[$i]} Required";done)"
     _s_spells_message="Spell: ${_s_spells[@]}"
     _s_item_message="No Item"
     _s_command=" Command:"
@@ -458,7 +458,7 @@ _sf_spell () { # {{{
     local i
     for((i=0; i<${#_s_your_spells[@]}; i++));do
       if [ $_s_current_n -eq $i ];then
-        _sf_new_message " ${_YOUR_SPELLS[$i]}: 消費MP ${_YOUR_SPELLS_MP[$i]}"
+        _sf_new_message " ${_s_your_spells[$i]}: MP ${_YOUR_SPELLS_MP[$i]}"
       fi
       _sf_command_reset
     done
