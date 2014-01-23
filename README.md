@@ -68,34 +68,49 @@ In cas there any directory/file names which have spaces, use line break as a sep
     $ ls | sentaku -s $'\n'
 
 If you want to use input file instead of pipe,
-use `sentaku -f <file>`.
+use `sentaku -F <file>`.
 
-Other options are:
+
+Other options and key operations at sentaku window are::
 
     Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
     
     Arguments:
-       -f <file>  Set iput file (default: ~/.sentaku_input)
-       -s <sep>   Set separtor (default:
-    )
-                  If <sep> is "line", $'\n' is set as a separator.
-       -H         Header is shown at sentaku window
-       -N         No nubmers are shown
-       -l         Show last words instead of starting words for longer lines
-       -a         Align input list (set selected one to the first)
-       -d         Enable Delete at sentaku window
-       -p         Push words to the file
+       -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+       -F <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+                  and use the list in the file for sentaku window instead of pipe's input.
+       -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+                  If <sep> is \"line\", \$'\\n' is set as a separator.
+       -H         Header is shown at sentaku window.
+       -N         No nubmers are shown.
+       -l         Show last words instead of starting words for longer lines.
+       -a         Align input list (set selected one to the first).
+       -d         Enable Delete at sentaku window.
+       -m         Execute main function even if it is not after pipe.
+                  (e.g. "-m -f <file>" == "-F <file>")
+       -p         Push words to the file.
        -n         Don't run functions, to just source this file
        -h         Print this HELP and exit
-
+    
+    Key operation at sentaku window:
+       n(any number) Set number. Multi digit can be used (13, 320, etc...).
+                     Used/reset by other key.
+       j/k        Up/Down (if n is given, n-th up/n-th down).
+       ^U/^D      Half page down/Half page down.
+       ^B/^F      Page up/Page down.
+       gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
+       d          Delete current candidate. (in case you use input file.)
+       s          Show detail of current candidate.
+       q/Esc      Quit.
+       Ener/Space Select and Quit.
 
 Example: [expipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh)
-
-## Key operation at sentaku window
 
 ## Use as a library
 
 You can use sentaku as a library for your shell script.
+
+### Simple examples to use like snippet
 
 The easiest examples are:
 
@@ -108,9 +123,11 @@ and select one from it.
 The separator is `$'\x07'` (BELL), therefore you can store even sentences in the list file (can be used as a snippet application).
 
 These two are examples for Bash and Zsh, respectively.
-(only shebang is different.)
+(only the shebang is different.)
 
+### Example: Explorer
 
+* [ex_explorer.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_explorer.sh)
 
 # To do
 

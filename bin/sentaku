@@ -386,7 +386,7 @@ _sf_printall () { # usage: _sf_printall offset select {{{
 
 _sf_echo () { # {{{
   clear >/dev/tty
-  printf "$@""\n" >/dev/tty
+  printf "%s\n" "$*" >/dev/tty
   _sf_wait
 } # }}}
 
