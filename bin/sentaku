@@ -83,7 +83,7 @@ _sf_finalize () { # {{{
   tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
   # Enable echo input
-  [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty echo
+  [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty echo 2>/dev/null
 
   # Release variables
   unset _s_file
@@ -777,7 +777,6 @@ _sf_main () { # {{{
   fi
 
   # Set trap
-  #trap "_sf_echo at HUP;_sf_clear;_sf_finalize;[ -z "$PS1" ] && exit 1 || return 1" 1 2 3 15
   trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" 1 2 3 15
 
   # Initializatoin
@@ -816,17 +815,17 @@ _sf_main () { # {{{
     _sf_read
     case $_s_read in
       $'\x04'|$'\x06' ) # ^D/^F
-        if [ $c = $'\x04' ];then
+        if [ $_s_read = $'\x04' ];then
           _s_n_move=$((_s_max_show/2))
-        elif [ $c = $'\x06' ];then
+        elif [ $_s_read = $'\x06' ];then
           _s_n_move=$((_s_max_show))
         fi
         _sf_move_up
         ;;
       $'\x15'|$'\x02' ) # k/^U/^B
-        if [ $c = $'\x15' ];then
+        if [ $_s_read = $'\x15' ];then
           _s_n_move=$((_s_max_show/2))
-        elif [ $c = $'\x02' ];then
+        elif [ $_s_read = $'\x02' ];then
           _s_n_move=$((_s_max_show))
         fi
         _sf_move_down

@@ -3,6 +3,12 @@ sentaku
 
 Utility to make selection (sentaku:選択) window with shell command.
 
+![sentaku](http://rcmdnk.github.io/images/post/20140123_sentaku.gif)
+
+If you pass multi-word to sentaku by pipe at command line,
+you can choose one of them in the selection window
+then selected one will be returned.
+
 # Installation
 
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
@@ -38,6 +44,11 @@ If you want to install other directory, do like:
     $ curl -fsSL https://raw.github.com/rcmdnk/sentaku/install/install.sh|  prefix=~/usr/local/ sh
 
 Or, simply download scripts and set where you like.
+
+# Usage
+
+## Standalone
+
 
 
 # To do
