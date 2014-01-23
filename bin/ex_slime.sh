@@ -129,17 +129,19 @@ _sf_check_args () { # {{{
     esac
   done
   if [ $_s_lang = "en" ];then
-    _s_command=" Command:"
-    _s_message=" A $_SLIME_NAME_EN Draws Near! $_s_command
-"
     _s_your_name="${_YOUR_NAME_EN}"
     _s_weapon=$_YOUR_WEAPON_EN
     _s_weapon_message="Weapon: $_s_weapon"
     _s_your_spells=("${_YOUR_SPELLS_EN[@]}")
-    _s_spell_message="Spell: $(for i in ${#_YOUR_SPELLS_EN};do \
+    _s_spell_message="Spell:
+$(for ((i=0; i<${#_s_your_spells[@]}; i++));do \
       echo " ${_YOUR_SPELLS_EN[$i]}: MP ${_YOUR_SPELLS_MP[$i]} Required";done)"
     _s_spells_message="Spell: ${_s_spells[@]}"
     _s_item_message="No Item"
+    _s_command=" Command:"
+    _s_your_info=" $_s_your_name HP: $_s_your_hp MP: $_s_your_mp"
+    _s_message=" A $_SLIME_NAME_EN Draws Near! $_s_command
+"
     _s_fight_command=" ${_s_your_name} attacks!"
     _sf_spell_command () { echo " ${_s_your_name} casts $1!";}
     _s_run_command=" Failed to escape!"
@@ -148,7 +150,7 @@ _sf_check_args () { # {{{
     _s_damage="damage!"
     _sf_cured () { echo "HP ${1} cured!";}
     _s_failed=" Failed!"
-    _s_nomp=" No MP remained!"
+    _s_nomp=" No enough MP remained!"
     _s_attacks="
 
 $_s_command"
@@ -296,6 +298,7 @@ _sf_your_info () { # {{{
     _s_your_info=" $_s_your_name HP: $_s_your_hp MP: $_s_your_mp"
   fi
 } # }}}
+
 _sf_slime_heal () { # {{{
   local cur_hp=$_s_slime_hp
   _s_slime_hp=$((_s_slime_hp+_s_slime_heal))
@@ -408,7 +411,7 @@ _sf_0 () { # FIGHT {{{
 _sf_1 () { # SPELL {{{
   local first=$((RANDOM%2))
   local spell=$(_sf_spell)
-  _sf_hide
+  #_sf_hide
   local is_attack=2
   if [ "$spell" = "${_s_your_spells[0]}" ];then
     local s_m=$(_sf_spell_command "$spell")
@@ -443,13 +446,9 @@ _sf_1 () { # SPELL {{{
 } # }}}
 
 _sf_spell () { # {{{
-  . sentaku -n
+  . sentaku -n -c
 
   spells="${_s_your_spells[@]}"
-
-  _sf_execute () {
-    echo "${_s_inputs[$_s_current_n]}"
-  }
 
   _sf_setheader () {
     _sf_setheader_mine

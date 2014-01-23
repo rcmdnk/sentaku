@@ -129,6 +129,55 @@ These two are examples for Bash and Zsh, respectively.
 
 * [ex_explorer.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_explorer.sh)
 
+It starts from current directory, show all files/directories.
+If you choose directory, the window goes to the chosen directory.
+
+At sentaku window:
+
+* `s`: Show details (ls -l)
+* `d`: Delete selected file/directory
+* `l`: Open file with `less`
+* `v`: Open file with `vim`
+* `Enter`/`Space`: Move the directly
+* `q`/`Esc`: Quit
+
+### Example: menu program
+
+* [ex_menu.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_menu.sh)
+
+For the first window, you can choose:
+
+* Keybaord Input
+* ls
+* pwd
+* date
+* more
+
+If you choose `Keyboard Input`, your input will be returned.
+`ls`, `pwd` and `date` return these commands results.
+
+If you choose `more`, you will go to the second window
+
+* echo aaa
+* echo bbb
+* echo ccc
+* echo ddd
+
+Each command return such `aaa`.
+
+If you put `q` here, you will be back to the first window.
+
+### Example: command game
+
+* [ex_slime.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_slime.sh)
+
+Usage:
+
+* ./ex_slime.sh # Japanese
+* ./ex_slime.sh -e # English
+
+
+
 # To do
 
 Fix error at trap for subshell case (ex_pipe.sh case)

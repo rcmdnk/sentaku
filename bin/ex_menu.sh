@@ -71,7 +71,7 @@ _sf_select () {
 
 _sf_more () { # {{{
 
-  . sentaku -n
+  . sentaku -n -c
 
   _SENTAKU_SEPARATOR=$'\n'
   _SENTAKU_NOHEADER=1

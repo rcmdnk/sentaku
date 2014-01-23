@@ -8,6 +8,7 @@ _SENTAKU_NOHEADER=0
 _SENTAKU_NONUMBER=0
 _SENTAKU_SHOWLAST=0
 _SENTAKU_DEBUG=0
+_SENTAKU_CHILD=0
 
 _sf_initialize () { # {{{
   # Set variables
@@ -59,6 +60,7 @@ Arguments:
    -d         Enable Delete at sentaku window.
    -m         Execute main function even if it is not after pipe.
    -p         Push words to the file.
+   -c         Load functions as a child process in other sentaku process.
    -n         Don't run functions, to just source this file
    -h         Print this HELP and exit
 
@@ -95,11 +97,13 @@ _sf_initialize_user () { # {{{
 } # }}}
 
 _sf_finalize () { # {{{
-  # Show cursor
-  tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
+  if [ $_SENTAKU_CHILD -eq 0 ];then
+    # Show cursor
+    tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
-  # Enable echo input
-  [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty echo 2>/dev/null
+    # Enable echo input
+    [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty echo 2>/dev/null
+  fi
 
   # Release variables
   unset _s_file
@@ -157,22 +161,27 @@ _sf_execute () { # {{{
 } # }}}
 
 _sf_hide () { # {{{
-  # Hide cursor
-  tput civis >/dev/tty 2>/dev/null || tput vi >/dev/tty 2>/dev/null
+  if [ $_SENTAKU_CHILD -eq 0 ];then
+    # Hide cursor
+    tput civis >/dev/tty 2>/dev/null || tput vi >/dev/tty 2>/dev/null
 
-  # Save current display
-  tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
+    # Save current display
+    tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
 
-  # Hide any input
-  [ $_s_stdin -eq 0 ] && stty -echo
+    # Hide any input
+    [ $_s_stdin -eq 0 ] && stty -echo
+  fi
 } # }}}
 
 _sf_clear () { # {{{
-  # clear after selection
-  clear >/dev/tty
+  if [ $_SENTAKU_CHILD -eq 0 ];then
+    _sf_echo_debug "sf_clear execute"
+    # clear after selection
+    clear >/dev/tty
 
-  # Restore display
-  tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
+    # Restore display
+    tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
+  fi
 } # }}}
 
 _sf_nth () { # {{{
@@ -224,6 +233,9 @@ _sf_check_args () { # {{{
       "-l" ) _s_showlast=1;shift;;
       "-a" ) _s_align=1;shift;;
       "-d" ) _s_delete=1;shift;;
+      "-c" ) shift;;
+      "-m" ) shift;;
+      "-n" ) shift;;
       "-p" )
         shift
         _sf_push "$@"
@@ -386,7 +398,7 @@ _sf_printall () { # usage: _sf_printall offset select {{{
 
 _sf_echo () { # {{{
   clear >/dev/tty
-  printf "%s\n" "$*" >/dev/tty
+  printf "$(echo "$*"|sed 's/^-/\\-/g')" >/dev/tty
   _sf_wait
 } # }}}
 
@@ -949,17 +961,18 @@ _s_is_main=0
 _s_is_push=0
 # {{{
 _sf_check_args_first () {
-  if [ "$*" = "-h" ];then
-    _s_is_noexec=1
-  elif [ "$1" = "-n" ];then
-    _s_is_push=1
-  elif [ "$1" = "-m" ];then
-    _s_is_main=1
-  elif [ "$1" = "-p" ];then
-    _s_is_push=1
-  elif echo "$*"|grep "\-F ";then
-    _s_is_file=1
-  fi
+  while [ $# -gt 0 ];do
+    _sf_echo_debug "args in _sf_check_args_first: $*"
+    case $1 in
+      "-h" ) _s_is_help=1;shift;;
+      "-n" ) _s_is_noexec=1;shift;;
+      "-c" ) _SENTAKU_CHILD=1;shift;;
+      "-m" ) _s_is_main=1;shift;;
+      "-p" ) _s_is_push=1;shift;;
+      "-F" ) _s_is_file=1;shift;;
+    * )break;;
+    esac
+  done
 } # }}}
 
 _sf_check_args_first "$@"
@@ -967,9 +980,6 @@ _sf_check_args_first "$@"
 # Execute if stdin is available, or any of help/file/push is on
 #if [ ! -t 0 ];then
 if [ $_s_is_noexec -eq 0 ];then
-  if [ $_s_is_main -eq 1 ];then
-    shift
-  fi
   if [ -p /dev/stdin ] || [ $_s_is_help -eq 1 ] || [ $_s_is_file -eq 1 ] || [ $_s_is_main -eq 1 ];then
     _sf_main "$@"
   fi
