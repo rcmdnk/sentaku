@@ -649,7 +649,7 @@ _sf_r () { # {{{
   :
 } # }}}
 _sf_s () { # {{{
-  _sf_echo_printall "$(_sf_nth $((_s_current_n))) value:
+  _sf_echo "$(_sf_nth $((_s_current_n))) value:
 
 ${_s_inputs[$_s_current_n]}"
 } # }}}
@@ -839,9 +839,6 @@ _sf_main () { # {{{
   # Hide displays
   _sf_hide
 
-  # First view
-  _sf_printall
-
   # Select value
   _s_current_n=0
   _s_n_offset=0
@@ -852,6 +849,7 @@ _sf_main () { # {{{
   tput cup $cursor_r 0 >/dev/tty
 
   while : ;do
+    _sf_printall
     _sf_read
     case $_s_read in
       $'\x04'|$'\x06' ) # ^D/^F

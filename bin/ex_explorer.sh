@@ -108,10 +108,8 @@ _sf_select () { # {{{
    _s_g=0
    _s_n_move=0
    _sf_get_values
-   _sf_printall
  else
    _sf_echo "${_s_inputs[$_s_current_n]} is not a directory"
-   _sf_printall
  fi
 } # }}}
 
@@ -161,11 +159,10 @@ _sf_d () {
     rm -rf ${_s_inputs[$_s_current_n]}
   fi
   _sf_get_values
-  _sf_printall
 }
 
 _sf_s () { # {{{
-  _sf_echo_printall $(ls -l "${_s_inputs[$_s_current_n]}")
+  _sf_echo $(ls -l "${_s_inputs[$_s_current_n]}")
 } # }}}
 
 _sf_l () { # {{{

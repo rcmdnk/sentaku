@@ -319,6 +319,11 @@ _sf_new_message () { # {{{
   _sf_echo "${_s_header}"
 } # }}}
 
+_sf_command_reset () { # {{{
+  _s_message="$_s_command
+"
+} # }}}
+
 _sf_message () { # is_you_first your_message is_attack slime_message is_attack {{{
   _s_first_message=$2
   if [ $1 -eq 0 ];then
@@ -395,12 +400,6 @@ $_s_second_message"
   _sf_command_reset
 } # }}}
 
-_sf_command_reset () { # {{{
-  _s_message="$_s_command
-"
-  _sf_printall
-} # }}}
-
 _sf_0 () { # FIGHT {{{
   local first=$((RANDOM%2))
   _sf_attacks ${_YOUR_WEAPON_POWER[0]} ${_YOUR_WEAPON_POWER[1]} $_YOUR_WEAPON_MISS \
@@ -459,8 +458,9 @@ _sf_spell () { # {{{
     for((i=0; i<${#_s_your_spells[@]}; i++));do
       if [ $_s_current_n -eq $i ];then
         _sf_new_message " ${_s_your_spells[$i]}: MP ${_YOUR_SPELLS_MP[$i]}"
+        _sf_command_reset
+        break
       fi
-      _sf_command_reset
     done
   }
 

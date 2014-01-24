@@ -50,8 +50,6 @@ _sf_e () {
   _s_selected=$(_sf_more)
   if [ "$_s_selected" != "" ];then
     _s_break=1
-  else
-    _sf_printall
   fi
 }
 

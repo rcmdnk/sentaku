@@ -3,7 +3,7 @@ sentaku
 
 Utility to make sentaku (selection, 選択(sentaku)) window with shell command.
 
-![sentaku](http://rcmdnk.github.io/images/post/20140123_sentaku.gif)
+![sentaku](http://rcmdnk.github.io/images/post/20140124_sentaku.gif)
 
 If you give multi-word to sentaku by pipe at command line,
 you can choose one of them in the sentaku window
@@ -135,7 +135,7 @@ If you simply add new key operation, make a script like:
 $!/usr/bin/env bash
 . sentaku -n
 _sf_a () {
-  echo "You pushed a!"
+  _sf_echo "You pushed a!"
 }
 _sf_main "$@"
 ```
@@ -149,6 +149,7 @@ In the last, call `_sf_main` function with arguments (`$@`).
 Save this script as `my_sentaku.sh`, then you can use it as same as
 original sentaku command.
 In addition, you can see `You pushed a!` when you push `a`.
+To show something, use `_sf_echo` instead of `echo`.
 
 More examples can be found below.
 
@@ -201,17 +202,33 @@ In this script, this function is redefined like:
 _sf_select () {
   cd ${_s_inputs[$_s_current_n]}
   ...
-   _sf_printall
 }
 ```
 
-It does `cd` and something, and the last, 
-it calls `_sf_printall` function, which prints a header and items again.
+It does `cd` to currently selected directory (`${_s_inputs[$_s_current_n]}`),
+
+`_s_current_n` is currently selected number (same as the number in the left of the list.)
+`_s_inputs` is an array which is made from the input.
+Therefore, `${_s_inputs[$_s_current_n]}` is currently selected value.
+
 And it does not set `_s_break` flag,
 therefore it stays in key operation (sentaku window).
 
 If you want to break with any key, you can change `_s_break` flag in 
 corresponding function.
+
+
+Another point: `_sf_l` is defined as:
+
+``` sh
+_sf_l () { # {{{
+  clear >/dev/tty
+  less ${_s_inputs[$_s_current_n]} >/dev/tty </dev/tty
+  _sf_quit
+} # }}}
+```
+
+In this script, it opens selected file: `${_s_inputs[$_s_current_n]}`.
 
 ### Example: menu program
 
@@ -260,9 +277,9 @@ Usage:
 * ./ex_slime.sh -e # English
 
 
-* Demo:
+* [Demo](http://asciinema.org/a/7340):
 
-[![slime](http://rcmdnk.github.io/images/post/20140123_slime.jpg)](http://asciinema.org/a/7340)
+[![slime](http://rcmdnk.github.io/images/post/20140124_slime.jpg)](http://asciinema.org/a/7340)
 
 # License
 
