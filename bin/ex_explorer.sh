@@ -4,6 +4,7 @@
 . sentaku -n
 
 _SENTAKU_SEPARATOR=$'\n'
+_SENTAKU_EDITOR=""
 
 # New variable
 _s_a=0
@@ -129,14 +130,14 @@ _sf_setheader () { # {{{
       _s_header=" $curdir
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
- s(show detail), d(delete), l(open with less), v(open with vim)
+ s(show detail), d(delete), l(open with less), e(edit the file)
  Enter(select, move to the directory), q/Esc(quit)
 "
     elif [ $_s_cols -ge 42 ];then
       _s_header=" $curdir
  vim-like updown, e.g)j:up, k:down, gg/G
  s(show detail), d(delete),
- l(open with less), v(open with vim)
+ l(open with less), e(edit the file)
  Enter(move to the directory), q/Esc(quit)
 "
     fi
@@ -173,8 +174,10 @@ _sf_l () { # {{{
   _sf_quit
 } # }}}
 
-_sf_v () { # {{{
-  vim ${_s_inputs[$_s_current_n]} >/dev/tty </dev/tty
+_sf_e () { # {{{
+  local e=${_SENTAKU_EDITOR:-${EDITOR}}
+  e=${e:-vim}
+  $e ${_s_inputs[$_s_current_n]} >/dev/tty </dev/tty
   _sf_quit
 } # }}}
 

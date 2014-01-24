@@ -104,11 +104,53 @@ Other options and key operations at sentaku window are::
        q/Esc      Quit.
        Ener/Space Select and Quit.
 
-Example: [expipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh)
+Example: [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh)
 
 ## Use as a library
 
 You can use sentaku as a library for your shell script.
+
+At sentaku window, all normal keys are assigned to functions like:
+
+* a-z: `_sf_a ()` ~ `_sf_z ()`
+* A-Z: `_sf_A ()` ~ `_sf_z ()`
+* 0-9: `_sf_0 ()` ~ `_sf_9 ()`
+
+In addition following keys are assigned:
+
+* Enter/Space: `_sf_select ()`
+* Esc: `_sf_quit ()`
+
+And `C-D`/`C-F`/`C-U`/`C-B` are assigned to move up down as described in the help.
+
+Following functions have default methods:
+
+* `_sf_j ()`/`_sf_k ()`/`_sf_g ()`/`_sf_G ()`/`_sf_d ()`/`_sf_s ()`/`_sf_q ()`
+
+And others are just set like `_sf_a () { :;}` (do nothing).
+
+If you simply add new key operation, make a script like:
+
+``` sh
+$!/usr/bin/env bash
+. sentaku -n
+_sf_a () {
+  echo "You pushed a!"
+}
+_sf_main "$@"
+```
+
+First, load `sentaku` with `-n` option, which don't execute functions here.
+
+Then, add your functions.
+
+In the last, call `_sf_main` function with arguments (`$@`).
+
+Save this script as `my_sentaku.sh`, then you can use it as same as
+original sentaku command.
+In addition, you can see `You pushed a!` when you push `a`.
+
+More examples can be found below.
 
 ### Simple examples to use like snippet
 
@@ -137,9 +179,39 @@ At sentaku window:
 * `s`: Show details (ls -l)
 * `d`: Delete selected file/directory
 * `l`: Open file with `less`
-* `v`: Open file with `vim`
+* `e`: Open file with $EDITOR (or `vim`)
 * `Enter`/`Space`: Move the directly
 * `q`/`Esc`: Quit
+
+#### Tips
+
+The original `_sf_select` function, which is executed when you push `Enter` or `Space`, is defined as:
+
+``` sh
+_sf_select () { # {{{
+  _s_break=1
+} # }}}
+```
+
+If `_s_break` flag is 1, it breaks key operation and goes to the end.
+
+In this script, this function is redefined like:
+
+``` sh
+_sf_select () {
+  cd ${_s_inputs[$_s_current_n]}
+  ...
+   _sf_printall
+}
+```
+
+It does `cd` and something, and the last, 
+it calls `_sf_printall` function, which prints a header and items again.
+And it does not set `_s_break` flag,
+therefore it stays in key operation (sentaku window).
+
+If you want to break with any key, you can change `_s_break` flag in 
+corresponding function.
 
 ### Example: menu program
 
@@ -166,6 +238,17 @@ If you choose `more`, you will go to the second window
 Each command return such `aaa`.
 
 If you put `q` here, you will be back to the first window.
+
+#### Tips
+
+In this script, new sentaku instance is made in the function (at `more`).
+
+To load sentaku in sentaku functions, do like
+
+    . sentaku -n -c
+
+`-c` option avoid to execute some functions which should not call
+twice in the same process.
 
 ### Example: command game
 

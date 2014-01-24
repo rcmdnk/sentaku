@@ -862,7 +862,7 @@ _sf_main () { # {{{
         fi
         _sf_move_up
         ;;
-      $'\x15'|$'\x02' ) # k/^U/^B
+      $'\x15'|$'\x02' ) # ^U/^B
         if [ $_s_read = $'\x15' ];then
           _s_n_move=$((_s_max_show/2))
         elif [ $_s_read = $'\x02' ];then
