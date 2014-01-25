@@ -168,7 +168,6 @@ _sf_s () { # {{{
 _sf_l () { # {{{
   clear >/dev/tty
   less ${_s_inputs[$_s_current_n]} >/dev/tty </dev/tty
-  _sf_quit
 } # }}}
 
 _sf_e () { # {{{

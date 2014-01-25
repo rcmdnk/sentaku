@@ -37,7 +37,6 @@ _sf_d () {
   _s_inputs=("${inputs[@]}")
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
-  _s_is_print=1
 }
 
 if [ $# -ne 2 ];then
