@@ -132,7 +132,7 @@ And others are just set like `_sf_a () { :;}` (do nothing).
 If you simply add new key operation, make a script like:
 
 ``` sh
-$!/usr/bin/env bash
+#!/usr/bin/env bash
 . sentaku -n
 _sf_a () {
   _sf_echo "You pushed a!"
