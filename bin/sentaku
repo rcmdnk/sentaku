@@ -53,6 +53,8 @@ _sf_initialize () { # {{{
   _s_align=0
   _s_delete=0
 
+  _s_is_print=1
+
   _s_ext_row=0
   _s_current_n=0
   _s_n_offset=0
@@ -146,6 +148,8 @@ _sf_finalize () { # {{{
   unset _s_stdin
   unset _s_align
   unset _s_delete
+
+  unset _s_is_print
 
   unset _s_ext_row
   unset _s_current_n
@@ -388,7 +392,12 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   tput cup $2 0 >/dev/tty
 } # }}}
 
-_sf_printall () { # usage: _sf_printall offset select {{{
+_sf_printall () { # usage: _sf_printall [not force] {{{
+  # if any argument is given, check if echoed or not.
+  if [ $# -ge 1 -a $_s_is_print -eq 0 ];then
+    return
+  fi
+
   local lines=$_s_lines
   local cols=$_s_cols
   _s_lines=$(tput lines)
@@ -402,9 +411,6 @@ _sf_printall () { # usage: _sf_printall offset select {{{
     _s_cursor_r=$_s_ext_row
   fi
 
-  local offset=${1-$_s_n_offset}
-  local select=${2-$_s_current_n}
-
   clear >/dev/tty
 
   # Header
@@ -412,17 +418,19 @@ _sf_printall () { # usage: _sf_printall offset select {{{
 
   local i=0
   for ((i=0; i<_s_max_show; i++));do
-    if [ $((i+offset)) -eq $select ];then
-      _sf_printline 1 $((i+_s_ext_row)) $((i+offset))
+    if [ $((i+_s_n_offset)) -eq $_s_current_n ];then
+      _sf_printline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
     else
-      _sf_printline 0 $((i+_s_ext_row)) $((i+offset))
+      _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
     fi
   done
+  _s_is_print=0
 } # }}}
 
 _sf_echo () { # {{{
   clear >/dev/tty
   printf "$(echo "$*"|sed 's/^-/\\-/g')" >/dev/tty
+  _s_is_print=1
   _sf_wait
 } # }}}
 
@@ -485,7 +493,8 @@ _sf_setview () { # {{{
   fi
 } # }}}
 
-_sf_move_up () { # {{{
+_sf_n_up () { # {{{
+  [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
   _sf_printline 0 $_s_cursor_r $_s_current_n
   local i=0
@@ -508,7 +517,8 @@ _sf_move_up () { # {{{
   _s_n_move=0
 } # }}}
 
-_sf_move_down () { # {{{
+_sf_n_down () { # {{{
+  [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
   _sf_printline 0 $_s_cursor_r $_s_current_n
   local i=0
@@ -542,7 +552,7 @@ _sf_select () { # {{{
 } # }}}
 
 _sf_n_move_inc () { # {{{
-  local n=${$1-0}
+  local n=${1:-"0"}
   [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$n" || _s_n_move=$n
 } # }}}
 
@@ -602,7 +612,7 @@ _sf_d () { # {{{
       ((_s_cursor_r--));((_s_current_n--))
     fi
   fi
-  _sf_printall
+  _s_is_print=1
 } # }}}
 _sf_e () { # {{{
   :
@@ -633,9 +643,9 @@ _sf_g () { # {{{
     _s_current_n=$((_s_n_move))
     _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
   fi
-  _sf_printall
   _s_n_move=0
   _s_g=0
+  _s_is_print=1
 } # }}}
 _sf_h () { # {{{
   :
@@ -644,12 +654,10 @@ _sf_i () { # {{{
   :
 } # }}}
 _sf_j () { # {{{
-  [ $_s_n_move -eq 0 ] && _s_n_move=1
-  _sf_move_up
+  _sf_n_up
 } # }}}
 _sf_k () { # {{{
-  [ $_s_n_move -eq 0 ] && _s_n_move=1
-  _sf_move_down
+  _sf_n_down
 } # }}}
 _sf_l () { # {{{
   :
@@ -676,6 +684,7 @@ _sf_s () { # {{{
   _sf_echo "$(_sf_nth $((_s_current_n))) value:
 
 ${_s_inputs[$_s_current_n]}"
+  _s_is_print=1
 } # }}}
 _sf_t () { # {{{
   :
@@ -741,9 +750,9 @@ _sf_G () { # {{{
     _s_current_n=$((_s_n_move))
     _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
   fi
-  _sf_printall
   _s_n_move=0
   _s_g=0
+  _s_is_print=1
 } # }}}
 _sf_H () { # {{{
   :
@@ -870,10 +879,11 @@ _sf_main () { # {{{
   _s_g=0
   _s_n_move=0
   _s_break=0
+  _s_is_print=1 # to show first printall
   tput cup $cursor_r 0 >/dev/tty
 
   while : ;do
-    _sf_printall
+    _sf_printall 1
     _sf_read
     case $_s_read in
       $'\x04'|$'\x06' ) # ^D/^F
@@ -882,7 +892,7 @@ _sf_main () { # {{{
         elif [ $_s_read = $'\x06' ];then
           _s_n_move=$((_s_max_show))
         fi
-        _sf_move_up
+        _sf_n_up
         ;;
       $'\x15'|$'\x02' ) # ^U/^B
         if [ $_s_read = $'\x15' ];then
@@ -890,7 +900,7 @@ _sf_main () { # {{{
         elif [ $_s_read = $'\x02' ];then
           _s_n_move=$((_s_max_show))
         fi
-        _sf_move_down
+        _sf_n_down
         ;;
       $'\x1b' ) _sf_quit;; # Esc
       ""|$'\n' ) _sf_select;; # Enter/Space
