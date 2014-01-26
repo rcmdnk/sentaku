@@ -16,6 +16,7 @@ Requirement:
 
 # Installation
 
+## Homebrew on Mac
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
 
     $ brew tap rcmdnk/rcmdnkpac
@@ -37,6 +38,11 @@ Or if you write like:
 and do `brewall install`, you will have all useful scripts in
 [rcmdnkpac](https://github.com/rcmdnk/homebrew-rcmdnkpac).
 
+Homebrew installation installs all scripts in `bin` directory including examples.
+
+
+## Curl
+
 You can also use an install script on the web like:
 
     $ curl -fsSL https://raw.github.com/rcmdnk/sentaku/install/install.sh| sh
@@ -47,6 +53,10 @@ and you may be asked root password.
 If you want to install other directory, do like:
 
     $ curl -fsSL https://raw.github.com/rcmdnk/sentaku/install/install.sh|  prefix=~/usr/local/ sh
+
+This method installs only `sentaku` and `ddv`.
+
+## By hand
 
 Or, simply download scripts and set where you like.
 
@@ -282,7 +292,7 @@ Usage:
 
 [![slime](http://rcmdnk.github.io/images/post/20140124_slime.jpg)](http://asciinema.org/a/7340)
 
-### Example: ddv (Diff Directory and open with Vim)
+### Example: ddv (Diff Directories and open with Vim)
 
 * [ddv](https://github.com/rcmdnk/sentaku/blob/master/bin/ddv)
 
