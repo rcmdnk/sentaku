@@ -46,6 +46,7 @@ _sf_initialize () { # {{{
   _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
   _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
+  _s_show=""
   _s_lines=0
   _s_cols=0
   _s_max_show=0
@@ -142,6 +143,7 @@ _sf_finalize () { # {{{
   unset _s_noheader
   unset _s_nonumber
   unset _s_showlast
+  unset _s_show
   unset _s_lines
   unset _s_cols
   unset _s_max_show
@@ -351,8 +353,34 @@ _sf_delete () { # {{{
   _sf_get_values
 } # }}}
 
+_sf_show () { # _sf_show [is_last [n_show]] {{{
+  local is_last=${1:-$_s_showlast}
+  local n_show=${2:-$_s_cols}
+  if [ ${#_s_show} -gt $n_show ];then
+    if [ $is_last -eq 0 ];then
+      if [ "x$ZSH_VERSION" != "x" ];then
+        _s_show="${_s_show[0,$((n_show-1))]}" # need for zsh version < 5
+      else
+        _s_show="${_s_show: 0: $n_show}"
+      fi
+    else
+      if [ "x$ZSH_VERSION" != "x" ];then
+        _s_show="${_s_show[$((${#_s_show}-$n_show)),-1]}"
+      else
+        _s_show="${_s_show: $((${#_s_show}-$n_show))}"
+      fi
+    fi
+  fi
+} # }}}
+
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
-  local show="$(\
+  if [ $# -lt 3 ];then
+    _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input)"
+    _sf_echo "exit"
+    _sf_quit 1
+    return
+  fi
+  _s_show="$(\
     echo "${_s_inputs[$3]}"|\
     awk -F\n -v ORS="\\\n" '{print}' |\
     sed 's/\\n$//' |\
@@ -367,25 +395,12 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   local num=""
   if [ $_s_nonumber -eq 0 ];then
     n_show=$((_s_cols-5))
-    num=$(printf "%3d: " $3)
+    local nmax=$((_s_n-1))
+    local num_width=${#nmax}
+    num=$(printf "%${num_width}d: " $3)
   fi
-  if [ ${#show} -gt $n_show ];then
-    if [ $_s_showlast -eq 0 ];then
-      if [ "x$ZSH_VERSION" != "x" ];then # need for zsh version < 5
-        printf "$num${show[0,$((n_show-1))]}" >/dev/tty
-      else
-        printf "$num${show: 0: $n_show}" >/dev/tty
-      fi
-    else
-      if [ "x$ZSH_VERSION" != "x" ];then # need for zsh version < 5
-        printf "$num${show[$((${#show}-$n_show)),-1]}" >/dev/tty
-      else
-        printf "$num${show: $((${#show}-$n_show))}" >/dev/tty
-      fi
-    fi
-  else
-    printf "$num${show}" >/dev/tty
-  fi
+  _sf_show $_s_showlast $n_show
+  printf "$num$_s_show" >/dev/tty
   if [ $1 -eq 1 ];then
     printf "\e[m" >/dev/tty
   fi
@@ -450,29 +465,29 @@ _sf_setheader () { # {{{
   if [ $_s_noheader = 1 -o $_s_lines -lt 10 ];then
     return
   elif [ $_s_delete -eq 1 ];then
-    if [ $_s_cols -ge 66 ];then
+    if [ $_s_cols -ge 67 ];then
       _s_header=" $_s_n values in total
- [n]n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
+ [n](n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
- d(dete), Enter(select), q/Esc(quit)
+ d(delete), Enter/Space(select), q/Esc(quit)
 "
     elif [ $_s_cols -ge 40 ];then
       _s_header=" $_s_n values in total
  vimike updown, e.g)j:up, k:down, gg/G
- d(dete), Enter(select), q/Esc(quit)
+ d(delete), Enter/Space(select), q/Esc(quit)
 "
     fi
   else
-    if [ $_s_cols -ge 66 ];then
+    if [ $_s_cols -ge 67 ];then
       _s_header=" $_s_n values in total
- [j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
+ [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
- Eer(select), q/Esc(quit)
+ Enter/Space(select), q/Esc(quit)
 "
     else
       _s_header=" $_s_n values in total
  v-like updown, e.g)j:up, k:down, gg/G
- Eer(select), q/Esc(quit)
+ Enter/Space(select), q/Esc(quit)
 "
     fi
   fi
