@@ -1,5 +1,6 @@
 #!/bin/sh
-scripts=(https://raw.github.com/rcmdnk/sentaku/master/bin/sentaku)
+repo=https://raw.github.com/rcmdnk/sentaku/master
+scripts=($repo/bin/sentaku $repo/bin/ddv)
 if [ x"$prefix" = x ];then
   prefix=/usr/local
 fi
@@ -31,4 +32,5 @@ for s in ${scripts[@]};do
   sname=`basename $s`
   echo Intalling ${sname}...
   $sudo curl -fsSL -o $prefix/bin/$sname $s
+  $sudo chmod 755 $prefix/bin/$sname
 done
