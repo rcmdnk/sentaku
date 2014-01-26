@@ -11,8 +11,8 @@ then selected one will be returned.
 
 Requirement:
 
-- Bash 3.X or newer
-- Zsh 4.X or newer
+- Bash 3.X or later
+- Zsh 4.X or later
 
 # Installation
 
