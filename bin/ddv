@@ -17,8 +17,9 @@ _sf_select () { # {{{
 _sf_d () {
   local n=$_s_current_n
   if [ $_s_n -eq 1 ];then
-    _sf_echo "There is no remained diff"
+    _sf_echo "There are no remained diff files"
     _sf_quit
+    return
   elif [ $_s_current_n -eq $((_s_n-1)) ];then
     _sf_n_down
     _s_is_print=1
@@ -50,8 +51,8 @@ _sf_setheader () { # {{{
     return
   elif [ $_s_cols -ge 66 ];then
     _s_header=" $_s_n files are different in
-a:$a_dir
-b:$b_dir
+<:$a_dir
+>:$b_dir
  [n](n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
  d(delete from the list), Enter/Space(vim diff), q/Esc(quit)
@@ -74,5 +75,10 @@ fi
 _s_first_dir="${1%/}/"
 _s_second_dir="${2%/}/"
 
-diff -r "$_s_first_dir" "$_s_second_dir" |grep diff |grep -v Binary|\
-  sed "s!.*${_s_second_dir}!!g"|_sf_main
+diff_ret=$(diff -r "$_s_first_dir" "$_s_second_dir" |grep diff |grep -v Binary|\
+  sed "s!.*${_s_second_dir}!!g")
+if [ "$diff_ret" = "" ];then
+  echo "There are no remained diff files"
+else
+  echo "$diff_ret"|_sf_main
+fi

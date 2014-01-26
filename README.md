@@ -282,6 +282,23 @@ Usage:
 
 [![slime](http://rcmdnk.github.io/images/post/20140124_slime.jpg)](http://asciinema.org/a/7340)
 
+### Example: ddv (Diff Directory and open with Vim)
+
+* [ddv](https://github.com/rcmdnk/sentaku/blob/master/bin/ddv)
+
+Use like:
+
+    $ ddv dir1 dir2
+
+`ddv` makes a list of files which are in both directories, but have differences.
+
+Use `Enter`/`Space` to open these files with `vim -d`.
+Then, you can edit these files with vim diff mode.
+
+You can remove a file from the sentaku window by `d`,
+once you edited and file becomes fine or you think the file is not needed to be edited.
+
+
 # References
 
 * [シェルスクリプトで対話的な選択を出来るようにするスクリプトを作った:sentaku](http://rcmdnk.github.io/blog/2014/01/24/computer-bash-zsh/)
