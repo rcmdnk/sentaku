@@ -308,6 +308,9 @@ Then, you can edit these files with vim diff mode.
 You can remove a file from the sentaku window by `d`,
 once you edited and file becomes fine or you think the file is not needed to be edited.
 
+* [Demo](http://asciinema.org/a/7373):
+
+[![ddv](http://rcmdnk.github.io/images/post/20140127_ddv.jpg)](http://asciinema.org/a/7373)
 
 # References
 
