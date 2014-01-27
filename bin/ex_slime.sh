@@ -48,7 +48,7 @@ Arguments:
    -h   Print this HELP and exit
 "
 
-_sf_setheader_mine () { # {{{
+_sf_set_header_mine () { # {{{
   local slime=""
   local message="$_s_message"
   if [ $_s_lines -ge 28 ];then
@@ -76,12 +76,11 @@ ${_s_message}"
   fi
   _s_header="${message}
 
-$_s_your_info
-"
+$_s_your_info"
 } # }}}
 
-_sf_setheader () { # {{{
-  _sf_setheader_mine
+_sf_set_header () { # {{{
+  _sf_set_header_mine
 } # }}}
 
 _sf_sudden_death () { # {{{
@@ -101,7 +100,7 @@ _/\/\/\/\/\/\/\_
 \e[m
 "
   fi
-  _sf_setheader
+  _sf_set_header
   _sf_echo "$_s_header"
   _sf_lose
 } # }}}
@@ -223,7 +222,7 @@ _sf_win () { # {{{
     |_|\___/ \__,_|     \/  \/   |_|_| |_(_)
 \e[m
 "
-  _sf_setheader
+  _sf_set_header
   _sf_echo "$_s_header"
   _sf_quit 0
 } # }}}
@@ -238,7 +237,7 @@ _sf_lose () { # {{{
     |_|\___/ \__,_| |______\___/|___/\___(_)
 \e[m
 "
-  _sf_setheader
+  _sf_set_header
   _sf_echo "$_s_header"
   _sf_quit 1
 } # }}}
@@ -449,8 +448,8 @@ _sf_spell () { # {{{
 
   spells="${_s_your_spells[@]}"
 
-  _sf_setheader () {
-    _sf_setheader_mine
+  _sf_set_header () {
+    _sf_set_header_mine
   }
 
   _sf_s () {

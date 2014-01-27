@@ -113,7 +113,7 @@ _sf_select () { # {{{
  fi
 } # }}}
 
-_sf_setheader () { # {{{
+_sf_set_header () { # {{{
   _s_header=""
   if [ $_s_noheader != 1 -a $_s_lines -gt 10 ];then
     local curdir=$(pwd)
@@ -129,15 +129,13 @@ _sf_setheader () { # {{{
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
  s(show detail), d(delete), l(open with less), e(edit the file)
- Enter(select, move to the directory), q/Esc(quit)
-"
+ Enter(select, move to the directory), q(quit)"
     elif [ $_s_cols -ge 42 ];then
       _s_header=" $curdir
  vim-like updown, e.g)j:up, k:down, gg/G
  s(show detail), d(delete),
  l(open with less), e(edit the file)
- Enter(move to the directory), q/Esc(quit)
-"
+ Enter(move to the directory), q(quit)"
     fi
   fi
 } # }}}

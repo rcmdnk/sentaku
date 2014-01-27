@@ -111,7 +111,7 @@ Other options and key operations at sentaku window are::
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
        d          Delete current candidate. (in case you use input file.)
        s          Show detail of current candidate.
-       q/Esc      Quit.
+       q          Quit.
        Ener/Space Select and Quit.
 
 Example: [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh)
@@ -129,7 +129,8 @@ At sentaku window, all normal keys are assigned to functions like:
 In addition following keys are assigned:
 
 * Enter/Space: `_sf_select ()`
-* Esc: `_sf_quit ()`
+* /: Start Search
+* Esc: Reset Search
 
 And `C-D`/`C-F`/`C-U`/`C-B` are assigned to move up down as described in the help.
 
@@ -192,7 +193,7 @@ At sentaku window:
 * `l`: Open file with `less`
 * `e`: Open file with $EDITOR (or `vim`)
 * `Enter`/`Space`: Move the directly
-* `q`/`Esc`: Quit
+* `q`: Quit
 
 #### Tips
 
