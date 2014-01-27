@@ -111,10 +111,29 @@ Other options and key operations at sentaku window are::
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
        d          Delete current candidate. (in case you use input file.)
        s          Show detail of current candidate.
+       /          Search.
+       Esc        Stop Search.
        q          Quit.
        Ener/Space Select and Quit.
 
 Example: [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh)
+
+* About Search mode
+
+If you push `/`, sentaku enters search mode.
+
+You can narrow the list by pushing starting characters.
+
+Backspace (^H) can be used to delete a character.
+
+You can select the first of the list (or the last remained one) by the Enter.
+
+If you push `Esc` while some candidates are remained,
+you can select them as select window.
+
+When you push `Esc` again, the original list will come back.
+
+[Demo](http://asciinema.org/a/7387)
 
 ## Use as a library
 

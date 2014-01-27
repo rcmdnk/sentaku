@@ -103,6 +103,8 @@ Key operation at sentaku window:
    gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
    d          Delete current candidate. (in case you use input file.)
    s          Show detail of current candidate.
+   /          Search.
+   Esc        Stop Search.
    q          Quit.
    Ener/Space Select and Quit.
 "}
