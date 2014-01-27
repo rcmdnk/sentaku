@@ -133,7 +133,9 @@ you can select them as select window.
 
 When you push `Esc` again, the original list will come back.
 
-[Demo](http://asciinema.org/a/7387)
+* [Demo](http://asciinema.org/a/7387)
+
+[![search](http://rcmdnk.github.io/images/post/20140127_sentaku_search.jpg)](http://asciinema.org/a/7387)
 
 ## Use as a library
 
