@@ -616,6 +616,10 @@ _sf_search () { # {{{
         _sf_reset
       fi
       return
+    elif [ "$_s_read" = "" ] || [ "$_s_read" = $'\n' ];then
+      IFS=$orig_ifs
+      _sf_select
+      return
     elif [ "$_s_read" = $'\x08' ];then
       if [ "$prefix" = "" ];then
         _s_search=""
