@@ -1131,7 +1131,7 @@ _sf_check_args_first () {
   while [ $# -gt 0 ];do
     _sf_echo_debug "args in _sf_check_args_first: $*"
     case $1 in
-      "-h"|"-N"|"-m"|"-p"|"-F" ) _s_is_help=2;shift;;
+      "-h"|"-N"|"-m"|"-p"|"-F" ) _s_is_exec=2;shift;;
       "-n" ) _s_is_noexec=0;shift;;
       "-c" ) _SENTAKU_CHILD=1;shift;;
     * )break;;
