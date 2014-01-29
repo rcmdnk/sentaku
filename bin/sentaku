@@ -1142,9 +1142,8 @@ _sf_check_args_first () {
 _sf_check_args_first "$@"
 
 # Execute if stdin is available, or any of help/file/push is on
-#if [ ! -t 0 ];then
 if [ $_s_is_exec -ne 0 ];then
-  if [ -p /dev/stdin ] || [ $_s_exec -eq 2 ];then
+  if [ -p /dev/stdin ] || [ $_s_is_exec -eq 2 ];then
     _sf_main "$@"
   fi
 fi
