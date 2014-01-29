@@ -250,7 +250,7 @@ _sf_check_args () { # {{{
   # Get arguments
   while [ $# -gt 0 ];do
     case $1 in
-      "-f" )
+      "-f"|"-F" ) # Use file
         _s_file=$2
         _s_use_file=1
         if [ "$_s_file" = "" ];then
@@ -259,7 +259,7 @@ _sf_check_args () { # {{{
         fi
         shift 2
         ;;
-      "-s" )
+      "-s" ) # Set separator
         _s_s=$2
         shift 2
         if [ "$_s_s" = "line" ];then
@@ -1125,22 +1125,15 @@ _sf_main () { # {{{
   _sf_finalize
 } # }}}
 
-_s_is_noexec=0
-_s_is_help=0
-_s_is_file=0
-_s_is_main=0
-_s_is_push=0
+_s_is_exec=1
 # {{{
 _sf_check_args_first () {
   while [ $# -gt 0 ];do
     _sf_echo_debug "args in _sf_check_args_first: $*"
     case $1 in
-      "-h" ) _s_is_help=1;shift;;
-      "-n" ) _s_is_noexec=1;shift;;
+      "-h"|"-N"|"-m"|"-p"|"-F" ) _s_is_help=2;shift;;
+      "-n" ) _s_is_noexec=0;shift;;
       "-c" ) _SENTAKU_CHILD=1;shift;;
-      "-m" ) _s_is_main=1;shift;;
-      "-p" ) _s_is_push=1;shift;;
-      "-F" ) _s_is_file=1;shift;;
     * )break;;
     esac
   done
@@ -1150,15 +1143,11 @@ _sf_check_args_first "$@"
 
 # Execute if stdin is available, or any of help/file/push is on
 #if [ ! -t 0 ];then
-if [ $_s_is_noexec -eq 0 ];then
-  if [ -p /dev/stdin ] || [ $_s_is_help -eq 1 ] || [ $_s_is_file -eq 1 ] || [ $_s_is_main -eq 1 ];then
+if [ $_s_is_exec -ne 0 ];then
+  if [ -p /dev/stdin ] || [ $_s_exec -eq 2 ];then
     _sf_main "$@"
   fi
 fi
 
 # Clean up
-unset _s_is_noexec
-unset _s_is_help
-unset _s_is_file
-unset _s_is_main
-unset _s_is_push
+unset _s_is_exec
