@@ -440,7 +440,7 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     num=$(printf "%${num_width}d: " $3)
   fi
   _sf_show $_s_showlast $n_show
-  _sf_print "%s" "$num$_s_show" >/dev/tty
+  echo "$num$_s_show" >/dev/tty
   if [ $1 -eq 1 ];then
     printf "\e[m" >/dev/tty
   fi
@@ -487,7 +487,7 @@ _sf_print () { # {{{
     printf -
     printf "$(echo "$*"|sed 's/^-//g')"
   else
-    printf "$(echo "$*"|sed 's/^-/\\-/g')"
+    printf "$*"
   fi
 } # }}}
 
