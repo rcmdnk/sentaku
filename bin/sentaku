@@ -243,9 +243,9 @@ _sf_read () { # {{{
   local orig_ifs=$IFS
   IFS=
   if [ "x$ZSH_VERSION" != "x" ];then
-    read -s -k 1 _s_read </dev/tty
+    read -sk 1 _s_read </dev/tty
   else
-    read -s -n 1 _s_read </dev/tty
+    read -sn 1 _s_read </dev/tty
   fi
   IFS=$orig_ifs
 } # }}}
@@ -625,36 +625,41 @@ _sf_search () { # {{{
   IFS=$orig_ifs
   while : ;do
     _sf_read
-    if [ "$_s_read" = $'\x1b' ];then
-      if [ $_s_n -eq 0 ];then
+    local r=$_s_read
+    case $r in
+      $'\x1b')
+        if [ $_s_n -eq 0 ];then
+          _s_inputs=("${_s_pre_inputs[@]}")
+          _s_n=${#_s_inputs[@]}
+          _s_search=""
+          _sf_reset
+        fi
+        IFS=$orig_ifs
+        return
+        ;;
+      ""|$'\n')
+        IFS=$orig_ifs
+        _sf_select
+        return
+        ;;
+      $'\x08')
+        if [ "$prefix" = "" ];then
+          _s_search=""
+          IFS=$orig_ifs
+          _sf_reset
+          return
+        fi
+        if [ "x$ZSH_VERSION" != "x" ];then
+          prefix="${prefix[0,$((${#prefix}-2))]}" # need for zsh version < 5
+        else
+          prefix="${prefix: 0: ((${#prefix}-1))}"
+        fi
         _s_inputs=("${_s_pre_inputs[@]}")
         _s_n=${#_s_inputs[@]}
-        _s_search=""
-        _sf_reset
-      fi
-      IFS=$orig_ifs
-      return
-    elif [ "$_s_read" = "" ] || [ "$_s_read" = $'\n' ];then
-      IFS=$orig_ifs
-      _sf_select
-      return
-    elif [ "$_s_read" = $'\x08' ];then
-      if [ "$prefix" = "" ];then
-        _s_search=""
-        IFS=$orig_ifs
-        _sf_reset
-        return
-      fi
-      if [ "x$ZSH_VERSION" != "x" ];then
-        prefix="${prefix[0,$((${#prefix}-2))]}" # need for zsh version < 5
-      else
-        prefix="${prefix: 0: ((${#prefix}-1))}"
-      fi
-      _s_inputs=("${_s_pre_inputs[@]}")
-      _s_n=${#_s_inputs[@]}
-    else
-      prefix="$prefix$_s_read"
-    fi
+        ;;
+      *)prefix="$prefix$_s_read";;
+    esac
+
     _s_search="Search:$prefix"
     local inputs
     inputs=()
@@ -1024,24 +1029,22 @@ _sf_main () { # {{{
   while : ;do
     _sf_printall 1
     _sf_read
-    case $_s_read in
-      $'\x04'|$'\x06' ) # ^D/^F
-        if [ $_s_read = $'\x04' ];then
-          _s_n_move=$((_s_max_show/2))
-        elif [ $_s_read = $'\x06' ];then
-          _s_n_move=$((_s_max_show))
-        fi
-        _sf_n_up
-        ;;
-      $'\x15'|$'\x02' ) # ^U/^B
-        if [ $_s_read = $'\x15' ];then
-          _s_n_move=$((_s_max_show/2))
-        elif [ $_s_read = $'\x02' ];then
-          _s_n_move=$((_s_max_show))
-        fi
-        _sf_n_down
-        ;;
+    local r=$_s_read
+    case $r in
+      '\e[A' ) _sf_n_up;;
+      '\e[B' ) _sf_n_down;;
+      'A' ) _sf_n_up;;
+      'B' ) _sf_n_down;;
+      $'\x04') # ^D
+        _s_n_move=$((_s_max_show/2));_sf_n_up;;
+      $'\x06' ) # ^F
+        _s_n_move=$((_s_max_show));_sf_n_up;;
+      $'\x15' ) # ^U
+        _s_n_move=$((_s_max_show/2));_sf_n_down;;
+      $'\x02' ) # ^B
+        _s_n_move=$((_s_max_show));_sf_n_down;;
       $'\x1b' ) # Esc
+        _s_is_print=0
         if [ "$_s_search" != "" ];then
           local orig_ifs=$IFS
           IFS="$_s_s"
@@ -1050,8 +1053,20 @@ _sf_main () { # {{{
           _s_search=""
           IFS=$orig_ifs
           _sf_reset
+        else
+          _sf_read
+          local r2=$_s_read
+          if [ "$r2" != "[" ];then
+            continue
+          fi
+          _sf_read
+          local r3=$_s_read
+          if [ "$r3" = "A" ];then # cursor up
+            _sf_n_down
+          elif [ "$r3" = "B" ];then # cursor down
+            _sf_n_up
+          fi
         fi
-        _s_is_print=0
         ;;
       / ) _sf_search;;
       ""|" "|$'\n' ) _sf_select;; # Enter/Space
