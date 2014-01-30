@@ -266,7 +266,7 @@ _sf_check_args () { # {{{
           _s_s=$'\n'
         fi
         ;;
-      "-H" ) _s_noheader=1;shift;;
+      "-H" ) _s_noheader=0;shift;;
       "-N" ) _s_nonumber=1;shift;;
       "-l" ) _s_showlast=1;shift;;
       "-a" ) _s_align=1;shift;;
