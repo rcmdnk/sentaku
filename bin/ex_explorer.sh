@@ -100,8 +100,8 @@ _sf_finalize_user () { # {{{
 } # }}}
 
 _sf_select () { # {{{
- if [ -d ${_s_inputs[$_s_current_n]} ];then
-   cd ${_s_inputs[$_s_current_n]}
+ if [ -d "${_s_inputs[$_s_current_n]}" ];then
+   cd "${_s_inputs[$_s_current_n]}"
    _s_current_n=0
    _s_n_offset=0
    _s_cursor_r=$_s_ext_row
