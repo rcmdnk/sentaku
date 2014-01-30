@@ -200,7 +200,7 @@ _sf_finalize_user () { # {{{
 
 _sf_execute () { # {{{
   local n=${1:-0}
-  printf "%s" "${_s_inputs[$1]}\n"
+  printf "%s" "${_s_inputs[$1]}"
 } # }}}
 
 _sf_hide () { # {{{
