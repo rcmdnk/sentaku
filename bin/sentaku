@@ -64,7 +64,7 @@ _sf_initialize () { # {{{
   _s_is_print=1
 
   _s_ext_row=0
-  _s_current_n=0
+  _s_current_n=-1
   _s_n_offset=0
   _s_cursor_r=0
   _s_g=0
@@ -96,6 +96,7 @@ Arguments:
    -a         Align input list (set selected one to the first).
    -d         Enable Delete at sentaku window.
    -m         Execute main function even if it is not after pipe.
+   -r <n>     Return nth value directly.
    -p         Push words to the file.
    -c         Load functions as a child process in other sentaku process.
    -n         Don't run functions, to just source this file
@@ -200,7 +201,7 @@ _sf_finalize_user () { # {{{
 
 _sf_execute () { # {{{
   local n=${1:-0}
-  printf "%s" "${_s_inputs[$1]}"
+  printf "%s" "${_s_inputs[$n]}"
 } # }}}
 
 _sf_hide () { # {{{
@@ -265,11 +266,10 @@ _sf_check_args () { # {{{
           echo "ERROR: empty input was given with -i" >/dev/tty
           return 1
         fi
-        shift 2
+        shift
         ;;
       "-s" ) # Set separator
         _s_s=$2
-        shift 2
         if [ "$_s_s" = "line" ];then
           _s_s=$'\n'
         fi
@@ -278,15 +278,25 @@ _sf_check_args () { # {{{
         else
           _s_s_push="$_s_s"
         fi
+        shift
         ;;
-      "-H" ) _s_noheader=0;shift;;
-      "-N" ) _s_nonumber=1;shift;;
-      "-l" ) _s_showlast=1;shift;;
-      "-a" ) _s_align=1;shift;;
-      "-d" ) _s_delete=1;shift;;
-      "-c" ) shift;;
-      "-m" ) shift;;
-      "-n" ) shift;;
+      "-H" ) _s_noheader=0;;
+      "-N" ) _s_nonumber=1;;
+      "-l" ) _s_showlast=1;;
+      "-a" ) _s_align=1;;
+      "-d" ) _s_delete=1;;
+      "-r" )
+        if expr "$2" : '[0-9]*' > /dev/null;then
+          _s_current_n=$2
+          shift
+        else
+          echo "-r option requires a number" >/dev/tty
+          return 1
+        fi
+        ;;
+      "-c" ) ;;
+      "-m" ) ;;
+      "-n" ) ;;
       "-p" )
         shift
         _sf_push "$@"
@@ -301,6 +311,7 @@ _sf_check_args () { # {{{
         return 1
         ;;
     esac
+    shift
   done
   return 10
 } # }}}
@@ -689,7 +700,6 @@ _sf_reset () { # {{{
   _s_cursor_r=$_s_ext_row
   _s_g=0
   _s_n_move=0
-  _s_break=0
   tput cup $_s_cursor_r 0 >/dev/tty
   _sf_printall
   _s_is_print=0
@@ -968,8 +978,7 @@ _sf_push () { # {{{
   _sf_echo_debug "_sf_push start"
 
   # Set trap
-  trap "_sf_clear;return 1" 1 2 3 15
-  trap "_sf_finalize" 0
+  trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" 1 2 3 15
 
   # Initializatoin
   _sf_initialize
@@ -982,7 +991,10 @@ _sf_push () { # {{{
   fi
 
   # Ignore blank
-  [ "$input" = "" ] && return
+  if [ "$input" = "" ];then
+    _sf_finalize
+    return 1
+  fi
 
   # Renew values
   _sf_get_values 0 0
@@ -1010,6 +1022,7 @@ _sf_main () { # {{{
   _sf_check_args "$@"
   local ret=$?
   if [ $ret -ne 10 ];then
+    _sf_finalize
     return $ret
   fi
 
@@ -1017,6 +1030,15 @@ _sf_main () { # {{{
   _sf_get_values
   local ret=$?
   if [ $ret -ne 0 ];then
+    _sf_finalize
+    return $ret
+  fi
+
+  # Return nth
+  if [ $_s_current_n -ge 0 ];then
+    _sf_execute $_s_current_n
+    local ret=$?
+    _sf_finalize
     return $ret
   fi
 
