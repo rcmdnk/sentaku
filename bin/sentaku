@@ -647,13 +647,9 @@ _sf_select () { # {{{
 
 _sf_search () { # {{{
   local prefix=""
-  local n=$_s_current_n
-  local orig_ifs=$IFS
-  IFS="$_s_s"
   _s_pre_inputs=("${_s_inputs[@]}")
   _s_search="Search:"
   _sf_printall
-  IFS=$orig_ifs
   while : ;do
     _sf_read
     local r=$_s_read
@@ -665,18 +661,15 @@ _sf_search () { # {{{
           _s_search=""
           _sf_reset
         fi
-        IFS=$orig_ifs
         return
         ;;
       ""|$'\n')
-        IFS=$orig_ifs
         _sf_select
         return
         ;;
       $'\x08')
         if [ "$prefix" = "" ];then
           _s_search=""
-          IFS=$orig_ifs
           _sf_reset
           return
         fi
@@ -703,7 +696,8 @@ _sf_search () { # {{{
     fi
     local i
     for ((i=0; i<$_s_n; i++));do
-      if echo "${_s_inputs[$i]}"| grep -q "^$prefix";then
+      _sf_search_check "$prefix" "${_s_inputs[$i]}"
+      if [ $? -eq 0 ];then
         inputs=("${inputs[@]}" "${_s_inputs[$i]}")
       fi
     done
@@ -711,7 +705,13 @@ _sf_search () { # {{{
     _s_n=${#_s_inputs[@]}
     _sf_reset
   done
-  IFS=$orig_ifs
+} # }}}
+
+_sf_search_check () { # {{{
+  if echo "${2}"| grep -q "^${1}";then
+    return 0
+  fi
+  return 1
 } # }}}
 
 _sf_reset () { # {{{
