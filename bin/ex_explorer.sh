@@ -76,6 +76,7 @@ _sf_execute () { # {{{
 
 _sf_check_args () { # {{{
   # Get arguments
+  _s_continue=0
   while [ $# -gt 0 ];do
     case $1 in
       "-a" ) _s_a=1;shift;;
@@ -92,7 +93,8 @@ _sf_check_args () { # {{{
         ;;
     esac
   done
- return 10
+  _s_continue=1
+  return 0
 } # }}}
 
 _sf_finalize_user () { # {{{

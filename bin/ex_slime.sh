@@ -111,6 +111,7 @@ _sf_execute () { # {{{
 
 _sf_check_args () { # {{{
   # Get arguments
+  _s_continue=0
   while [ $# -gt 0 ];do
     case $1 in
       "-j" ) _s_lang="ja";shift;;
@@ -154,7 +155,8 @@ $(for ((i=0; i<${#_s_your_spells[@]}; i++));do \
 
 $_s_command"
   fi
-  return 10
+  _s_continue=1
+  return 0
 
 } # }}}
 

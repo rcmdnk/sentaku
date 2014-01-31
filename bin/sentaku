@@ -60,6 +60,7 @@ _sf_initialize () { # {{{
   _s_stdin=0
   _s_align=0
   _s_delete=0
+  _s_continue=0
 
   _s_is_print=1
 
@@ -164,6 +165,7 @@ _sf_finalize () { # {{{
   unset _s_stdin
   unset _s_align
   unset _s_delete
+  unset _s_continue
 
   unset _s_is_print
 
@@ -257,6 +259,7 @@ _sf_wait () { # {{{
 
 _sf_check_args () { # {{{
   # Get arguments
+  _s_continue=0
   while [ $# -gt 0 ];do
     case $1 in
       "-f"|"-F" ) # Use file
@@ -313,7 +316,8 @@ _sf_check_args () { # {{{
     esac
     shift
   done
-  return 10
+  _s_continue=1
+  return 0
 } # }}}
 
 _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
@@ -1021,7 +1025,7 @@ _sf_main () { # {{{
   # Get arguments
   _sf_check_args "$@"
   local ret=$?
-  if [ $ret -ne 10 ];then
+  if [ $_s_continue -eq 0 ];then
     _sf_finalize
     return $ret
   fi
