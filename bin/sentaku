@@ -257,6 +257,21 @@ _sf_wait () { # {{{
   _sf_read
 } # }}}
 
+_sf_yn () { # {{{
+  local message="$@"
+  while : ;do
+    clear >/dev/tty
+    echo "$message [y/n]: " >/dev/tty
+    _sf_read
+    if [ "$_s_read" = "y" ];then
+      return 0
+    elif [ "$_s_read" = "n" ];then
+      _sf_quit
+      return 1
+    fi
+  done
+} # }}}
+
 _sf_check_args () { # {{{
   # Get arguments
   _s_continue=0
@@ -303,6 +318,7 @@ _sf_check_args () { # {{{
       "-p" )
         shift
         _sf_push "$@"
+        _s_continue=0
         return 0
         ;;
       "-h" )
@@ -449,13 +465,13 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   local n_show=$_s_cols
   local num=""
   if [ $_s_nonumber -eq 0 ];then
-    n_show=$((_s_cols-5))
     local nmax=$((_s_n-1))
     local num_width=${#nmax}
+    n_show=$((_s_cols-num_width-2))
     num=$(printf "%${num_width}d: " $3)
   fi
   _sf_show $_s_showlast $n_show
-  echo "$num$_s_show" >/dev/tty
+  printf "%s" "$num$_s_show" >/dev/tty
   if [ $1 -eq 1 ];then
     printf "\e[m" >/dev/tty
   fi
@@ -769,16 +785,17 @@ _sf_d () { # {{{
   _sf_delete
   local ret=$?
   if [ $ret -ne 0 ];then
-    _s_current_n=-1
-    _s_break=1
-    return $ret
+    _sf_quit $ret
+    return
   fi
   if [ $_s_current_n -eq $_s_n ];then
-    if [ $_s_n_offset -gt 0 ];then
-      ((_s_n_offset--));((_s_current_n--))
-    else
+    if [ $_s_n_offset -eq 0 ];then
       ((_s_cursor_r--));((_s_current_n--))
+    else
+      ((_s_n_offset--));((_s_current_n--))
     fi
+  elif [ $((_s_n_offset+_s_max_show)) -gt $_s_n ];then
+    ((_s_n_offset--));((_s_cursor_r++))
   fi
 } # }}}
 _sf_e () { # {{{
