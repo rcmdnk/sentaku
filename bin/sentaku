@@ -366,6 +366,9 @@ _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
   fi
   _s_n=${#_s_inputs[@]}
 
+  # Reset view, especially for _s_max_show
+  _sf_setview
+
   if [ $check -eq 1 -a $_s_n -eq 0 ];then
     if [ $stdin -eq 0 -o $_s_use_file -eq 1 ];then
       _sf_echo "No value in $_s_file"
@@ -786,11 +789,14 @@ _sf_d () { # {{{
     _sf_quit $ret
     return
   fi
-  if [ $_s_current_n -eq $_s_n ];then
+  if [ $_s_current_n -eq 0 ];then
+    return
+  elif [ $_s_current_n -eq $_s_n ];then
+    ((_s_current_n--))
     if [ $_s_n_offset -eq 0 ];then
-      ((_s_cursor_r--));((_s_current_n--))
+      ((_s_cursor_r--))
     else
-      ((_s_n_offset--));((_s_current_n--))
+      ((_s_n_offset--))
     fi
   elif [ $((_s_n_offset+_s_max_show)) -gt $_s_n ];then
     ((_s_n_offset--));((_s_cursor_r++))
