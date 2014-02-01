@@ -318,8 +318,7 @@ _sf_check_args () { # {{{
       "-p" )
         shift
         _sf_push "$@"
-        _s_continue=0
-        return 0
+        return $?
         ;;
       "-h" )
         echo "$_s_help" >/dev/tty
@@ -369,11 +368,10 @@ _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
 
   if [ $check -eq 1 -a $_s_n -eq 0 ];then
     if [ $stdin -eq 0 -o $_s_use_file -eq 1 ];then
-      echo "No value in $_s_file" >/dev/tty
+      _sf_echo "No value in $_s_file"
     else
-      echo "No value in stdin" >/dev/tty
+      _sf_echo "No value in stdin"
     fi
-    _sf_wait
     return 1
   fi
   return 0
@@ -998,12 +996,6 @@ _sf_push () { # {{{
 
   _sf_echo_debug "_sf_push start"
 
-  # Set trap
-  trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" 1 2 3 15
-
-  # Initializatoin
-  _sf_initialize
-
   # Set input
   local input="$@"
   shift $#
@@ -1013,7 +1005,6 @@ _sf_push () { # {{{
 
   # Ignore blank
   if [ "$input" = "" ];then
-    _sf_finalize
     return 1
   fi
 
@@ -1024,9 +1015,6 @@ _sf_push () { # {{{
   _sf_align_values 0 0
 
   echo "$input" is stored in $_s_file
-
-  # Finalization
-  _sf_finalize
 } # }}}
 
 _sf_main () { # {{{
