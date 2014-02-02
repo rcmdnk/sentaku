@@ -62,6 +62,7 @@ _sf_initialize () { # {{{
   _s_delete=0
   _s_continue=0
   _s_noshow=0
+  _s_normal_echo=${_s_normal_echo:-1}
 
   _s_is_print=1
 
@@ -168,6 +169,7 @@ _sf_finalize () { # {{{
   unset _s_delete
   unset _s_continue
   unset _s_noshow
+  unset _s_normal_echo
 
   unset _s_is_print
 
@@ -218,6 +220,8 @@ _sf_hide () { # {{{
 
     # Hide any input
     [ $_s_stdin -eq 0 ] && stty -echo
+
+    _s_normal_echo=0
   fi
 } # }}}
 
@@ -229,6 +233,8 @@ _sf_clear () { # {{{
 
     # Restore display
     tput rmcup >/dev/tty 2>/dev/null || tput te >/dev/tty 2>/dev/null
+
+    _s_normal_echo=1
   fi
 } # }}}
 
@@ -529,7 +535,11 @@ _sf_print () { # {{{
 } # }}}
 
 _sf_echo () { # {{{
-  if [ $_s_noshow -ne 1 ];then
+  if [ $_s_noshow -eq 1 ];then
+    :
+  elif [ $_s_normal_echo -eq 1 ];then
+    _sf_print "$@" >/dev/tty
+  else
     clear >/dev/tty
     _sf_print "$@" >/dev/tty
     _s_is_print=1
