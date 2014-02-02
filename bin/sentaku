@@ -223,7 +223,7 @@ _sf_hide () { # {{{
 
 _sf_clear () { # {{{
   if [ $_SENTAKU_CHILD -eq 0 -a $_s_noshow -eq 0 ];then
-    _sf_echo_debug "sf_clear execute"
+    _sf_echo_debug "sf_clear execute\n"
     # clear after selection
     clear >/dev/tty
 
@@ -415,7 +415,7 @@ _sf_delete () { # {{{
 _sf_remove () { # {{{
   local n=$_s_current_n
   if [ $_s_n -eq 1 ];then
-    _sf_echo "There are no remained diff files"
+    _sf_echo "There are no remained diff files\n"
     _sf_quit
     return
   elif [ $_s_current_n -eq $((_s_n-1)) ];then
@@ -459,8 +459,7 @@ _sf_show () { # _sf_show [is_last [n_show]] {{{
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   if [ $# -lt 3 ];then
-    _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input)"
-    _sf_echo "exit"
+    _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input), exit\n"
     _sf_quit 1
     return
   fi
@@ -879,7 +878,7 @@ _sf_r () { # {{{
 _sf_s () { # {{{
   _sf_echo "$(_sf_nth $((_s_current_n))) value:
 
-${_s_inputs[$_s_current_n]}"
+${_s_inputs[$_s_current_n]}\n"
 } # }}}
 _sf_t () { # {{{
   _s_is_print=0
@@ -1008,7 +1007,7 @@ _sf_Z () { # {{{
 
 _sf_push () { # {{{
 
-  _sf_echo_debug "_sf_push start"
+  _sf_echo_debug "_sf_push start\n"
 
   # Set input
   local input="$@"
@@ -1028,12 +1027,12 @@ _sf_push () { # {{{
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
 
-  _sf_echo "$input" is stored in $_s_file
+  _sf_echo "$input is stored in $_s_file\n"
 } # }}}
 
 _sf_main () { # {{{
 
-  _sf_echo_debug "_sf_main start"
+  _sf_echo_debug "_sf_main start\n"
 
   # Set trap
   trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" 1 2 3 15
@@ -1200,7 +1199,7 @@ _sf_main () { # {{{
 _s_is_exec=1
 _sf_check_args_first () { # {{{
   while [ $# -gt 0 ];do
-    _sf_echo_debug "args in _sf_check_args_first: $*"
+    _sf_echo_debug "args in _sf_check_args_first: ${*}\n"
     case $1 in
       "-h"|"-N"|"-m"|"-p"|"-F" ) _s_is_exec=2;shift;;
       "-n" ) _s_is_exec=0;shift;;
