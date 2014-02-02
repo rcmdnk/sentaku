@@ -61,6 +61,7 @@ _sf_initialize () { # {{{
   _s_align=0
   _s_delete=0
   _s_continue=0
+  _s_noshow=0
 
   _s_is_print=1
 
@@ -138,7 +139,7 @@ _sf_initialize_user () { # {{{
 } # }}}
 
 _sf_finalize () { # {{{
-  if [ $_SENTAKU_CHILD -eq 0 ];then
+  if [ $_SENTAKU_CHILD -eq 0 -a $_s_noshow -eq 0 ];then
     # Show cursor
     tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
@@ -166,6 +167,7 @@ _sf_finalize () { # {{{
   unset _s_align
   unset _s_delete
   unset _s_continue
+  unset _s_noshow
 
   unset _s_is_print
 
@@ -207,7 +209,7 @@ _sf_execute () { # {{{
 } # }}}
 
 _sf_hide () { # {{{
-  if [ $_SENTAKU_CHILD -eq 0 ];then
+  if [ $_SENTAKU_CHILD -eq 0 -a $_s_noshow -eq 0 ];then
     # Hide cursor
     tput civis >/dev/tty 2>/dev/null || tput vi >/dev/tty 2>/dev/null
 
@@ -220,7 +222,7 @@ _sf_hide () { # {{{
 } # }}}
 
 _sf_clear () { # {{{
-  if [ $_SENTAKU_CHILD -eq 0 ];then
+  if [ $_SENTAKU_CHILD -eq 0 -a $_s_noshow -eq 0 ];then
     _sf_echo_debug "sf_clear execute"
     # clear after selection
     clear >/dev/tty
@@ -528,10 +530,12 @@ _sf_print () { # {{{
 } # }}}
 
 _sf_echo () { # {{{
-  clear >/dev/tty
-  _sf_print "$@" >/dev/tty
-  _s_is_print=1
-  _sf_wait
+  if [ $_s_noshow -ne 1 ];then
+    clear >/dev/tty
+    _sf_print "$@" >/dev/tty
+    _s_is_print=1
+    _sf_wait
+  fi
 } # }}}
 
 _sf_echo_debug () { # {{{
@@ -1024,7 +1028,7 @@ _sf_push () { # {{{
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
 
-  echo "$input" is stored in $_s_file
+  _sf_echo "$input" is stored in $_s_file
 } # }}}
 
 _sf_main () { # {{{
@@ -1194,8 +1198,7 @@ _sf_main () { # {{{
 } # }}}
 
 _s_is_exec=1
-# {{{
-_sf_check_args_first () {
+_sf_check_args_first () { # {{{
   while [ $# -gt 0 ];do
     _sf_echo_debug "args in _sf_check_args_first: $*"
     case $1 in
