@@ -371,9 +371,9 @@ _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
 
   if [ $check -eq 1 -a $_s_n -eq 0 ];then
     if [ $stdin -eq 0 -o $_s_use_file -eq 1 ];then
-      _sf_echo "No value in $_s_file"
+      _sf_echo "No value in $_s_file\n"
     else
-      _sf_echo "No value in stdin"
+      _sf_echo "No value in stdin\n"
     fi
     return 1
   fi
@@ -381,8 +381,12 @@ _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
 } # }}}
 
 _sf_align_values () { # _sf_align_values [<n> [<is_get>]]{{{
-  local n=${1:-0}
+  local n=${1:-$_s_current_n}
   local is_get=${2:-1}
+  if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "$_s_n" ];then
+    _sf_echo "$n is not valid for _sf_align_values\n"
+    return 1
+  fi
   local v="${_s_inputs[$n]}"
   printf "%s$_s_s_push" "$v" > "$_s_file"
   local i=0
@@ -1182,7 +1186,7 @@ _sf_main () { # {{{
     _sf_execute $_s_current_n
 
     # Align values
-    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n
+    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n 0
   fi
 
   # Finalization
