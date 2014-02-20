@@ -130,7 +130,7 @@ _sf_set_header () { # {{{
  Enter(select, move to the directory), q(quit)"
     elif [ $_s_cols -ge 42 ];then
       _s_header=" $curdir
- vim-like updown, e.g)j:up, k:down, gg/G
+ vim-like updown, e.g)j:down, k:up, gg/G
  s(show detail), d(delete),
  l(open with less), e(edit the file)
  Enter(move to the directory), q(quit)"

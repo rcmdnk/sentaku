@@ -32,14 +32,14 @@ _sf_set_header () { # {{{
     _s_header=" $_s_n files are different in
 <:$a_dir
 >:$b_dir
- [n](n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
- ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
+ [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
+ ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
  d(delete from the list), Enter/Space(vim diff), q(quit)"
   elif [ $_s_cols -ge 40 ];then
       _s_header=" $_s_n values in total
 a:$a_dir
 b:$b_dir
- vimike updown, e.g)j:up, k:down, gg/G
+ vimike updown, e.g)j:down, k:up, gg/G
  d(delete from the list),
  Enter/Space(vim diff), q(quit)"
   fi

@@ -108,7 +108,7 @@ Arguments:
 Key operation at sentaku window:
    n(any number) Set number. Multi digit can be used (13, 320, etc...).
                  Used/reset by other key.
-   j/k        Up/Down (if n is given, n-th up/n-th down).
+   k/j        Up/Down (if n is given, n-th up/n-th down).
    ^U/^D      Half page down/Half page down.
    ^B/^F      Page up/Page down.
    gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
@@ -565,23 +565,23 @@ _sf_set_header () { # {{{
   elif [ $_s_delete -eq 1 ];then
     if [ $_s_cols -ge 67 ];then
       _s_header=" $_s_n values in total
- [n](n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
- ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
+ [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
+ ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
  d(delete), /(search), Enter/Space(select), q(quit)"
     elif [ $_s_cols -ge 40 ];then
       _s_header=" $_s_n values in total
- vimike updown, e.g)j:up, k:down, gg/G
+ vimike updown, e.g)j:down, k:up, gg/G
  d(delete), Enter/Space(select), q(quit)"
     fi
   else
     if [ $_s_cols -ge 67 ];then
       _s_header=" $_s_n values in total
- [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n),
- ^Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up),
+ [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
+ ^Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
  /(search), Enter/Space(select), q(quit)"
     elif [ $_s_cols -ge 40 ];then
       _s_header=" $_s_n values in total
- v-like updown, e.g)j:up, k:down, gg/G
+ v-like updown, e.g)j:down, k:up, gg/G
  Enter/Space(select), q(quit)"
     fi
   fi
