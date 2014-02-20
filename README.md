@@ -334,6 +334,26 @@ once you edited and file becomes fine or you think the file is not needed to be 
 
 [![ddv](http://rcmdnk.github.io/images/post/20140127_ddv.jpg)](http://asciinema.org/a/7373)
 
+### Other examples from other repositories
+
+#### sd_cl
+
+[rcmdnk/sd_cl](https://github.com/rcmdnk/sd_cl)
+
+Useful functions to change directories for Bash/Zsh and GNU screen/tmux.
+
+#### trash
+
+[rcmdnk/trash](https://github.com/rcmdnk/trash)
+
+Remove Command using a trash box.
+
+#### multi_clipbaord
+
+[rcmdnk/multi_clipboard](https://github.com/rcmdnk/multi_clipboard)
+
+Clipboard manager for GNU screen.
+
 # References
 
 * [シェルスクリプトで対話的な選択を出来るようにするスクリプトを作った:sentaku](http://rcmdnk.github.io/blog/2014/01/24/computer-bash-zsh/)
