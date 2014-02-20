@@ -105,7 +105,7 @@ Other options and key operations at sentaku window are::
     Key operation at sentaku window:
        n(any number) Set number. Multi digit can be used (13, 320, etc...).
                      Used/reset by other key.
-       j/k        Up/Down (if n is given, n-th up/n-th down).
+       k/j        Up/Down (if n is given, n-th up/n-th down).
        ^U/^D      Half page down/Half page down.
        ^B/^F      Page up/Page down.
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
