@@ -41,7 +41,7 @@ and do `brewall install`, you will have all useful scripts in
 Homebrew installation installs all scripts in `bin` directory including examples.
 
 
-## Curl
+## cURL
 
 You can also use an install script on the web like:
 
