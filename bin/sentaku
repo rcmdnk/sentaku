@@ -55,7 +55,8 @@ _sf_initialize () { # {{{
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
   _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
   _s_search_opt=${SENTAKU_SEARCH_OPT:-$_SENTAKU_SEARCH_OPT}
-  _s_debug=${SENTAKU_DEBUG:-$_SENTAKU_DEBUG}
+  #_s_debug=${SENTAKU_DEBUG:-$_SENTAKU_DEBUG}
+  _s_debug=0
   _s_show=""
   _s_lines=0
   _s_cols=0
@@ -551,9 +552,9 @@ _sf_echo () { # {{{
 } # }}}
 
 _sf_echo_debug () { # {{{
-  if [ $_s_debug -gt 0 ];then
+  #if [ $_s_debug -gt 0 ];then
     _sf_echo "$@"
-  fi
+  #fi
 } # }}}
 
 _sf_echo_printall () { # {{{
@@ -1055,8 +1056,6 @@ _sf_push () { # {{{
 
 _sf_main () { # {{{
 
-  _sf_echo_debug "_sf_main start\n"
-
   # Set trap
   trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" 1 2 3 15
 
@@ -1222,7 +1221,6 @@ _sf_main () { # {{{
 _s_is_exec=1
 _sf_check_args_first () { # {{{
   while [ $# -gt 0 ];do
-    _sf_echo_debug "args in _sf_check_args_first: ${*}\n"
     case $1 in
       "-h"|"-N"|"-m"|"-p"|"-F" ) _s_is_exec=2;shift;;
       "-n" ) _s_is_exec=0;shift;;
