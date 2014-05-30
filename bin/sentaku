@@ -32,7 +32,7 @@ _SENTAKU_NOHEADER=0
 _SENTAKU_NONUMBER=0
 _SENTAKU_SHOWLAST=0
 _SENTAKU_CHILD=0
-_SENTAKU_SEARCH_OPT=0 # 0: and, 1, starts with
+_SENTAKU_SEARCH_OPT=0 # 0: AND (ignore case), 1: AND (case sensitive), 2: starts with
 _SENTAKU_DEBUG=0
 
 _sf_initialize () { # {{{
@@ -730,8 +730,13 @@ _sf_search () { # {{{
 } # }}}
 
 _sf_search_check () { # {{{
-  if [ $_s_search_opt -eq 1 ];then
-    if ! echo "${2}"| grep -q "^${1}";then
+  if [ $_s_search_opt -le 1 ];then
+    if [ $_s_search_opt -eq 0 ];then
+      local ic="-i"
+    else
+      local ic=""
+    fi
+    if ! echo "${2}"| grep $ic -q "^${1}";then
       return 1
     fi
   else
