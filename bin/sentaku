@@ -31,8 +31,9 @@ _SENTAKU_MAX=20
 _SENTAKU_NOHEADER=0
 _SENTAKU_NONUMBER=0
 _SENTAKU_SHOWLAST=0
-_SENTAKU_DEBUG=0
 _SENTAKU_CHILD=0
+_SENTAKU_SEARCH_OPT=0 # 0: and, 1, starts with
+_SENTAKU_DEBUG=0
 
 _sf_initialize () { # {{{
   # Set variables
@@ -53,6 +54,7 @@ _sf_initialize () { # {{{
   _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
   _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
+  _s_search_opt=${SENTAKU_SEARCH_OPT:-$_SENTAKU_SEARCH_OPT}
   _s_debug=${SENTAKU_DEBUG:-$_SENTAKU_DEBUG}
   _s_show=""
   _s_lines=0
@@ -727,10 +729,20 @@ _sf_search () { # {{{
 } # }}}
 
 _sf_search_check () { # {{{
-  if echo "${2}"| grep -q "^${1}";then
-    return 0
+  if [ $_s_search_opt -eq 1 ];then
+    if ! echo "${2}"| grep -q "^${1}";then
+      return 1
+    fi
+  else
+    local words=(${1})
+    local w
+    for w in ${words[@]};do
+      if ! echo "${2}"| grep -q "${w}";then
+        return 1
+      fi
+    done
   fi
-  return 1
+  return 0
 } # }}}
 
 _sf_reset () { # {{{
