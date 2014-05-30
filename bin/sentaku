@@ -53,6 +53,7 @@ _sf_initialize () { # {{{
   _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
   _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
+  _s_debug=${SENTAKU_DEBUG:-$_SENTAKU_DEBUG}
   _s_show=""
   _s_lines=0
   _s_cols=0
@@ -548,7 +549,7 @@ _sf_echo () { # {{{
 } # }}}
 
 _sf_echo_debug () { # {{{
-  if [ $_SENTAKU_DEBUG -gt 0 ];then
+  if [ $_s_debug -gt 0 ];then
     _sf_echo "$@"
   fi
 } # }}}
