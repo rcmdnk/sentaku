@@ -52,7 +52,7 @@ fi
 _s_first_dir="${1%/}/"
 _s_second_dir="${2%/}/"
 
-diff_ret=$(diff -r "$_s_first_dir" "$_s_second_dir" |grep diff |grep -v Binary|\
+diff_ret=$(diff -r "$_s_first_dir" "$_s_second_dir" |grep "^diff" |grep -v Binary|\
   sed "s!.*${_s_second_dir}!!g")
 if [ "$diff_ret" = "" ];then
   echo "There are no remained diff files"
