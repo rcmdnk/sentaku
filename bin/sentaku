@@ -123,6 +123,10 @@ Key operation at sentaku window:
    Ener/Space Select and Quit.
 "}
 
+  # Lines and columns at beginning
+  _s_lines=$(tput lines)
+  _s_cols=$(tput cols)
+
   # Fix array for zsh
   if [ "x$ZSH_VERSION" != "x" ];then
     if ! setopt|grep -q ksharrays;then
@@ -551,6 +555,10 @@ _sf_echo () { # {{{
 } # }}}
 
 _sf_echo_debug () { # {{{
+  if [ "$_s_debug" = "" ];then
+    # Temporarily use default value for debug_echo before initialization.
+    _s_debug=$_SENTAKU_DEBUG
+  fi
   if [ $_s_debug -gt 0 ];then
     _sf_echo "$@"
   fi
