@@ -114,8 +114,10 @@ Key operation at sentaku window (Vim mode):
    n(any number) Set number. Multi digit can be used (13, 320, etc...).
                  Used/reset by other key.
    k/j        Up/Down (if n is given, n-th up/n-th down).
+   C-p/C-n    Up/Down.
    C-u/C-d    Half page down/Half page down.
    C-b/C-f    Page up/Page down.
+   M-v/C-v    Page up/Page down.
    gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
    d          Delete current candidate. (in case you use input file.)
    s          Show detail of current candidate.
@@ -659,9 +661,6 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
 } # }}}
 
 _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
-if [ "x$ret" != "x" ];then
-  echo $ret is selected
-fi
   [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
   _sf_printline 0 $_s_cursor_r $_s_current_n
@@ -714,7 +713,7 @@ _sf_search () { # {{{
       local r=$_s_read
       case $r in
         $'\x1b') # Esc
-          if [ $_s_n -eq 0 ];then
+          if [ $_s_n -eq 0 ] || [ $_s_keymode -eq 1 ];then
             _s_inputs=("${_s_pre_inputs[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
@@ -722,6 +721,12 @@ _sf_search () { # {{{
           fi
           return
           ;;
+        $'\x10' ) # ^P
+          _sf_n_up; continue;;
+        $'\x0E' ) # ^N
+          _sf_n_down; continue;;
+        $'\x16' ) # ^V
+          _s_n_move=$((_s_max_show)); _sf_n_down;;
         ""|$'\n')
           _sf_select
           return
@@ -1151,13 +1156,19 @@ _sf_main () { # {{{
       # Vim mode
       case $r in
         $'\x04') # ^D
-          _s_n_move=$((_s_max_show/2));_sf_n_down;;
+          _s_n_move=$((_s_max_show/2)); _sf_n_down;;
         $'\x06' ) # ^F
-          _s_n_move=$((_s_max_show));_sf_n_down;;
+          _s_n_move=$((_s_max_show)); _sf_n_down;;
         $'\x15' ) # ^U
-          _s_n_move=$((_s_max_show/2));_sf_n_up;;
+          _s_n_move=$((_s_max_show/2)); _sf_n_up;;
         $'\x02' ) # ^B
-          _s_n_move=$((_s_max_show));_sf_n_up;;
+          _s_n_move=$((_s_max_show)); _sf_n_up;;
+        $'\x10' ) # ^P
+          _sf_n_up;;
+        $'\x0E' ) # ^N
+          _sf_n_down;;
+        $'\x16' ) # ^V
+          _s_n_move=$((_s_max_show)); _sf_n_down;;
         $'\x1b' ) # Esc
           _s_is_print=0
           if [ "$_s_search" != "" ];then
@@ -1171,6 +1182,10 @@ _sf_main () { # {{{
           else
             _sf_read
             local r2=$_s_read
+            if [ "$r2" = "v" ];then # M-v
+              _s_n_move=$((_s_max_show)); _sf_n_up
+              continue
+            fi
             if [ "$r2" != "[" ];then
               continue
             fi
@@ -1184,7 +1199,7 @@ _sf_main () { # {{{
           fi
           ;;
         / ) _sf_search;;
-        ""|" "|$'\n' ) _sf_select;; # Enter/Space
+        " "|""|$'\n' ) _sf_select;; # Enter/Space (Normally "" corresponds to Enter (line break before any key))
         0 ) _sf_0;;
         1 ) _sf_1;;
         2 ) _sf_2;;
@@ -1257,7 +1272,7 @@ _sf_main () { # {{{
         $'\x0E' ) # ^N
           _sf_n_down;;
         $'\x16' ) # ^V
-          _s_n_move=$((_s_max_show));_sf_n_down;;
+          _s_n_move=$((_s_max_show)); _sf_n_down;;
         $'\x18' ) # ^X
           _sf_quit;;
         $'\x1b' ) # Esc
@@ -1274,14 +1289,17 @@ _sf_main () { # {{{
             _sf_read
             local r2=$_s_read
             if [ "$r2" = "v" ];then # M-v
-              _s_n_move=$((_s_max_show));_sf_n_up
+              _s_n_move=$((_s_max_show)); _sf_n_up
               continue
             fi
           fi
           ;;
         [a-zA-Z0-9] ) _sf_search $r;;
         " " ) _sf_search $r;;
-        $'\n' ) _sf_select;; # Enter/Space
+        ""|$'\n') # Enter
+          _sf_select
+          return
+          ;;
         * ) continue;;
       esac
     fi

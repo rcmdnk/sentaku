@@ -109,8 +109,10 @@ Other options and key operations at sentaku window are::
        n(any number) Set number. Multi digit can be used (13, 320, etc...).
                      Used/reset by other key.
        k/j        Up/Down (if n is given, n-th up/n-th down).
+       C-p/C-n    Up/Down.
        C-u/C-d    Half page down/Half page down.
        C-b/C-f    Page up/Page down.
+       M-v/C-v    Page up/Page down.
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
        d          Delete current candidate. (in case you use input file.)
        s          Show detail of current candidate.
@@ -138,7 +140,7 @@ Default mode is Vim mode, in which you can go up/down with k/j, respectively.
 
 If you like emacs mode, you use `-E` option,
 or set the value like `export SENTAKU_KEYMODE=1` in your `.bashrc`/`.zshrc`.
-In this mode, you can use `<C-n>`/`<C-p>` for going up/down, respectively.
+In this mode, `<C-n>`/`<C-p>` are used for going up/down, respectively (These keys are also available at Vim mode).
 It has nice feature that you can start incremental search directly
 by pushing any normal keys.
 
