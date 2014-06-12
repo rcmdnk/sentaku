@@ -97,17 +97,20 @@ Other options and key operations at sentaku window are::
        -a         Align input list (set selected one to the first).
        -d         Enable Delete at sentaku window.
        -m         Execute main function even if it is not after pipe.
-                  (e.g. "-m -f <file>" == "-F <file>")
+       -r <n>     Return nth value directly.
        -p         Push words to the file.
+       -E         Use Emacs mode
+       -V         Use Vmacs mode
+       -c         Load functions as a child process in other sentaku process.
        -n         Don't run functions, to just source this file
        -h         Print this HELP and exit
     
-    Key operation at sentaku window:
+    Key operation at sentaku window (Vim mode):
        n(any number) Set number. Multi digit can be used (13, 320, etc...).
                      Used/reset by other key.
        k/j        Up/Down (if n is given, n-th up/n-th down).
-       ^U/^D      Half page down/Half page down.
-       ^B/^F      Page up/Page down.
+       C-u/C-d    Half page down/Half page down.
+       C-b/C-f    Page up/Page down.
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
        d          Delete current candidate. (in case you use input file.)
        s          Show detail of current candidate.
@@ -115,12 +118,33 @@ Other options and key operations at sentaku window are::
        Esc        Stop Search.
        q          Quit.
        Ener/Space Select and Quit.
+    
+    Key operation at sentaku window (Emacs mode):
+       C-p/C-n    Up/Down.
+       M-v/C-v    Page up/Page down.
+       C-x        Quit.
+       Ener       Select and Quit.
+       Esc        Stop Search.
+       Other normal keys start an incremental search
 
-Example: [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh)
+Simple Examples:
+
+* [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh): Example for Vim mode (Default).
+* [ex_emacs](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_emacs.sh): Example for Emacs mode.
+
+* About Vim/Emacs mode
+
+Default mode is Vim mode, in which you can go up/down with k/j, respectively.
+
+If you like emacs mode, you use `-E` option,
+or set the value like `export SENTAKU_KEYMODE=1` in your `.bashrc`/`.zshrc`.
+In this mode, you can use `<C-n>`/`<C-p>` for going up/down, respectively.
+It has nice feature that you can start incremental search directly
+by pushing any normal keys.
 
 * About Search mode
 
-If you push `/`, sentaku enters search mode.
+If you push `/`, sentaku enters search mode (at Vim mode).
 
 You can narrow the list by pushing starting characters.
 
@@ -132,6 +156,13 @@ If you push `Esc` while some candidates are remained,
 you can select them as select window.
 
 When you push `Esc` again, the original list will come back.
+
+You can set search option `SENTAKU_SEARCH_OPT`:
+
+* 0: AND search (ignore case) (Default)
+* 1: AND search (case sensitive)
+* 2: Starts with (ignore case)
+* 3: Starts with(case sensitive)
 
 * [Demo](http://asciinema.org/a/7387)
 

@@ -125,8 +125,12 @@ Key operation at sentaku window (Vim mode):
    Ener/Space Select and Quit.
 
 Key operation at sentaku window (Emacs mode):
-   C-p/C-n    Up/Down
+   C-p/C-n    Up/Down.
    M-v/C-v    Page up/Page down.
+   C-x        Quit.
+   Ener       Select and Quit.
+   Esc        Stop Search.
+   Other normal keys start an incremental search
 "}
 
   # Lines and columns at beginning
@@ -445,7 +449,7 @@ _sf_remove () { # {{{
     _sf_quit
     return
   elif [ $_s_current_n -eq $((_s_n-1)) ];then
-    _sf_n_down
+    _sf_n_up
     _s_is_print=1
   fi
   local orig_ifs=$IFS
@@ -629,7 +633,7 @@ $_s_search"
   fi
 } # }}}
 
-_sf_n_up () { # Increase Number (The line goes down!) {{{
+_sf_n_down () { # The line goes Down. (Increase the line number) {{{
   [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
   _sf_printline 0 $_s_cursor_r $_s_current_n
@@ -654,7 +658,10 @@ _sf_n_up () { # Increase Number (The line goes down!) {{{
   _s_is_print=0
 } # }}}
 
-_sf_n_down () { # Decrease Number (The line goes Up!) {{{
+_sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
+if [ "x$ret" != "x" ];then
+  echo $ret is selected
+fi
   [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
   _sf_printline 0 $_s_cursor_r $_s_current_n
@@ -917,10 +924,10 @@ _sf_i () { # {{{
   _s_is_print=0
 } # }}}
 _sf_j () { # {{{
-  _sf_n_up
+  _sf_n_down
 } # }}}
 _sf_k () { # {{{
-  _sf_n_down
+  _sf_n_up
 } # }}}
 _sf_l () { # {{{
   _s_is_print=0
@@ -1144,13 +1151,13 @@ _sf_main () { # {{{
       # Vim mode
       case $r in
         $'\x04') # ^D
-          _s_n_move=$((_s_max_show/2));_sf_n_up;;
-        $'\x06' ) # ^F
-          _s_n_move=$((_s_max_show));_sf_n_up;;
-        $'\x15' ) # ^U
           _s_n_move=$((_s_max_show/2));_sf_n_down;;
-        $'\x02' ) # ^B
+        $'\x06' ) # ^F
           _s_n_move=$((_s_max_show));_sf_n_down;;
+        $'\x15' ) # ^U
+          _s_n_move=$((_s_max_show/2));_sf_n_up;;
+        $'\x02' ) # ^B
+          _s_n_move=$((_s_max_show));_sf_n_up;;
         $'\x1b' ) # Esc
           _s_is_print=0
           if [ "$_s_search" != "" ];then
@@ -1170,9 +1177,9 @@ _sf_main () { # {{{
             _sf_read
             local r3=$_s_read
             if [ "$r3" = "A" ];then # cursor up
-              _sf_n_down
-            elif [ "$r3" = "B" ];then # cursor down
               _sf_n_up
+            elif [ "$r3" = "B" ];then # cursor down
+              _sf_n_down
             fi
           fi
           ;;
@@ -1246,11 +1253,11 @@ _sf_main () { # {{{
       # Emacs mode
       case $r in
         $'\x10' ) # ^P
-          _sf_n_down;;
-        $'\x0E' ) # ^N
           _sf_n_up;;
+        $'\x0E' ) # ^N
+          _sf_n_down;;
         $'\x16' ) # ^V
-          _s_n_move=$((_s_max_show));_sf_n_up;;
+          _s_n_move=$((_s_max_show));_sf_n_down;;
         $'\x18' ) # ^X
           _sf_quit;;
         $'\x1b' ) # Esc
@@ -1267,7 +1274,7 @@ _sf_main () { # {{{
             _sf_read
             local r2=$_s_read
             if [ "$r2" = "v" ];then # M-v
-              _s_n_move=$((_s_max_show));_sf_n_down
+              _s_n_move=$((_s_max_show));_sf_n_up
               continue
             fi
           fi
