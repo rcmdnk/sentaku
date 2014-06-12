@@ -629,7 +629,7 @@ $_s_search"
   fi
 } # }}}
 
-_sf_n_up () { # {{{
+_sf_n_up () { # Increase Number (The line goes down!) {{{
   [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
   _sf_printline 0 $_s_cursor_r $_s_current_n
@@ -654,7 +654,7 @@ _sf_n_up () { # {{{
   _s_is_print=0
 } # }}}
 
-_sf_n_down () { # {{{
+_sf_n_down () { # Decrease Number (The line goes Up!) {{{
   [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
   _sf_printline 0 $_s_cursor_r $_s_current_n
@@ -1246,11 +1246,11 @@ _sf_main () { # {{{
       # Emacs mode
       case $r in
         $'\x10' ) # ^P
-          _sf_n_up;;
-        $'\x0E' ) # ^N
           _sf_n_down;;
+        $'\x0E' ) # ^N
+          _sf_n_up;;
         $'\x16' ) # ^V
-          _s_n_move=$((_s_max_show));_sf_n_down;;
+          _s_n_move=$((_s_max_show));_sf_n_up;;
         $'\x18' ) # ^X
           _sf_quit;;
         $'\x1b' ) # Esc
