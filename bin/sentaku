@@ -24,7 +24,7 @@
 #CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # }}}
 
-# Default variables
+# Default variables # {{{
 _SENTAKU_INPUT_FILE="$HOME/.sentaku_input"
 _SENTAKU_SEPARATOR=$IFS
 _SENTAKU_MAX=20
@@ -32,8 +32,10 @@ _SENTAKU_NOHEADER=0
 _SENTAKU_NONUMBER=0
 _SENTAKU_SHOWLAST=0
 _SENTAKU_CHILD=0
-_SENTAKU_SEARCH_OPT=0 # 0: AND (ignore case), 1: AND (case sensitive), 2: starts with
+_SENTAKU_SEARCH_OPT=0 # 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive)
+_SENTAKU_KEYMODE=0
 _SENTAKU_DEBUG=0
+# }}}
 
 _sf_initialize () { # {{{
   # Set variables
@@ -55,6 +57,7 @@ _sf_initialize () { # {{{
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
   _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
   _s_search_opt=${SENTAKU_SEARCH_OPT:-$_SENTAKU_SEARCH_OPT}
+  _s_keymode=${SENTAKU_KEYMODE:-$_SENTAKU_KEYMODE}
   _s_debug=${SENTAKU_DEBUG:-$_SENTAKU_DEBUG}
   _s_show=""
   _s_lines=0
@@ -76,12 +79,9 @@ _sf_initialize () { # {{{
   _s_g=0
   _s_n_move=0
   _s_break=0
-
   _s_search=""
   _s_pre_inputs=0
-
   _s_read=""
-
   _s_zsh_ksharrays=0
 
   _s_ret=0
@@ -104,16 +104,18 @@ Arguments:
    -m         Execute main function even if it is not after pipe.
    -r <n>     Return nth value directly.
    -p         Push words to the file.
+   -E         Use Emacs mode
+   -V         Use Vmacs mode
    -c         Load functions as a child process in other sentaku process.
    -n         Don't run functions, to just source this file
    -h         Print this HELP and exit
 
-Key operation at sentaku window:
+Key operation at sentaku window (Vim mode):
    n(any number) Set number. Multi digit can be used (13, 320, etc...).
                  Used/reset by other key.
    k/j        Up/Down (if n is given, n-th up/n-th down).
-   ^U/^D      Half page down/Half page down.
-   ^B/^F      Page up/Page down.
+   C-u/C-d    Half page down/Half page down.
+   C-b/C-f    Page up/Page down.
    gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
    d          Delete current candidate. (in case you use input file.)
    s          Show detail of current candidate.
@@ -121,6 +123,10 @@ Key operation at sentaku window:
    Esc        Stop Search.
    q          Quit.
    Ener/Space Select and Quit.
+
+Key operation at sentaku window (Emacs mode):
+   C-p/C-n    Up/Down
+   M-v/C-v    Page up/Page down.
 "}
 
   # Fix array for zsh
@@ -163,6 +169,9 @@ _sf_finalize () { # {{{
   unset _s_noheader
   unset _s_nonumber
   unset _s_showlast
+  unset _s_search_opt
+  unset _s_keymode
+  unset _s_debug
   unset _s_show
   unset _s_lines
   unset _s_cols
@@ -183,7 +192,8 @@ _sf_finalize () { # {{{
   unset _s_g
   unset _s_n_move
   unset _s_break
-
+  unset _s_search
+  unset _s_pre_inputs
   unset _s_read
 
   unset _s_help
@@ -314,6 +324,7 @@ _sf_check_args () { # {{{
       "-l" ) _s_showlast=1;;
       "-a" ) _s_align=1;;
       "-d" ) _s_delete=1;;
+      "-m" ) ;;
       "-r" )
         if expr "$2" : '[0-9]*' > /dev/null;then
           _s_current_n=$2
@@ -323,14 +334,16 @@ _sf_check_args () { # {{{
           return 1
         fi
         ;;
-      "-c" ) ;;
-      "-m" ) ;;
-      "-n" ) ;;
       "-p" )
         shift
         _sf_push "$@"
         return $?
         ;;
+      "-N" ) _s_nonumber=1;;
+      "-E" ) _s_keymode=1;;
+      "-V" ) _s_keymode=0;;
+      "-c" ) ;;
+      "-n" ) ;;
       "-h" )
         echo "$_s_help" >/dev/tty
         return 0
@@ -565,27 +578,29 @@ _sf_set_header () { # {{{
   _s_header=""
   if [ $_s_noheader = 1 -o $_s_lines -lt 10 ];then
     return
-  elif [ $_s_delete -eq 1 ];then
+  fi
+  if [ $_s_delete -eq 1 ];then
+    local delete_key="d(delete), "
+  else
+    local delete_key=""
+  fi
+  if [ $_s_keymode -eq 0 ];then
     if [ $_s_cols -ge 67 ];then
       _s_header=" $_s_n values in total
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
- ^D(lf page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- d(delete), /(search), Enter/Space(select), q(quit)"
+ ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
+ ${delete_key}/(search), Enter/Space(select), q(quit)"
     elif [ $_s_cols -ge 40 ];then
       _s_header=" $_s_n values in total
  vimike updown, e.g)j:down, k:up, gg/G
- d(delete), Enter/Space(select), q(quit)"
+ ${delete_key}Enter/Space(select), q(quit)"
     fi
   else
-    if [ $_s_cols -ge 67 ];then
+    if [ $_s_cols -ge 50 ];then
       _s_header=" $_s_n values in total
- [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
- ^Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- /(search), Enter/Space(select), q(quit)"
-    elif [ $_s_cols -ge 40 ];then
-      _s_header=" $_s_n values in total
- v-like updown, e.g)j:down, k:up, gg/G
- Enter/Space(select), q(quit)"
+ C-n(down), C-j(up), C-v(Page down), M-v(Page up)
+ ${delete_key}Enter(select), C-x(quit)
+ Other normal keys start an incremental search"
     fi
   fi
 }  # }}}
@@ -667,43 +682,55 @@ _sf_select () { # {{{
 } # }}}
 
 _sf_search () { # {{{
+  local first_char=$1
   local prefix=""
   _s_pre_inputs=("${_s_inputs[@]}")
   _s_search="Search:"
-  _sf_printall
+
+  if [ "$first_char" = "" ];then
+    _sf_printall
+  fi
   while : ;do
-    _sf_read
-    local r=$_s_read
-    case $r in
-      $'\x1b')
-        if [ $_s_n -eq 0 ];then
+    if [ "$first_char" != "" ];then
+      prefix="$first_char"
+      first_char=""
+    else
+      _sf_read
+      local r=$_s_read
+      case $r in
+        $'\x1b') # Esc
+          if [ $_s_n -eq 0 ];then
+            _s_inputs=("${_s_pre_inputs[@]}")
+            _s_n=${#_s_inputs[@]}
+            _s_search=""
+            _sf_reset
+          fi
+          return
+          ;;
+        ""|$'\n')
+          _sf_select
+          return
+          ;;
+        $'\x08') # ^H
+          if [ "$prefix" = "" ];then
+            _s_search=""
+            _sf_reset
+            return
+          fi
+          if [ "x$ZSH_VERSION" != "x" ];then
+            prefix="${prefix[0,$((${#prefix}-2))]}" # need for zsh version < 5
+          else
+            prefix="${prefix: 0: ((${#prefix}-1))}"
+          fi
           _s_inputs=("${_s_pre_inputs[@]}")
           _s_n=${#_s_inputs[@]}
-          _s_search=""
-          _sf_reset
-        fi
-        return
-        ;;
-      ""|$'\n')
-        _sf_select
-        return
-        ;;
-      $'\x08')
-        if [ "$prefix" = "" ];then
-          _s_search=""
-          _sf_reset
-          return
-        fi
-        if [ "x$ZSH_VERSION" != "x" ];then
-          prefix="${prefix[0,$((${#prefix}-2))]}" # need for zsh version < 5
-        else
-          prefix="${prefix: 0: ((${#prefix}-1))}"
-        fi
-        _s_inputs=("${_s_pre_inputs[@]}")
-        _s_n=${#_s_inputs[@]}
-        ;;
-      *)prefix="$prefix$_s_read";;
-    esac
+          ;;
+        $'\x15') # ^U
+          prefix=""
+          ;;
+        *)prefix="$prefix$_s_read";;
+      esac
+    fi
 
     _s_search="Search:$prefix"
     local inputs
@@ -735,17 +762,22 @@ _sf_search_check () { # {{{
     else
       local ic=""
     fi
-    if ! echo "${2}"| grep $ic -q "^${1}";then
-      return 1
-    fi
-  else
     local words=(${1})
     local w
     for w in ${words[@]};do
-      if ! echo "${2}"| grep -q "${w}";then
+      if ! echo "${2}"| grep $ic -q "${w}";then
         return 1
       fi
     done
+  else
+    if [ $_s_search_opt -eq 2 ];then
+      local ic="-i"
+    else
+      local ic=""
+    fi
+    if ! echo "${2}"| grep $ic -q "^${1}";then
+      return 1
+    fi
   fi
   return 0
 } # }}}
@@ -1100,110 +1132,144 @@ _sf_main () { # {{{
     _sf_printall 1
     _sf_read
     local r=$_s_read
-    case $r in
-      '\e[A' ) _sf_n_up;;
-      '\e[B' ) _sf_n_down;;
-      'A' ) _sf_n_up;;
-      'B' ) _sf_n_down;;
-      $'\x04') # ^D
-        _s_n_move=$((_s_max_show/2));_sf_n_up;;
-      $'\x06' ) # ^F
-        _s_n_move=$((_s_max_show));_sf_n_up;;
-      $'\x15' ) # ^U
-        _s_n_move=$((_s_max_show/2));_sf_n_down;;
-      $'\x02' ) # ^B
-        _s_n_move=$((_s_max_show));_sf_n_down;;
-      $'\x1b' ) # Esc
-        _s_is_print=0
-        if [ "$_s_search" != "" ];then
-          local orig_ifs=$IFS
-          IFS="$_s_s"
-          _s_inputs=("${_s_pre_inputs[@]}")
-          _s_n=${#_s_inputs[@]}
-          _s_search=""
-          IFS=$orig_ifs
-          _sf_reset
-        else
-          _sf_read
-          local r2=$_s_read
-          if [ "$r2" != "[" ];then
-            continue
+    if [ $_s_keymode -eq 0 ];then
+      # Vim mode
+      case $r in
+        $'\x04') # ^D
+          _s_n_move=$((_s_max_show/2));_sf_n_up;;
+        $'\x06' ) # ^F
+          _s_n_move=$((_s_max_show));_sf_n_up;;
+        $'\x15' ) # ^U
+          _s_n_move=$((_s_max_show/2));_sf_n_down;;
+        $'\x02' ) # ^B
+          _s_n_move=$((_s_max_show));_sf_n_down;;
+        $'\x1b' ) # Esc
+          _s_is_print=0
+          if [ "$_s_search" != "" ];then
+            local orig_ifs=$IFS
+            IFS="$_s_s"
+            _s_inputs=("${_s_pre_inputs[@]}")
+            _s_n=${#_s_inputs[@]}
+            _s_search=""
+            IFS=$orig_ifs
+            _sf_reset
+          else
+            _sf_read
+            local r2=$_s_read
+            if [ "$r2" != "[" ];then
+              continue
+            fi
+            _sf_read
+            local r3=$_s_read
+            if [ "$r3" = "A" ];then # cursor up
+              _sf_n_down
+            elif [ "$r3" = "B" ];then # cursor down
+              _sf_n_up
+            fi
           fi
-          _sf_read
-          local r3=$_s_read
-          if [ "$r3" = "A" ];then # cursor up
-            _sf_n_down
-          elif [ "$r3" = "B" ];then # cursor down
-            _sf_n_up
+          ;;
+        / ) _sf_search;;
+        ""|" "|$'\n' ) _sf_select;; # Enter/Space
+        0 ) _sf_0;;
+        1 ) _sf_1;;
+        2 ) _sf_2;;
+        3 ) _sf_3;;
+        4 ) _sf_4;;
+        5 ) _sf_5;;
+        6 ) _sf_6;;
+        7 ) _sf_7;;
+        8 ) _sf_8;;
+        9 ) _sf_9;;
+        a ) _sf_a;;
+        b ) _sf_b;;
+        c ) _sf_c;;
+        d ) _sf_d;;
+        e ) _sf_e;;
+        f ) _sf_f;;
+        g ) _sf_g;;
+        h ) _sf_h;;
+        i ) _sf_i;;
+        j ) _sf_j;;
+        k ) _sf_k;;
+        l ) _sf_l;;
+        m ) _sf_m;;
+        n ) _sf_n;;
+        o ) _sf_o;;
+        p ) _sf_p;;
+        q ) _sf_q;;
+        r ) _sf_r;;
+        s ) _sf_s;;
+        t ) _sf_t;;
+        u ) _sf_u;;
+        v ) _sf_v;;
+        w ) _sf_w;;
+        x ) _sf_x;;
+        y ) _sf_y;;
+        z ) _sf_z;;
+        A ) _sf_A;;
+        B ) _sf_B;;
+        C ) _sf_C;;
+        D ) _sf_D;;
+        E ) _sf_E;;
+        F ) _sf_F;;
+        G ) _sf_G;;
+        H ) _sf_H;;
+        I ) _sf_I;;
+        J ) _sf_J;;
+        K ) _sf_K;;
+        L ) _sf_L;;
+        M ) _sf_M;;
+        N ) _sf_N;;
+        O ) _sf_O;;
+        P ) _sf_P;;
+        Q ) _sf_Q;;
+        R ) _sf_R;;
+        S ) _sf_S;;
+        T ) _sf_T;;
+        U ) _sf_U;;
+        V ) _sf_V;;
+        W ) _sf_W;;
+        X ) _sf_X;;
+        Y ) _sf_Y;;
+        Z ) _sf_Z;;
+        * ) continue;;
+      esac
+    else
+      # Emacs mode
+      case $r in
+        $'\x10' ) # ^P
+          _sf_n_up;;
+        $'\x0E' ) # ^N
+          _sf_n_down;;
+        $'\x16' ) # ^V
+          _s_n_move=$((_s_max_show));_sf_n_down;;
+        $'\x18' ) # ^X
+          _sf_quit;;
+        $'\x1b' ) # Esc
+          _s_is_print=0
+          if [ "$_s_search" != "" ];then
+            local orig_ifs=$IFS
+            IFS="$_s_s"
+            _s_inputs=("${_s_pre_inputs[@]}")
+            _s_n=${#_s_inputs[@]}
+            _s_search=""
+            IFS=$orig_ifs
+            _sf_reset
+          else
+            _sf_read
+            local r2=$_s_read
+            if [ "$r2" = "v" ];then # M-v
+              _s_n_move=$((_s_max_show));_sf_n_down
+              continue
+            fi
           fi
-        fi
-        ;;
-      / ) _sf_search;;
-      ""|" "|$'\n' ) _sf_select;; # Enter/Space
-      0 ) _sf_0;;
-      1 ) _sf_1;;
-      2 ) _sf_2;;
-      3 ) _sf_3;;
-      4 ) _sf_4;;
-      5 ) _sf_5;;
-      6 ) _sf_6;;
-      7 ) _sf_7;;
-      8 ) _sf_8;;
-      9 ) _sf_9;;
-      a ) _sf_a;;
-      b ) _sf_b;;
-      c ) _sf_c;;
-      d ) _sf_d;;
-      e ) _sf_e;;
-      f ) _sf_f;;
-      g ) _sf_g;;
-      h ) _sf_h;;
-      i ) _sf_i;;
-      j ) _sf_j;;
-      k ) _sf_k;;
-      l ) _sf_l;;
-      m ) _sf_m;;
-      n ) _sf_n;;
-      o ) _sf_o;;
-      p ) _sf_p;;
-      q ) _sf_q;;
-      r ) _sf_r;;
-      s ) _sf_s;;
-      t ) _sf_t;;
-      u ) _sf_u;;
-      v ) _sf_v;;
-      w ) _sf_w;;
-      x ) _sf_x;;
-      y ) _sf_y;;
-      z ) _sf_z;;
-      A ) _sf_A;;
-      B ) _sf_B;;
-      C ) _sf_C;;
-      D ) _sf_D;;
-      E ) _sf_E;;
-      F ) _sf_F;;
-      G ) _sf_G;;
-      H ) _sf_H;;
-      I ) _sf_I;;
-      J ) _sf_J;;
-      K ) _sf_K;;
-      L ) _sf_L;;
-      M ) _sf_M;;
-      N ) _sf_N;;
-      O ) _sf_O;;
-      P ) _sf_P;;
-      Q ) _sf_Q;;
-      R ) _sf_R;;
-      S ) _sf_S;;
-      T ) _sf_T;;
-      U ) _sf_U;;
-      V ) _sf_V;;
-      W ) _sf_W;;
-      X ) _sf_X;;
-      Y ) _sf_Y;;
-      Z ) _sf_Z;;
-      * ) continue;;
-    esac
+          ;;
+        [a-zA-Z0-9] ) _sf_search $r;;
+        " " ) _sf_search $r;;
+        $'\n' ) _sf_select;; # Enter/Space
+        * ) continue;;
+      esac
+    fi
     [ $_s_break -eq 1 ] && break
   done
 
@@ -1222,6 +1288,7 @@ _sf_main () { # {{{
   _sf_finalize
 } # }}}
 
+# Execution part {{{
 _s_is_exec=1
 _sf_check_args_first () { # {{{
   while [ $# -gt 0 ];do
@@ -1245,3 +1312,4 @@ fi
 
 # Clean up
 unset _s_is_exec
+# }}}
