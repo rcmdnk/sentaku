@@ -11,6 +11,7 @@ _sf_execute () { # {{{
 _sf_select () { # {{{
   vim -d "$_s_first_dir/${_s_inputs[$_s_current_n]}"\
     "$_s_second_dir/${_s_inputs[$_s_current_n]}" </dev/tty
+  _sf_remove
   tput civis >/dev/tty 2>/dev/null || tput vi >/dev/tty 2>/dev/null
 } # }}}
 
