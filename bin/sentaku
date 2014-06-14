@@ -102,6 +102,7 @@ Arguments:
    -a         Align input list (set selected one to the first).
    -d         Enable Delete at sentaku window.
    -m         Execute main function even if it is not after pipe.
+                  (e.g. "-m -f <file>" == "-F <file>")
    -r <n>     Return nth value directly.
    -p         Push words to the file.
    -E         Use Emacs mode

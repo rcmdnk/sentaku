@@ -98,6 +98,7 @@ Other options and key operations at sentaku window are::
        -d         Enable Delete at sentaku window.
        -m         Execute main function even if it is not after pipe.
        -r <n>     Return nth value directly.
+                  (e.g. "-m -f <file>" == "-F <file>")
        -p         Push words to the file.
        -E         Use Emacs mode
        -V         Use Vmacs mode
@@ -128,11 +129,6 @@ Other options and key operations at sentaku window are::
        Ener       Select and Quit.
        Esc        Stop Search.
        Other normal keys start an incremental search
-
-Simple Examples:
-
-* [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh): Example for Vim mode (Default).
-* [ex_emacs](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_emacs.sh): Example for Emacs mode.
 
 * About Vim/Emacs mode
 
@@ -170,6 +166,11 @@ You can set search option `SENTAKU_SEARCH_OPT`:
 * [Demo](http://asciinema.org/a/7387)
 
 [![search](http://rcmdnk.github.io/images/post/20140127_sentaku_search.jpg)](http://asciinema.org/a/7387)
+
+Simple Examples:
+
+* [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh): Example for Vim mode (Default).
+* [ex_emacs](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_emacs.sh): Example for Emacs mode.
 
 ## Use as a library
 
