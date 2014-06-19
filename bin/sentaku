@@ -102,7 +102,7 @@ Arguments:
    -a         Align input list (set selected one to the first).
    -d         Enable Delete at sentaku window.
    -m         Execute main function even if it is not after pipe.
-                  (e.g. "-m -f <file>" == "-F <file>")
+                  (e.g. -m -f <file> == -F <file>)
    -r <n>     Return nth value directly.
    -p         Push words to the file.
    -E         Use Emacs mode
@@ -119,6 +119,7 @@ Key operation at sentaku window (Vim mode):
    C-u/C-d    Half page down/Half page down.
    C-b/C-f    Page up/Page down.
    M-v/C-v    Page up/Page down.
+   C-i/C-d    Move the item up/down
    gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
    d          Delete current candidate. (in case you use input file.)
    s          Show detail of current candidate.
@@ -130,6 +131,7 @@ Key operation at sentaku window (Vim mode):
 Key operation at sentaku window (Emacs mode):
    C-p/C-n    Up/Down.
    M-v/C-v    Page up/Page down.
+   C-i/C-d    Move the item up/down
    C-x        Quit.
    Ener       Select and Quit.
    Esc        Stop Search.

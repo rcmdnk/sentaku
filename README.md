@@ -114,6 +114,7 @@ Other options and key operations at sentaku window are::
        C-u/C-d    Half page down/Half page down.
        C-b/C-f    Page up/Page down.
        M-v/C-v    Page up/Page down.
+       C-i/C-d    Move the item up/down
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
        d          Delete current candidate. (in case you use input file.)
        s          Show detail of current candidate.
@@ -125,6 +126,7 @@ Other options and key operations at sentaku window are::
     Key operation at sentaku window (Emacs mode):
        C-p/C-n    Up/Down.
        M-v/C-v    Page up/Page down.
+       C-i/C-d    Move the item up/down
        C-x        Quit.
        Ener       Select and Quit.
        Esc        Stop Search.
@@ -139,6 +141,15 @@ or set the value like `export SENTAKU_KEYMODE=1` in your `.bashrc`/`.zshrc`.
 In this mode, `<C-n>`/`<C-p>` are used for going up/down, respectively (These keys are also available at Vim mode).
 It has nice feature that you can start incremental search directly
 by pushing any normal keys.
+
+* Simple Examples:
+    * [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh): Example for Vim mode (Default).
+    * [ex_emacs](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_emacs.sh): Example for Emacs mode.
+
+* Item Up/Down Demo
+
+![item_up_down](http://rcmdnk.github.io/images/post/20140621_sentaku_item_updown.gif)
+
 
 * About Search mode
 
@@ -163,14 +174,13 @@ You can set search option `SENTAKU_SEARCH_OPT`:
 * 2: Starts with (ignore case)
 * 3: Starts with(case sensitive)
 
-* [Demo](http://asciinema.org/a/7387)
+* [Search Demo for Vim mode, SENTAKU_KEYMODE = 3](http://asciinema.org/a/7387)
 
 [![search](http://rcmdnk.github.io/images/post/20140127_sentaku_search.jpg)](http://asciinema.org/a/7387)
 
-Simple Examples:
+* [Search Demo for Emacs mdoe, SENTAKU_KEYMODE = 1](http://rcmdnk.github.io/images/post/20140613_sentaku_emacs.gif)
 
-* [ex_pipe.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_pipe.sh): Example for Vim mode (Default).
-* [ex_emacs](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_emacs.sh): Example for Emacs mode.
+![sentaku_emacs](http://rcmdnk.github.io/images/post/20140613_sentaku_emacs.gif)
 
 ## Use as a library
 
