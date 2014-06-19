@@ -370,7 +370,7 @@ _sf_check_args () { # {{{
   return 0
 } # }}}
 
-_sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
+_sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   local stdin=$_s_stdin
   local check=1
   if [ $# -gt 0 ];then
@@ -415,7 +415,7 @@ _sf_get_values () { # _sf_get_values [<is_stdin> [<is_check>]] {{{
   return 0
 } # }}}
 
-_sf_align_values () { # _sf_align_values [<n> [<is_get>]]{{{
+_sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
   local n=${1:-$_s_current_n}
   local is_get=${2:-1}
   if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "$_s_n" ];then
@@ -643,7 +643,7 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
   local i=0
   for ((i=0; i<_s_n_move; i++));do
     if [ $_s_current_n -eq $((_s_n-1)) ];then
-      :
+      break
     elif [ $_s_cursor_r -eq $((_s_lines-1)) ];then
       ((_s_n_offset++));((_s_current_n++))
       all=1
@@ -673,7 +673,7 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
       ((_s_n_offset--));((_s_current_n--))
       all=1
     else
-      :
+      break
     fi
   done
   if [ $all -eq 1 ];then
@@ -684,6 +684,40 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
   _s_g=0
   _s_n_move=0
   _s_is_print=0
+} # }}}
+
+_sf_item_move_up () { # {{{ Move the item up
+  [ $_s_current_n -eq 0 ] && _s_is_print=0 && return
+
+  [ $_s_n_move -eq 0 ] && _s_n_move=1
+
+  local replace=$((_s_current_n-_s_n_move))
+  [ $replace -lt 0 ] && replace=0
+
+  local v_current=${_s_inputs[$_s_current_n]}
+  local v_replace=${_s_inputs[$replace]}
+  _s_inputs[$_s_current_n]=$v_replace
+  _s_inputs[$replace]=$v_current
+  [ $_s_stdin -eq 0 ] && _sf_align_values 0 0
+  _sf_printall
+  _sf_n_up
+} # }}}
+
+_sf_item_move_down () { # {{{ Move the item down
+  [ $_s_current_n -eq $((_s_n-1)) ] && _s_is_print=0 && return
+
+  [ $_s_n_move -eq 0 ] && _s_n_move=1
+
+  local replace=$((_s_current_n+_s_n_move))
+  [ $replace -gt $((_s_n-1)) ] && replace=$((_s_n-1))
+
+  local v_current=${_s_inputs[$_s_current_n]}
+  local v_replace=${_s_inputs[$replace]}
+  _s_inputs[$_s_current_n]=$v_replace
+  _s_inputs[$replace]=$v_current
+  [ $_s_stdin -eq 0 ] && _sf_align_values 0 0
+  _sf_printall
+  _sf_n_down
 } # }}}
 
 _sf_quit () { # {{{
@@ -1170,6 +1204,10 @@ _sf_main () { # {{{
           _sf_n_down;;
         $'\x16' ) # ^V
           _s_n_move=$((_s_max_show)); _sf_n_down;;
+        $'\x09' ) # ^I
+          _sf_item_move_up;;
+        $'\x0F' ) # ^O
+          _sf_item_move_down;;
         $'\x1b' ) # Esc
           _s_is_print=0
           if [ "$_s_search" != "" ];then
@@ -1274,6 +1312,10 @@ _sf_main () { # {{{
           _sf_n_down;;
         $'\x16' ) # ^V
           _s_n_move=$((_s_max_show)); _sf_n_down;;
+        $'\x09' ) # ^I
+          _sf_item_move_up;;
+        $'\x0F' ) # ^O
+          _sf_item_move_down;;
         $'\x18' ) # ^X
           _sf_quit;;
         $'\x1b' ) # Esc
