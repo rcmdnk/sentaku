@@ -162,6 +162,14 @@ _sf_initialize_user () { # {{{
 } # }}}
 
 _sf_finalize () { # {{{
+  if [ $_s_ret -eq 0 ] && [ $_s_current_n -ge 0 ];then
+    # Execution for selected value
+    _sf_execute $_s_current_n
+
+    # Align values
+    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n 0
+  fi
+
   if [ $_SENTAKU_CHILD -eq 0 -a $_s_noshow -eq 0 ];then
     # Show cursor
     tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
@@ -1159,26 +1167,24 @@ _sf_main () { # {{{
 
   # Get arguments
   _sf_check_args "$@"
-  local ret=$?
+  _s_ret=$?
   if [ $_s_continue -eq 0 ];then
     _sf_finalize
-    return $ret
+    return $?
   fi
 
   # Get values
   _sf_get_values_wrapper
-  local ret=$?
-  if [ $ret -ne 0 ];then
+  _s_ret=$?
+  if [ $_s_ret -ne 0 ];then
     _sf_finalize
-    return $ret
+    return $?
   fi
 
   # Return nth
   if [ $_s_current_n -ge 0 ];then
-    _sf_execute $_s_current_n
-    local ret=$?
     _sf_finalize
-    return $ret
+    return $?
   fi
 
   # Hide displays
@@ -1355,14 +1361,6 @@ _sf_main () { # {{{
 
   # Clear (Show cursor, Restore display, Enable echo input)
   _sf_clear
-
-  if [ $_s_current_n -ge 0 ];then
-    # Execution for selected value
-    _sf_execute $_s_current_n
-
-    # Align values
-    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n 0
-  fi
 
   # Finalization
   _sf_finalize
