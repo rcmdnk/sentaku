@@ -232,7 +232,7 @@ _sf_finalize_user () { # {{{
 } # }}}
 
 _sf_execute () { # {{{
-  local n=${1:-0}
+  local n=${1:-$_s_current_n}
   printf "%s" "${_s_inputs[$n]}"
 } # }}}
 

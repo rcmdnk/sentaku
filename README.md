@@ -271,8 +271,8 @@ _sf_select () { # {{{
 } # }}}
 ```
 
-If `_s_break` flag is 1, it breaks key operation and goes `_sf_execute ()`.
-If you want to skip `_sf_execute`, call `_sf_quit` instead of `_s_breack=`.
+If `_s_break` flag is 1, it breaks key operation and goes to `_sf_execute ()`.
+If you want to skip `_sf_execute`, call `_sf_quit` instead of `_sf_select=`.
 
 In this script, this function is redefined like:
 
