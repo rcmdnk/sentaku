@@ -372,6 +372,11 @@ _sf_check_args () { # {{{
   return 0
 } # }}}
 
+_sf_get_values_wrapper () { # {{{ _sf_get_values_wrapper [<is_stdin> [<is_check>]]
+  _sf_get_values
+  _sf_setview
+} # }}}
+
 _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   local stdin=$_s_stdin
   local check=1
@@ -403,9 +408,6 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   fi
   _s_n=${#_s_inputs[@]}
 
-  # Reset view, especially for _s_max_show
-  _sf_setview
-
   if [ $check -eq 1 -a $_s_n -eq 0 ];then
     if [ $stdin -eq 0 -o $_s_use_file -eq 1 ];then
       _sf_echo "No value in $_s_file\n"
@@ -433,7 +435,7 @@ _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
     fi
   done
   if [ $is_get -eq 1 ];then
-    _sf_get_values
+    _sf_get_values_wrapper
   fi
 } # }}}
 
@@ -444,7 +446,7 @@ _sf_delete () { # {{{
   for ((i=0; i<$_s_n; i++));do
     [ $i -ne $n ] && printf "%s$_s_s_push" "${_s_inputs[$i]}" >> "$_s_file"
   done
-  _sf_get_values
+  _sf_get_values_wrapper
 } # }}}
 
 _sf_remove () { # {{{
@@ -1139,7 +1141,7 @@ _sf_push () { # {{{
   fi
 
   # Renew values
-  _sf_get_values 0 0
+  _sf_get_values_wrapper 0 0
   _s_inputs=("$input" "${_s_inputs[@]}")
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
@@ -1164,7 +1166,7 @@ _sf_main () { # {{{
   fi
 
   # Get values
-  _sf_get_values
+  _sf_get_values_wrapper
   local ret=$?
   if [ $ret -ne 0 ];then
     _sf_finalize
