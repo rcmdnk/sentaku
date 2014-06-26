@@ -460,7 +460,7 @@ _sf_delete () { # {{{
 _sf_remove () { # {{{
   local n=$_s_current_n
   if [ $_s_n -eq 1 ];then
-    _sf_echo "There are no remained diff files\n"
+    _sf_echo "There are no remained entries\n"
     _sf_quit
     return
   elif [ $_s_current_n -eq $((_s_n-1)) ];then
