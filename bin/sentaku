@@ -80,6 +80,7 @@ _sf_initialize () { # {{{
   _s_n_move=0
   _s_break=0
   _s_search=""
+  _s_search_words=""
   _s_pre_inputs=0
   _s_read=""
   _s_zsh_ksharrays=0
@@ -214,6 +215,7 @@ _sf_finalize () { # {{{
   unset _s_n_move
   unset _s_break
   unset _s_search
+  unset _s_search_words
   unset _s_pre_inputs
   unset _s_read
 
@@ -482,11 +484,11 @@ _sf_remove () { # {{{
   _s_n=${#_s_inputs[@]}
 } # }}}
 
-_sf_show () { # _sf_show [is_last [n_show]] {{{
-  local is_last=${1:-$_s_showlast}
+_sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
+  local is_selected=${1:-0}
   local n_show=${2:-$_s_cols}
   if [ ${#_s_show} -gt $n_show ];then
-    if [ $is_last -eq 0 ];then
+    if [ $_s_showlast -eq 0 ];then
       if [ "x$ZSH_VERSION" != "x" ];then
         _s_show="${_s_show[0,$((n_show-1))]}" # need for zsh version < 5
       else
@@ -500,6 +502,34 @@ _sf_show () { # _sf_show [is_last [n_show]] {{{
       fi
     fi
   fi
+
+  # Color search words
+  if [ "$_s_search_words" != "" ];then
+    local negative=""
+    if [ $is_selected -eq 1 ];then
+      negative=";7"
+    fi
+    if [ $_s_search_opt -le 1 ];then
+      if [ $_s_search_opt -eq 0 ];then
+        local ic="i"
+      else
+        local ic=""
+      fi
+      local words=(${_s_search_words})
+      local w
+      for w in ${words[@]};do
+        _s_show=$(echo $_s_show|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
+      done
+    else
+      if [ $_s_search_opt -eq 2 ];then
+        local ic="i"
+      else
+        local ic=""
+      fi
+      w="${_s_search_words}"
+      _s_show=$(echo $_s_show|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
+    fi
+  fi
 } # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
@@ -508,9 +538,15 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     _sf_quit 1
     return
   fi
-  _s_show="$(echo "${_s_inputs[$3]}"|awk -F\n -v ORS="\\\n" '{print}' |sed 's/\\n$//')"
-  tput cup $2 0 >/dev/tty
-  if [ $1 -eq 1 ];then
+  local is_selected=$1
+  local n_line=$2
+  local n_input=$3
+
+  # Change line breaks to \n (to be shown), and remove the last line break
+  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F\n -v ORS="\\\n" '{print}' |sed 's|\\n$||')"
+
+  tput cup $n_line 0 >/dev/tty
+  if [ $is_selected -eq 1 ];then
     printf "\e[7m" >/dev/tty
   fi
   local n_show=$_s_cols
@@ -519,14 +555,14 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     local nmax=$((_s_n-1))
     local num_width=${#nmax}
     n_show=$((_s_cols-num_width-2))
-    num=$(printf "%${num_width}d: " $3)
+    num=$(printf "%${num_width}d: " $n_input)
   fi
-  _sf_show $_s_showlast $n_show
+  _sf_show $is_selected $n_show
   printf "%s" "$num$_s_show" >/dev/tty
-  if [ $1 -eq 1 ];then
+  if [ $is_selected -eq 1 ];then
     printf "\e[m" >/dev/tty
   fi
-  tput cup $2 0 >/dev/tty
+  tput cup $n_line 0 >/dev/tty
 } # }}}
 
 _sf_printall () { # usage: _sf_printall [not force] {{{
@@ -565,12 +601,7 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
 } # }}}
 
 _sf_print () { # {{{
-  if echo "$*"|grep -q "^-";then
-    printf -
-    printf "$(echo "$*"|sed 's/^-//g')"
-  else
-    printf "$*"
-  fi
+  printf -- "$*"
 } # }}}
 
 _sf_echo () { # {{{
@@ -744,7 +775,7 @@ _sf_select () { # {{{
 
 _sf_search () { # {{{
   local first_char=$1
-  local prefix=""
+  _s_search_words=""
   _s_pre_inputs=("${_s_inputs[@]}")
   _s_search="Search:"
 
@@ -753,7 +784,7 @@ _sf_search () { # {{{
   fi
   while : ;do
     if [ "$first_char" != "" ];then
-      prefix="$first_char"
+      _s_search_words="$first_char"
       first_char=""
     else
       _sf_read
@@ -764,6 +795,7 @@ _sf_search () { # {{{
             _s_inputs=("${_s_pre_inputs[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
+            _s_search_words=""
             _sf_reset
           fi
           return
@@ -779,30 +811,32 @@ _sf_search () { # {{{
           return
           ;;
         $'\x08') # ^H
-          if [ "$prefix" = "" ];then
+          if [ "$_s_search_words" = "" ];then
             _s_search=""
+            _s_search_words=""
             _sf_reset
             return
           fi
           if [ "x$ZSH_VERSION" != "x" ];then
-            prefix="${prefix[0,$((${#prefix}-2))]}" # need for zsh version < 5
+            # need for zsh version < 5
+            _s_search_words="${_s_search_words[0,$((${#_s_search_words}-2))]}"
           else
-            prefix="${prefix: 0: ((${#prefix}-1))}"
+            _s_search_words="${_s_search_words: 0: ((${#_s_search_words}-1))}"
           fi
           _s_inputs=("${_s_pre_inputs[@]}")
           _s_n=${#_s_inputs[@]}
           ;;
         $'\x15') # ^U
-          prefix=""
+          _s_search_words=""
           ;;
-        *)prefix="$prefix$_s_read";;
+        *)_s_search_words="$_s_search_words$_s_read";;
       esac
     fi
 
-    _s_search="Search:$prefix"
+    _s_search="Search:$_s_search_words"
     local inputs
     inputs=()
-    if [ "$prefix" = "" ];then
+    if [ "$_s_search_words" = "" ];then
       _s_inputs=("${_s_pre_inputs[@]}")
       _s_n=${#_s_inputs[@]}
       _s_search="Search:"
@@ -811,7 +845,7 @@ _sf_search () { # {{{
     fi
     local i
     for ((i=0; i<$_s_n; i++));do
-      _sf_search_check "$prefix" "${_s_inputs[$i]}"
+      _sf_search_check "${_s_inputs[$i]}"
       if [ $? -eq 0 ];then
         inputs=("${inputs[@]}" "${_s_inputs[$i]}")
       fi
@@ -823,16 +857,17 @@ _sf_search () { # {{{
 } # }}}
 
 _sf_search_check () { # {{{
+  local input="$1"
   if [ $_s_search_opt -le 1 ];then
     if [ $_s_search_opt -eq 0 ];then
       local ic="-i"
     else
       local ic=""
     fi
-    local words=(${1})
+    local words=(${_s_search_words})
     local w
     for w in ${words[@]};do
-      if ! echo "${2}"| grep $ic -q "${w}";then
+      if ! echo "${input}"| grep $ic -q "${w}";then
         return 1
       fi
     done
@@ -842,7 +877,7 @@ _sf_search_check () { # {{{
     else
       local ic=""
     fi
-    if ! echo "${2}"| grep $ic -q "^${1}";then
+    if ! echo "${input}"| grep $ic -q "^${_s_search_words}";then
       return 1
     fi
   fi
