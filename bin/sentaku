@@ -833,7 +833,7 @@ _sf_search () { # {{{
       esac
     fi
 
-    _s_search="Search:$_s_search_words"
+    _s_search="Search:\e[31m$_s_search_words\e[0m"
     local inputs
     inputs=()
     if [ "$_s_search_words" = "" ];then
@@ -843,6 +843,7 @@ _sf_search () { # {{{
       _sf_reset
       continue
     fi
+    local n_before=${#_s_inputs[@]}
     local i
     for ((i=0; i<$_s_n; i++));do
       _sf_search_check "${_s_inputs[$i]}"
