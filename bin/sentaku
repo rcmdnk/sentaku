@@ -532,7 +532,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   fi
 } # }}}
 
-_sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
+_sf_makeline () { # useage: _sf_printline is_selected n_line n_input {{{
   if [ $# -lt 3 ];then
     _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input), exit\n"
     _sf_quit 1
@@ -545,11 +545,7 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   # Change line breaks to \n (to be shown), and remove the last line break
   _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F\n -v ORS="\\\n" '{print}' |sed 's|\\n$||')"
 
-  tput cup $n_line 0 >/dev/tty
-  if [ $is_selected -eq 1 ];then
-    printf "\e[7m" >/dev/tty
-  fi
-  local n_show=$_s_cols
+  _sf_show $is_selected $n_show
   local num=""
   if [ $_s_nonumber -eq 0 ];then
     local nmax=$((_s_n-1))
@@ -557,11 +553,25 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     n_show=$((_s_cols-num_width-2))
     num=$(printf "%${num_width}d: " $n_input)
   fi
-  _sf_show $is_selected $n_show
-  printf "%s" "$num$_s_show" >/dev/tty
+  _s_show="$num$_s_show"
   if [ $is_selected -eq 1 ];then
-    printf "\e[m" >/dev/tty
+    _s_show="\e[7m${_s_show}\e[m"
   fi
+}
+
+_sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
+  if [ $# -lt 3 ];then
+    _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input), exit\n"
+    _sf_quit 1
+    return
+  fi
+  local is_selected=$1
+  local n_line=$2
+  local n_input=$3
+
+  tput cup $n_line 0 >/dev/tty
+  _sf_makeline $is_selected $n_line $n_input
+  printf "$_s_show" >/dev/tty
   tput cup $n_line 0 >/dev/tty
 } # }}}
 
@@ -587,17 +597,22 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
 
   clear >/dev/tty
 
+  local show=""
+
   # Header
-  [ $_s_noheader != 1 ] && _sf_print "${_s_header}\n" >/dev/tty
+  [ $_s_noheader != 1 ] && show="${_s_header}\n"
 
   local i=0
   for ((i=0; i<_s_max_show; i++));do
     if [ $((i+_s_n_offset)) -eq $_s_current_n ];then
-      _sf_printline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
+      _sf_makeline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
+      show="${show}${_s_show}\n"
     else
-      _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
+      _sf_makeline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
+      show="${show}${_s_show}\n"
     fi
   done
+  _sf_print "${show%%\\n}" >/dev/tty
 } # }}}
 
 _sf_print () { # {{{
