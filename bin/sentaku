@@ -368,12 +368,12 @@ _sf_check_args () { # {{{
       "-c" ) ;;
       "-n" ) ;;
       "-h" )
-        #echo "$_s_help" >/dev/tty
         echo "$_s_help"|${PAGER:-less} >/dev/tty
         return 0
         ;;
       * )
-        echo "$_s_help"|${PAGER:-less} >/dev/tty
+        echo "$(basename $0) $1: unknown argument
+Check \"$(basename $0) -h\" for further information" >/dev/tty
         return 1
         ;;
     esac
