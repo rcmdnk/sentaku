@@ -544,9 +544,8 @@ _sf_makeline () { # useage: _sf_printline is_selected n_line n_input {{{
   local n_input=$3
 
   # Change line breaks to \n (to be shown), and remove the last line break
-  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F\n -v ORS="\\\n" '{print}' |sed 's|\\n$||')"
+  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F\n -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||')"
 
-  _sf_show $is_selected $n_show
   local num=""
   if [ $_s_nonumber -eq 0 ];then
     local nmax=$((_s_n-1))
@@ -554,6 +553,7 @@ _sf_makeline () { # useage: _sf_printline is_selected n_line n_input {{{
     n_show=$((_s_cols-num_width-2))
     num=$(printf "%${num_width}d: " $n_input)
   fi
+  _sf_show $is_selected $n_show
   _s_show="$num$_s_show"
   if [ $is_selected -eq 1 ];then
     _s_show="\e[7m${_s_show}\e[m"
@@ -613,21 +613,21 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
       show="${show}${_s_show}\n"
     fi
   done
-  _sf_print "${show%%\\n}" >/dev/tty
+  _sf_print "${show%%\\n}"
 } # }}}
 
 _sf_print () { # {{{
-  printf -- "$*"
+  printf "%b" "$*" >/dev/tty
 } # }}}
 
 _sf_echo () { # {{{
   if [ $_s_noshow -eq 1 ];then
     :
   elif [ $_s_normal_echo -eq 1 ];then
-    _sf_print "$@" >/dev/tty
+    _sf_print "$*"
   else
     clear >/dev/tty
-    _sf_print "$@" >/dev/tty
+    _sf_print "$*"
     _s_is_print=1
     _sf_wait
   fi
