@@ -118,8 +118,12 @@ Other options and key operations at sentaku window are::
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
        d          Delete current candidate. (in case you use input file.)
        s          Show detail of current candidate.
+       v/Space    Start Visual mode (multiple selection).
        /          Search.
-       Esc        Stop Search.
+       Esc        At search mode, first Esc takes it back to normal mode
+                  with selected words.
+                  Second Esc clear search mode.
+                  Visual mode is cleared by first Esc.
        q          Quit.
        Ener/Space Select and Quit.
     
@@ -128,11 +132,13 @@ Other options and key operations at sentaku window are::
        M-v/C-v    Page up/Page down.
        C-i/C-d    Move the item up/down
        C-x        Quit.
+       Space      Start Visual mode (multiple selection).
+                  At search mode, it starts when space is pushed twice.
        Ener       Select and Quit.
-       Esc        Stop Search.
+       Esc        Clear Search/Visual mode.
        Other normal keys start an incremental search
 
-* About Vim/Emacs mode
+* Vim/Emacs mode
 
 Default mode is Vim mode, in which you can go up/down with k/j, respectively.
 
@@ -151,7 +157,7 @@ by pushing any normal keys.
 ![item_up_down](http://rcmdnk.github.io/images/post/20140621_sentaku_item_updown.gif)
 
 
-* About Search mode
+* Search mode
 
 If you push `/`, sentaku enters search mode (at Vim mode).
 
@@ -181,6 +187,13 @@ You can set search option `SENTAKU_SEARCH_OPT`:
 * [Search Demo for Emacs mdoe, SENTAKU_KEYMODE = 1](http://rcmdnk.github.io/images/post/20140613_sentaku_emacs.gif)
 
 ![sentaku_emacs](http://rcmdnk.github.io/images/post/20140613_sentaku_emacs.gif)
+
+* Visual mode (multi-selection)
+
+By pushing `Space` (or `v` (only Vim mode)),
+you can start to choose multi-line.
+
+Output will be separated by `SENTAKU_SEPARATOR` (default is $IFS).
 
 ## Use as a library
 
