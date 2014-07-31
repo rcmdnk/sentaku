@@ -2,12 +2,12 @@
 
 ## Description {{{
 #
-SENTAKU_VERSION=v0.1.1
-SENTAKU_DATE="30/Jul/2014"
-#
 # Utility to make sentaku (selection) window with shell command.
 #
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
+#
+SENTAKU_VERSION=v0.1.1
+SENTAKU_DATE="30/Jul/2014"
 #
 # }}}
 
