@@ -654,7 +654,7 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
   fi
   local i=0
   for ((i=0; i<_s_max_show; i++));do
-    if ((i+_s_n_offset >=_s_current_n && i+_s_n_offset <=_s_current_n));then
+    if ((i+_s_n_offset >=select_min && i+_s_n_offset <=select_max));then
       _sf_makeline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
       show="${show}${_s_show}\n"
     else
@@ -747,11 +747,8 @@ $_s_search"
 _sf_n_down () { # The line goes Down. (Increase the line number) {{{
   [ $_s_n_move -eq 0 ] && _s_n_move=1
   local all=0
-  if ((_s_visual ==  -1 || _s_visual > _s_current_n));then
-    _sf_printline 0 $_s_cursor_r $_s_current_n
-  elif [ $_s_n_move -ge 2 ];then
-    all=1
-  fi
+  local old_cursor_r=$_s_cursor_r
+  local old_current_n=$_s_current_n
   local i=0
   for ((i=0; i<_s_n_move; i++));do
     if [ $_s_current_n -eq $((_s_n-1)) ];then
@@ -765,8 +762,23 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
   done
   if [ $all -eq 1 ];then
     _sf_printall
-  else
+  elif [ $_s_visual -eq  -1 ];then
+    _sf_printline 0 $old_cursor_r $old_current_n
     _sf_printline 1 $_s_cursor_r $_s_current_n
+  else
+    local tmp_r=$old_cursor_r
+    local tmp_n=$old_current_n
+    while [ $tmp_n -lt $_s_current_n ];do
+      if [ $tmp_n -lt $_s_visual ];then
+        _sf_printline 0 $tmp_r $tmp_n
+      else
+        _sf_printline 1 $tmp_r $tmp_n
+      fi
+      ((tmp_r++));((tmp_n++))
+    done
+    if [ $_s_current_n -gt $_s_visual ];then
+      _sf_printline 1 $_s_cursor_r $_s_current_n
+    fi
   fi
   _s_g=0
   _s_n_move=0
@@ -775,27 +787,58 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
 
 _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
   [ $_s_n_move -eq 0 ] && _s_n_move=1
-  local all=0
-  if ((_s_visual ==  -1 || _s_visual < _s_current_n));then
-    _sf_printline 0 $_s_cursor_r $_s_current_n
-  elif [ $_s_n_move -ge 2 ];then
-    all=1
-  fi
-  local i=0
-  for ((i=0; i<_s_n_move; i++));do
-    if [ $_s_cursor_r -ne $_s_ext_row ];then
-      ((_s_cursor_r--));((_s_current_n--))
-    elif [ $_s_n_offset -gt 0 ];then
-      ((_s_n_offset--));((_s_current_n--))
+  if [ $_s_current_n -ne 0 ];then
+    local all=0
+    local old_cursor_r=$_s_cursor_r
+    local old_current_n=$_s_current_n
+    local i=0
+    local offset_move=$((_s_n_move-(_s_cursor_r-_s_ext_row)))
+    if [ $offset_move -gt 0 ];then
       all=1
+      _s_cursor_r=$_s_ext_row
+      _s_n_offset=$((_s_n_offset-offset_move))
+      if [ $_s_n_offset -lt 0 ];then
+        _s_n_offset=0
+      fi
     else
-      break
+      _s_cursor_r=$((_s_cursor_r-_s_n_move))
     fi
-  done
-  if [ $all -eq 1 ];then
-    _sf_printall
-  else
-    _sf_printline 1 $_s_cursor_r $_s_current_n
+    _s_current_n=$((_s_current_n-_s_n_move))
+    if [ $_s_current_n -lt 0 ];then
+      _s_current_n=0
+    fi
+    #for ((i=0; i<_s_n_move; i++));do
+    #  if [ $_s_cursor_r -ne $_s_ext_row ];then
+    #    ((_s_cursor_r--));((_s_current_n--))
+    #  elif [ $_s_n_offset -gt 0 ];then
+    #    ((_s_n_offset--));((_s_current_n--))
+    #    all=1
+    #  else
+    #    break
+    #  fi
+    #done
+    if [ $all -eq 1 ];then
+      _sf_printall
+    elif [ $_s_current_n -ne $old_current_n ];then
+      if [ $_s_visual -eq  -1 ];then
+        _sf_printline 0 $old_cursor_r $old_current_n
+        _sf_printline 1 $_s_cursor_r $_s_current_n
+      else
+        local tmp_r=$old_cursor_r
+        local tmp_n=$old_current_n
+        while [ $tmp_n -gt $_s_current_n ];do
+          if [ $tmp_n -gt $_s_visual ];then
+            _sf_printline 0 $tmp_r $tmp_n
+          else
+            _sf_printline 1 $tmp_r $tmp_n
+          fi
+          ((tmp_r--));((tmp_n--))
+        done
+        if [ $_s_current_n -lt $_s_visual ];then
+          _sf_printline 1 $_s_cursor_r $_s_current_n
+        fi
+      fi
+    fi
   fi
   _s_g=0
   _s_n_move=0
