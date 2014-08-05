@@ -792,21 +792,6 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
     local old_cursor_r=$_s_cursor_r
     local old_current_n=$_s_current_n
     local i=0
-    #local offset_move=$((_s_n_move-(_s_cursor_r-_s_ext_row)))
-    #if [ $offset_move -gt 0 ];then
-    #  all=1
-    #  _s_cursor_r=$_s_ext_row
-    #  _s_n_offset=$((_s_n_offset-offset_move))
-    #  if [ $_s_n_offset -lt 0 ];then
-    #    _s_n_offset=0
-    #  fi
-    #else
-    #  _s_cursor_r=$((_s_cursor_r-_s_n_move))
-    #fi
-    #_s_current_n=$((_s_current_n-_s_n_move))
-    #if [ $_s_current_n -lt 0 ];then
-    #  _s_current_n=0
-    #fi
     for ((i=0; i<_s_n_move; i++));do
       if [ $_s_cursor_r -ne $_s_ext_row ];then
         ((_s_cursor_r--));((_s_current_n--))
