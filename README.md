@@ -114,7 +114,7 @@ Other options and key operations at sentaku window are::
        C-u/C-d    Half page down/Half page down.
        C-b/C-f    Page up/Page down.
        M-v/C-v    Page up/Page down.
-       C-i/C-d    Move the item up/down
+       C-i/C-o    Move the item up/down
        gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
        d          Delete current candidate. (in case you use input file.)
        s          Show detail of current candidate.
@@ -130,7 +130,7 @@ Other options and key operations at sentaku window are::
     Key operation at sentaku window (Emacs mode):
        C-p/C-n    Up/Down.
        M-v/C-v    Page up/Page down.
-       C-i/C-d    Move the item up/down
+       C-i/C-o    Move the item up/down
        C-x        Quit.
        Space      Start Visual mode (multiple selection).
                   At search mode, it starts when space is pushed twice.
