@@ -93,7 +93,11 @@ _sf_initialize () { # {{{
   _s_break=0
   _s_search=""
   _s_search_words=""
-  _s_pre_inputs=0
+  _s_pre_inputs=()
+  local i
+  for((i=0; i<50;i++));do
+    eval "_s_pre_inputs_$i=()"
+  done
   _s_read=""
   _s_zsh_ksharrays=0
 
@@ -237,6 +241,10 @@ _sf_finalize () { # {{{
   unset _s_search
   unset _s_search_words
   unset _s_pre_inputs
+  local i
+  for((i=0; i<50;i++));do
+    eval "unset _s_pre_inputs_$i"
+  done
   unset _s_read
 
   unset _s_help
@@ -876,9 +884,10 @@ _sf_select () { # {{{
 
 _sf_search () { # {{{
   local first_char=$1
-  _s_search_words=""
-  _s_pre_inputs=("${_s_inputs[@]}")
-  _s_search="Search:"
+  if [ "$_s_search" = "" ];then
+    _s_pre_inputs=("${_s_inputs[@]}")
+    _s_search="Search:"
+  fi
 
   if [ "$first_char" = "" ];then
     _sf_printall
