@@ -93,9 +93,9 @@ _sf_initialize () { # {{{
   _s_break=0
   _s_search=""
   _s_search_words=""
-  _s_pre_inputs=()
+  _s_pre_inputs_n=0
   local i
-  for((i=0; i<50;i++));do
+  for((i=0; i<1000;i++));do
     eval "_s_pre_inputs_$i=()"
   done
   _s_read=""
@@ -240,9 +240,9 @@ _sf_finalize () { # {{{
   unset _s_break
   unset _s_search
   unset _s_search_words
-  unset _s_pre_inputs
+  unset _s_pre_inputs_n
   local i
-  for((i=0; i<50;i++));do
+  for((i=0; i<1000;i++));do
     eval "unset _s_pre_inputs_$i"
   done
   unset _s_read
@@ -885,7 +885,8 @@ _sf_select () { # {{{
 _sf_search () { # {{{
   local first_char=$1
   if [ "$_s_search" = "" ];then
-    _s_pre_inputs=("${_s_inputs[@]}")
+    _s_pre_inputs_0=("${_s_inputs[@]}")
+    _s_pre_inputs_n=0
     _s_search="Search:"
   fi
 
@@ -893,8 +894,9 @@ _sf_search () { # {{{
     _sf_printall
   fi
   while : ;do
+    local del=0
     if [ "$first_char" != "" ];then
-      _s_search_words="$first_char"
+      _s_search_words="$_s_search_words$first_char"
       first_char=""
     else
       _sf_read
@@ -918,7 +920,7 @@ _sf_search () { # {{{
             fi
           fi
           if [ $_s_n -eq 0 ] || [ $_s_keymode -eq 1 ];then
-            _s_inputs=("${_s_pre_inputs[@]}")
+            _s_inputs=("${_s_pre_inputs_0[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
             _s_search_words=""
@@ -949,11 +951,14 @@ _sf_search () { # {{{
           else
             _s_search_words="${_s_search_words: 0: ((${#_s_search_words}-1))}"
           fi
-          _s_inputs=("${_s_pre_inputs[@]}")
+          ((_s_pre_inputs_n--))
+          eval "_s_inputs=(\"\${_s_pre_inputs_$((_s_pre_inputs_n))[@]}\")"
           _s_n=${#_s_inputs[@]}
+          del=1
           ;;
         $'\cu') # ^U
           _s_search_words=""
+          _s_pre_inputs_n=0
           ;;
         " " )
           # Space to start visual
@@ -968,26 +973,30 @@ _sf_search () { # {{{
       esac
     fi
 
-    _s_search="Search:\e[31m$_s_search_words\e[0m"
-    local inputs
-    inputs=()
+    _s_search="Search: \e[31m$_s_search_words\e[0m"
+
     if [ "$_s_search_words" = "" ];then
-      _s_inputs=("${_s_pre_inputs[@]}")
+      _s_inputs=("${_s_pre_inputs_0[@]}")
       _s_n=${#_s_inputs[@]}
-      _s_search="Search:"
-      _sf_reset
-      continue
+    elif [ $del -eq 1 ];then
+      :
+    else
+      local inputs
+      inputs=()
+      local n_before=${#_s_inputs[@]}
+      local i
+      for ((i=0; i<$_s_n; i++));do
+        _sf_search_check "${_s_inputs[$i]}"
+        if [ $? -eq 0 ];then
+          inputs=("${inputs[@]}" "${_s_inputs[$i]}")
+        fi
+      done
+      _s_inputs=("${inputs[@]}")
+      _s_n=${#_s_inputs[@]}
+      ((_s_pre_inputs_n++))
+      eval "_s_pre_inputs_${_s_pre_inputs_n}=(\"\${_s_inputs[@]}\")"
     fi
-    local n_before=${#_s_inputs[@]}
-    local i
-    for ((i=0; i<$_s_n; i++));do
-      _sf_search_check "${_s_inputs[$i]}"
-      if [ $? -eq 0 ];then
-        inputs=("${inputs[@]}" "${_s_inputs[$i]}")
-      fi
-    done
-    _s_inputs=("${inputs[@]}")
-    _s_n=${#_s_inputs[@]}
+
     _sf_reset
   done
 } # }}}
@@ -1424,7 +1433,7 @@ _sf_main () { # {{{
           if [ "$_s_search" != "" ];then
             local orig_ifs=$IFS
             IFS="$_s_s"
-            _s_inputs=("${_s_pre_inputs[@]}")
+            _s_inputs=("${_s_pre_inputs_0[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
             _s_search_words=""
@@ -1544,7 +1553,7 @@ _sf_main () { # {{{
           if [ "$_s_search" != "" ];then
             local orig_ifs=$IFS
             IFS="$_s_s"
-            _s_inputs=("${_s_pre_inputs[@]}")
+            _s_inputs=("${_s_pre_inputs_0[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
             _s_search_words=""
