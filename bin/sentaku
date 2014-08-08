@@ -461,7 +461,7 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   IFS=$orig_ifs
   if [ "x$ZSH_VERSION" != "x" ];then
     # Fix array for ZSH
-    # Zsh's array add additional empty value to array if IFS is in the end of file.
+    # Zsh's array adds additional empty value to array if IFS is in the end of file.
     if [ ${#_s_inputs[@]} -gt 0 ];then
       local last="${_s_inputs[$((${#_s_inputs[@]}-1))]}"
       if [ "${#last}" -eq 0 ];then
@@ -514,18 +514,15 @@ _sf_delete () { # {{{
 } # }}}
 
 _sf_remove () { # {{{
-  local orig_ifs=$IFS
-  IFS="$_s_s"
   local inputs
   inputs=()
   local i
   for ((i=0; i<$_s_n; i++));do
     if ((i<_s_select_min || i>_s_select_max));then
-      inputs=("${inputs[@]}" "${_s_inputs[$i]}")
+      inputs[${#inpputs[@]}]="${_s_inputs[$i]}"
     fi
   done
   _s_inputs=("${inputs[@]}")
-  IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
 } # }}}
 
@@ -1307,7 +1304,10 @@ _sf_push () { # {{{
 
   # Renew values
   _sf_get_values_wrapper 0 0
-  _s_inputs=("$input" "${_s_inputs[@]}")
+  local orig_ifs=$IFS
+  IFS="$_s_s"
+  _s_inputs=("$input""${_s_s_push}""${_s_inputs[@]}")
+  IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
 
@@ -1397,13 +1397,10 @@ _sf_main () { # {{{
             _s_is_print=1
           fi
           if [ "$_s_search" != "" ];then
-            local orig_ifs=$IFS
-            IFS="$_s_s"
             _s_inputs=("${_s_pre_inputs_0[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
             _s_search_words=""
-            IFS=$orig_ifs
             _sf_reset
           fi
           ;;
@@ -1516,13 +1513,10 @@ _sf_main () { # {{{
             _s_is_print=1
           fi
           if [ "$_s_search" != "" ];then
-            local orig_ifs=$IFS
-            IFS="$_s_s"
             _s_inputs=("${_s_pre_inputs_0[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
             _s_search_words=""
-            IFS=$orig_ifs
             _sf_reset
           fi
           ;;
