@@ -88,7 +88,7 @@ _sf_initialize () { # {{{
   _s_n_offset=0
   _s_cursor_r=0
   _s_g=0
-  _s_n_move=0
+  _s_n_move=-1
   _s_visual=-1
   _s_break=0
   _s_search=""
@@ -615,7 +615,6 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
 _sf_printall () { # usage: _sf_printall [not force] {{{
   # if any argument is given, check if echoed or not.
   if [ $# -ge 1 -a $_s_is_print -eq 0 ];then
-    _s_is_print=1
     return
   fi
 
@@ -656,6 +655,7 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
       _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
     fi
   done
+  _s_is_print=0
 } # }}}
 
 _sf_print () { # {{{
@@ -738,7 +738,7 @@ $_s_search"
 } # }}}
 
 _sf_n_down () { # The line goes Down. (Increase the line number) {{{
-  [ $_s_n_move -eq 0 ] && _s_n_move=1
+  [ $_s_n_move -le 0 ] && _s_n_move=1
   local all=0
   local old_cursor_r=$_s_cursor_r
   local old_current_n=$_s_current_n
@@ -754,7 +754,7 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
     fi
   done
   if [ $all -eq 1 ];then
-    _sf_printall
+    _s_is_print=1
   elif [ $_s_visual -eq  -1 ];then
     _sf_printline 0 $old_cursor_r $old_current_n
     _sf_printline 1 $_s_cursor_r $_s_current_n
@@ -774,12 +774,11 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
     fi
   fi
   _s_g=0
-  _s_n_move=0
-  _s_is_print=0
+  _s_n_move=-1
 } # }}}
 
 _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
-  [ $_s_n_move -eq 0 ] && _s_n_move=1
+  [ $_s_n_move -le 0 ] && _s_n_move=1
   if [ $_s_current_n -ne 0 ];then
     local all=0
     local old_cursor_r=$_s_cursor_r
@@ -796,7 +795,7 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
       fi
     done
     if [ $all -eq 1 ];then
-      _sf_printall
+      _s_is_print=1
     elif [ $_s_current_n -ne $old_current_n ];then
       if [ $_s_visual -eq  -1 ];then
         _sf_printline 0 $old_cursor_r $old_current_n
@@ -819,14 +818,13 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
     fi
   fi
   _s_g=0
-  _s_n_move=0
-  _s_is_print=0
+  _s_n_move=-1
 } # }}}
 
 _sf_item_move_up () { # {{{ Move the item up
-  [ $_s_current_n -eq 0 ] && _s_is_print=0 && return
+  [ $_s_current_n -eq 0 ] && return
 
-  [ $_s_n_move -eq 0 ] && _s_n_move=1
+  [ $_s_n_move -le 0 ] && _s_n_move=1
 
   local replace=$((_s_current_n-_s_n_move))
   [ $replace -lt 0 ] && replace=0
@@ -841,9 +839,9 @@ _sf_item_move_up () { # {{{ Move the item up
 } # }}}
 
 _sf_item_move_down () { # {{{ Move the item down
-  [ $_s_current_n -eq $((_s_n-1)) ] && _s_is_print=0 && return
+  [ $_s_current_n -eq $((_s_n-1)) ] && return
 
-  [ $_s_n_move -eq 0 ] && _s_n_move=1
+  [ $_s_n_move -le 0 ] && _s_n_move=1
 
   local replace=$((_s_current_n+_s_n_move))
   [ $replace -gt $((_s_n-1)) ] && replace=$((_s_n-1))
@@ -1019,11 +1017,51 @@ _sf_reset () { # {{{
   _s_n_offset=0
   _s_cursor_r=$_s_ext_row
   _s_g=0
-  _s_n_move=0
+  _s_n_move=-1
   _s_visual=-1
   tput cup $_s_cursor_r 0 >/dev/tty
   _sf_printall
-  _s_is_print=0
+} # }}}
+
+_sf_visual_start () { # {{{
+  if [ $_s_visual -ne -1 ];then
+    _s_is_print=1
+  fi
+  _s_visual=$_s_current_n
+} # }}}
+
+_sf_gG () { # {{{
+  local old_cursor_r=$_s_cursor_r
+  local old_current_n=$_s_current_n
+  local old_n_offset=$_s_n_offset
+
+  if [ $_s_n_move -le 0 ];then
+    _s_n_move=0
+  elif [ $_s_n_move -ge $_s_n ];then
+    _s_n_move=$((_s_n-1))
+  fi
+  if [ $_s_n_move -le $_s_n_offset ];then
+    _s_current_n=$((_s_n_move))
+    _s_n_offset=$_s_current_n
+    _s_cursor_r=$_s_ext_row
+  elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
+    _s_current_n=$((_s_n_move))
+    _s_n_offset=$((_s_current_n-_s_max_show+1))
+    _s_cursor_r=$((_s_lines-1))
+  else
+    _s_current_n=$((_s_n_move))
+    _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
+  fi
+
+  _s_n_move=-1
+  _s_g=0
+
+  if [ $_s_n_offset -eq $old_n_offset ];then
+    _sf_printline 0 $old_cursor_r $old_current_n
+    _sf_printline 1 $_s_cursor_r $_s_current_n
+  else
+    _s_is_print=1
+  fi
 } # }}}
 
 _sf_n_move_inc () { # {{{
@@ -1031,64 +1069,45 @@ _sf_n_move_inc () { # {{{
   [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$n" || _s_n_move=$n
 } # }}}
 
-_sf_visual_start () { # {{{
-  if [ $_s_visual -ne -1 ];then
-    _s_is_print=1
-  else
-    _s_is_print=0
-  fi
-  _s_visual=$_s_current_n
-} # }}}
-
 _sf_0 () { # {{{
   _sf_n_move_inc 0
-  _s_is_print=0
 } # }}}
 _sf_1 () { # {{{
   _sf_n_move_inc 1
-  _s_is_print=0
 } # }}}
 _sf_2 () { # {{{
   _sf_n_move_inc 2
-  _s_is_print=0
 } # }}}
 _sf_3 () { # {{{
   _sf_n_move_inc 3
-  _s_is_print=0
 } # }}}
 _sf_4 () { # {{{
   _sf_n_move_inc 4
-  _s_is_print=0
 } # }}}
 _sf_5 () { # {{{
   _sf_n_move_inc 5
-  _s_is_print=0
 } # }}}
 _sf_6 () { # {{{
   _sf_n_move_inc 6
-  _s_is_print=0
 } # }}}
 _sf_7 () { # {{{
   _sf_n_move_inc 7
-  _s_is_print=0
 } # }}}
 _sf_8 () { # {{{
   _sf_n_move_inc 8
-  _s_is_print=0
 } # }}}
 _sf_9 () { # {{{
   _sf_n_move_inc 9
-  _s_is_print=0
 } # }}}
 
 _sf_a () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_b () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_c () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_d () { # {{{
   [ $_s_stdin -eq 1 -o $_s_delete -eq 0 ] && continue
@@ -1110,45 +1129,29 @@ _sf_d () { # {{{
   elif [ $((_s_n_offset+_s_max_show)) -gt $_s_n ];then
     ((_s_n_offset--));((_s_cursor_r++))
   fi
+  _s_is_print=1
 } # }}}
 _sf_e () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_f () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_g () { # {{{
   if [ $_s_g -eq 0 ];then
     _s_g=1
-    _s_is_print=0
     return
   fi
-  if [ $_s_n_move -eq 0 ];then
-    _s_current_n=0
-    _s_n_offset=0
-    _s_cursor_r="$_s_ext_row"
-  elif [ $_s_n_move -gt $_s_n ];then
-    :
-  elif [ $_s_n_move -le $_s_n_offset ];then
-    _s_current_n=$((_s_n_move))
-    _s_n_offset=$_s_current_n
-    _s_cursor_r=$_s_ext_row
-  elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
-    _s_current_n=$((_s_n_move))
-    _s_n_offset=$((n-_s_max_show+1))
-    _s_cursor_r=$((_s_lines-1))
-  else
-    _s_current_n=$((_s_n_move))
-    _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
+  if [ $_s_n_move -lt 0 ];then
+    _s_n_move=0
   fi
-  _s_n_move=0
-  _s_g=0
+  _sf_gG
 } # }}}
 _sf_h () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_i () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_j () { # {{{
   _sf_n_down
@@ -1157,25 +1160,25 @@ _sf_k () { # {{{
   _sf_n_up
 } # }}}
 _sf_l () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_m () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_n () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_o () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_p () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_q () { # {{{
   _sf_quit
 } # }}}
 _sf_r () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_s () { # {{{
   _sf_echo "$(_sf_nth $((_s_current_n))) value:
@@ -1183,128 +1186,107 @@ _sf_s () { # {{{
 ${_s_inputs[$_s_current_n]}\n"
 } # }}}
 _sf_t () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_u () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_v () { # {{{
   _sf_visual_start
 } # }}}
 _sf_w () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_x () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_y () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_z () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 
 _sf_A () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_B () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_C () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_D () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_E () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_F () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_G () { # {{{
-  if [ $_s_n_move -eq 0 ];then
-    _s_current_n=$((_s_n-1))
-    if [ $_s_current_n -ge $_s_max_show ];then
-      _s_n_offset=$((_s_n-_s_max_show))
-      _s_cursor_r=$((_s_lines-1))
-    else
-      _s_n_offset=0
-      _s_cursor_r=$((_s_ext_row+_s_current_n))
-    fi
-  elif [ $_s_n_move -gt $_s_n ];then
-    _s_is_print=0
-  elif [ $_s_n_move -le $_s_n_offset ];then
-    _s_current_n=$((_s_n_move))
-    _s_n_offset=$_s_current_n
-    _s_cursor_r=$_s_ext_row
-  elif [ $_s_n_move -gt $((_s_n_offset+_s_max_show)) ];then
-    _s_current_n=$((_s_n_move))
-    _s_n_offset=$((_s_current_n-_s_max_show+1))
-    _s_cursor_r=$((_s_lines-1))
-  else
-    _s_current_n=$((_s_n_move))
-    _s_cursor_r=$((_s_ext_row+_s_current_n-_s_n_offset))
+  if [ $_s_n_move -lt 0 ];then
+    _s_n_move=$_s_n
   fi
-  _s_n_move=0
-  _s_g=0
+  _sf_gG
 } # }}}
 _sf_H () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_I () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_J () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_K () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_L () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_M () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_N () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_O () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_P () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_Q () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_R () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_S () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_T () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_U () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_V () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_W () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_X () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_Y () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 _sf_Z () { # {{{
-  _s_is_print=0
+  :
 } # }}}
 
 _sf_push () { # {{{
@@ -1394,7 +1376,6 @@ _sf_main () { # {{{
         $'\co' ) # ^O
           _sf_item_move_down;;
         $'\E' ) # Esc
-          _s_is_print=0
           _sf_read
           local r2=$_s_read
           if [ "$r2" = "v" ];then # M-v
@@ -1496,7 +1477,7 @@ _sf_main () { # {{{
         X ) _sf_X;;
         Y ) _sf_Y;;
         Z ) _sf_Z;;
-        * ) _s_is_print=0; continue;;
+        * ) continue;;
       esac
     else
       # Emacs mode
@@ -1514,7 +1495,6 @@ _sf_main () { # {{{
         $'\cx' ) # ^X
           _sf_quit;;
         $'\E' ) # Esc
-          _s_is_print=0
           _sf_read
           local r2=$_s_read
           if [ "$r2" = "v" ];then # M-v
@@ -1554,7 +1534,7 @@ _sf_main () { # {{{
           ;;
         [a-zA-Z0-9] ) _sf_search $r;;
         ""|$'\n') _sf_select ;; # Enter
-        * ) _s_is_print=0; continue;;
+        * ) continue;;
       esac
     fi
     [ $_s_break -eq 1 ] && break
