@@ -117,7 +117,6 @@ Arguments:
    -N         No nubmers are shown.
    -l         Show last words instead of starting words for longer lines.
    -a         Align input list (set selected one to the first).
-   -d         Enable Delete at sentaku window.
    -m         Execute main function even if it is not after pipe.
                   (e.g. -m -f <file> == -F <file>)
    -r <n>     Return nth value directly.
@@ -391,7 +390,6 @@ _sf_check_args () { # {{{
       "-N" ) _s_nonumber=1;;
       "-l" ) _s_showlast=1;;
       "-a" ) _s_align=1;;
-      "-d" ) _s_delete=1;;
       "-m" ) ;;
       "-r" )
         if expr "$2" : '[0-9]*' > /dev/null;then
@@ -471,9 +469,9 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
     else
       _sf_echo "No value in stdin\n"
     fi
-    return 1
+    _s_ret=1
   fi
-  return 0
+  _s_ret=0
 } # }}}
 
 _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
@@ -507,14 +505,13 @@ _sf_delete () { # {{{
 } # }}}
 
 _sf_remove () { # {{{
+  _s_ret=0
   local n=$_s_current_n
   if [ $_s_n -eq 1 ];then
     _sf_echo "There are no remained entries\n"
+    _s_ret=1
     _sf_quit
     return
-  elif [ $_s_current_n -eq $((_s_n-1)) ];then
-    _sf_n_up
-    _s_is_print=1
   fi
   local orig_ifs=$IFS
   IFS="$_s_s"
@@ -529,6 +526,31 @@ _sf_remove () { # {{{
   _s_inputs=("${inputs[@]}")
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
+} # }}}
+
+_sf_rm_del () { # {{{
+  if [ $_s_delete -eq 0 ] || [ $_s_stdin -eq 1 ];then
+    _sf_remove
+  else
+    _sf_delete
+  fi
+  if [ $_s_ret -ne 0 ];then
+    _sf_quit $_s_ret
+    return
+  fi
+  if [ $_s_current_n -eq 0 ];then
+    :
+  elif [ $_s_current_n -eq $_s_n ];then
+    ((_s_current_n--))
+    if [ $_s_n_offset -eq 0 ];then
+      ((_s_cursor_r--))
+    else
+      ((_s_n_offset--))
+    fi
+  elif [ $_s_n_offset -gt 0 ] && [ $((_s_n_offset+_s_max_show)) -gt $_s_n ];then
+    ((_s_n_offset--));((_s_cursor_r++))
+  fi
+  _s_is_print=1
 } # }}}
 
 _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
@@ -1110,26 +1132,7 @@ _sf_c () { # {{{
   :
 } # }}}
 _sf_d () { # {{{
-  [ $_s_stdin -eq 1 -o $_s_delete -eq 0 ] && continue
-  _sf_delete
-  local ret=$?
-  if [ $ret -ne 0 ];then
-    _sf_quit $ret
-    return
-  fi
-  if [ $_s_current_n -eq 0 ];then
-    return
-  elif [ $_s_current_n -eq $_s_n ];then
-    ((_s_current_n--))
-    if [ $_s_n_offset -eq 0 ];then
-      ((_s_cursor_r--))
-    else
-      ((_s_n_offset--))
-    fi
-  elif [ $((_s_n_offset+_s_max_show)) -gt $_s_n ];then
-    ((_s_n_offset--));((_s_cursor_r++))
-  fi
-  _s_is_print=1
+  _sf_rm_del
 } # }}}
 _sf_e () { # {{{
   :
