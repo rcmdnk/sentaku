@@ -90,6 +90,8 @@ _sf_initialize () { # {{{
   _s_g=0
   _s_n_move=-1
   _s_visual=-1
+  _s_select_min=-1
+  _s_select_max=-1
   _s_break=0
   _s_search=""
   _s_search_words=""
@@ -236,6 +238,8 @@ _sf_finalize () { # {{{
   unset _s_g
   unset _s_n_move
   unset _s_visual
+  unset _s_select_min
+  unset _s_select_max
   unset _s_break
   unset _s_search
   unset _s_search_words
@@ -268,21 +272,25 @@ _sf_finalize_user () { # {{{
   :
 } # }}}
 
-_sf_execute () { # {{{
-  local select_min=_s_current_n
-  local select_max=_s_current_n
+_sf_set_maxmin () { # {{{
+  _s_select_min=$_s_current_n
+  _s_select_max=$_s_current_n
   if [ $_s_visual != -1 ];then
     if [ $_s_visual -gt $_s_current_n ];then
-      select_min=$_s_current_n
-      select_max=$_s_visual
+      _s_select_min=$_s_current_n
+      _s_select_max=$_s_visual
     else
-      select_min=$_s_visual
-      select_max=$_s_current_n
+      _s_select_min=$_s_visual
+      _s_select_max=$_s_current_n
     fi
   fi
+} # }}}
+
+_sf_execute () { # {{{
+  _sf_set_maxmin
   local i
-  for ((i=$select_min; i<=$select_max; i++));do
-    if [ $i -eq $((select_max)) ];then
+  for ((i=$_s_select_min; i<=$_s_select_max; i++));do
+    if [ $i -eq $_s_select_max ];then
       printf "%s" "${_s_inputs[$i]}"
     else
       printf "%s$_s_s" "${_s_inputs[$i]}"
@@ -495,31 +503,24 @@ _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
 } # }}}
 
 _sf_delete () { # {{{
-  local n=$_s_current_n
   rm -f "$_s_file"
   local i
   for ((i=0; i<$_s_n; i++));do
-    [ $i -ne $n ] && printf "%s$_s_s_push" "${_s_inputs[$i]}" >> "$_s_file"
+    if ((i<_s_select_min || i>_s_select_max));then
+      printf "%s$_s_s_push" "${_s_inputs[$i]}" >> "$_s_file"
+    fi
   done
   _sf_get_values_wrapper
 } # }}}
 
 _sf_remove () { # {{{
-  _s_ret=0
-  local n=$_s_current_n
-  if [ $_s_n -eq 1 ];then
-    _sf_echo "There are no remained entries\n"
-    _s_ret=1
-    _sf_quit
-    return
-  fi
   local orig_ifs=$IFS
   IFS="$_s_s"
   local inputs
   inputs=()
   local i
   for ((i=0; i<$_s_n; i++));do
-    if [ $i -ne $n ];then
+    if ((i<_s_select_min || i>_s_select_max));then
       inputs=("${inputs[@]}" "${_s_inputs[$i]}")
     fi
   done
@@ -529,10 +530,15 @@ _sf_remove () { # {{{
 } # }}}
 
 _sf_rm_del () { # {{{
+  _sf_set_maxmin
   if [ $_s_delete -eq 0 ] || [ $_s_stdin -eq 1 ];then
     _sf_remove
   else
     _sf_delete
+  fi
+  if [ $_s_n -eq 0 ];then
+    _sf_echo "There are no remained entries\n"
+    _s_ret=1
   fi
   if [ $_s_ret -ne 0 ];then
     _sf_quit $_s_ret
@@ -550,6 +556,7 @@ _sf_rm_del () { # {{{
   elif [ $_s_n_offset -gt 0 ] && [ $((_s_n_offset+_s_max_show)) -gt $_s_n ];then
     ((_s_n_offset--));((_s_cursor_r++))
   fi
+  _s_visual=-1
   _s_is_print=1
 } # }}}
 
@@ -658,20 +665,10 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
   # Header
   [ $_s_noheader != 1 ] && _sf_print "${_s_header}\n"
 
-  local select_min=_s_current_n
-  local select_max=_s_current_n
-  if [ $_s_visual != -1 ];then
-    if [ $_s_visual -gt $_s_current_n ];then
-      select_min=$_s_current_n
-      select_max=$_s_visual
-    else
-      select_min=$_s_visual
-      select_max=$_s_current_n
-    fi
-  fi
+  _sf_set_maxmin
   local i=0
   for ((i=0; i<_s_max_show; i++));do
-    if ((i+_s_n_offset >=select_min && i+_s_n_offset <=select_max));then
+    if ((i+_s_n_offset >=_s_select_min && i+_s_n_offset <=_s_select_max));then
       _sf_printline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
     else
       _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
