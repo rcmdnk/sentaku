@@ -613,7 +613,8 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
 } # }}}
 
 _sf_printall () { # usage: _sf_printall [not force] {{{
-  if [ $_s_is_print -eq 0 ];then
+  # if any argument is given, check if echoed or not.
+  if [ $# -ge 1 -a $_s_is_print -eq 0 ];then
     _s_is_print=1
     return
   fi
@@ -1368,7 +1369,7 @@ _sf_main () { # {{{
   _sf_reset
 
   while : ;do
-    _sf_printall
+    _sf_printall 1
     _sf_read
     local r=$_s_read
     if [ $_s_keymode -eq 0 ];then
