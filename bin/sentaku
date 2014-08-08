@@ -613,8 +613,7 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
 } # }}}
 
 _sf_printall () { # usage: _sf_printall [not force] {{{
-  # if any argument is given, check if echoed or not.
-  if [ $# -ge 1 -a $_s_is_print -eq 0 ];then
+  if [ $_s_is_print -eq 0 ];then
     _s_is_print=1
     return
   fi
@@ -1369,7 +1368,7 @@ _sf_main () { # {{{
   _sf_reset
 
   while : ;do
-    _sf_printall 1
+    _sf_printall
     _sf_read
     local r=$_s_read
     if [ $_s_keymode -eq 0 ];then
@@ -1496,7 +1495,7 @@ _sf_main () { # {{{
         X ) _sf_X;;
         Y ) _sf_Y;;
         Z ) _sf_Z;;
-        * ) continue;;
+        * ) _s_is_print=0; continue;;
       esac
     else
       # Emacs mode
@@ -1554,7 +1553,7 @@ _sf_main () { # {{{
           ;;
         [a-zA-Z0-9] ) _sf_search $r;;
         ""|$'\n') _sf_select ;; # Enter
-        * ) continue;;
+        * ) _s_is_print=0; continue;;
       esac
     fi
     [ $_s_break -eq 1 ] && break
