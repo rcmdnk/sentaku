@@ -519,7 +519,7 @@ _sf_remove () { # {{{
   local i
   for ((i=0; i<$_s_n; i++));do
     if ((i<_s_select_min || i>_s_select_max));then
-      inputs[${#inpputs[@]}]="${_s_inputs[$i]}"
+      inputs[${#inputs[@]}]="${_s_inputs[$i]}"
     fi
   done
   _s_inputs=("${inputs[@]}")
@@ -541,18 +541,23 @@ _sf_rm_del () { # {{{
     _sf_quit $_s_ret
     return
   fi
-  if [ $_s_current_n -eq 0 ];then
-    :
-  elif [ $_s_current_n -eq $_s_n ];then
+  _s_current_n=$_s_select_min
+  if [ $_s_current_n -eq $_s_n ];then
     ((_s_current_n--))
-    if [ $_s_n_offset -eq 0 ];then
-      ((_s_cursor_r--))
-    else
-      ((_s_n_offset--))
-    fi
-  elif [ $_s_n_offset -gt 0 ] && [ $((_s_n_offset+_s_max_show)) -gt $_s_n ];then
-    ((_s_n_offset--));((_s_cursor_r++))
   fi
+  local n_delete=$((_s_select_max-_s_select_min+1))
+  if [ $n_delete -gt $_s_max_show ];then
+    _s_n_offset=$((_s_n_offset-n_delete+_s_max_show))
+  fi
+  local n_move
+  if [ $((_s_n)) -lt $((_s_lines-_s_ext_row+_s_n_offset)) ];then
+    local n_move=$((_s_lines-_s_ext_row+_s_n_offset-_s_n))
+    if [ $n_move -gt $_s_n_offset ];then
+      n_move=$_s_n_offset
+    fi
+    _s_n_offset=$((_s_n_offset-n_move))
+  fi
+  _s_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
   _s_visual=-1
   _s_is_print=1
 } # }}}
@@ -744,7 +749,7 @@ _sf_setview () { # {{{
   else
     _s_header="${_s_header}
 $_s_search"
-    _s_ext_row=$(printf "${_s_header}\n"|wc -l)
+  _s_ext_row=$(echo $(printf "${_s_header}\n"|wc -l))
   fi
 
   _s_max_show=$_s_n
