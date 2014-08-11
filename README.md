@@ -180,15 +180,18 @@ You can set search option `SENTAKU_SEARCH_OPT`:
 * 2: Starts with (ignore case)
 * 3: Starts with(case sensitive)
 
-* [Search Demo for Vim mode, SENTAKU_KEYMODE = 3](http://asciinema.org/a/7387)
+* [Search Demo for Vim mode, SENTAKU_KEYMODE = 3](http://rcmdnk.github.io/images/post/20140805_vim_search.gif)
 
-[![search](http://rcmdnk.github.io/images/post/20140127_sentaku_search.jpg)](http://asciinema.org/a/7387)
+![sentaku_vim](http://rcmdnk.github.io/images/post/20140805_vim_search.gif)
 
-* [Search Demo for Emacs mdoe, SENTAKU_KEYMODE = 1](http://rcmdnk.github.io/images/post/20140613_sentaku_emacs.gif)
 
-![sentaku_emacs](http://rcmdnk.github.io/images/post/20140613_sentaku_emacs.gif)
+* [Search Demo for Emacs mdoe, SENTAKU_KEYMODE = 1](http://rcmdnk.github.io/images/post/20140805_emacs_search.gif)
+
+![sentaku_emacs](http://rcmdnk.github.io/images/post/20140805_emacs_search.gif)
 
 * Visual mode (multi-selection)
+
+![sentaku_vim_multi](http://rcmdnk.github.io/images/post/20140805_vim_multi.gif)
 
 By pushing `Space` (or `v` (only Vim mode)),
 you can start to choose multi-line.
