@@ -6,8 +6,8 @@
 #
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
-SENTAKU_VERSION=v0.1.3
-SENTAKU_DATE="05/Aug/2014"
+SENTAKU_VERSION=v0.1.7
+SENTAKU_DATE="18/Aug/2014"
 #
 # }}}
 
@@ -501,7 +501,7 @@ _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
 } # }}}
 
 _sf_delete () { # {{{
-  rm -f "$_s_file"
+  echo -n > "$_s_file"
   local i
   for ((i=0; i<$_s_n; i++));do
     if ((i<_s_select_min || i>_s_select_max));then
