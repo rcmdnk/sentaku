@@ -109,57 +109,56 @@ _sf_initialize () { # {{{
 Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 
 Arguments:
-   -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-   -F <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+  -f <file>   Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+  -F <file>   Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
               and use the list in the file for sentaku window instead of pipe's input.
-   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+  -s <sep>    Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
               If <sep> is \"line\", \$'\\n' is set as a separator.
-   -H         Header is shown at sentaku window.
-   -N         No nubmers are shown.
-   -l         Show last words instead of starting words for longer lines.
-   -a         Align input list (set selected one to the first).
-   -m         Execute main function even if it is not after pipe.
+  -H          Header is shown at sentaku window.
+  -N          No nubmers are shown.
+  -l          Show last words instead of starting words for longer lines.
+  -a          Align input list (set selected one to the first).
+  -m          Execute main function even if it is not after pipe.
                   (e.g. -m -f <file> == -F <file>)
-   -r <n>     Return nth value directly.
-   -p         Push words to the file.
-   -E         Use Emacs mode
-   -V         Use Vmacs mode
-   -c         Load functions as a child process in other sentaku process.
-   -n         Don't run functions, to just source this file
-   -v         Show version
-   -h         Print this HELP and exit
+  -r <n>      Return nth value directly.
+  -p          Push words to the file.
+  -E          Use Emacs mode
+  -V          Use Vmacs mode
+  -c          Load functions as a child process in other sentaku process.
+  -n          Don't run functions, to just source this file
+  -v          Show version
+  -h          Print this HELP and exit
 
-Key operation at sentaku window (Vim mode):
-   n(any number) Set number. Multi-digit can be used (13, 320, etc...).
-                 Used/reset by other key.
-   k/j        Up/Down (if n is given, n-th up/n-th down).
-   C-p/C-n    Up/Down.
-   C-u/C-d    Half page down/Half page down.
-   C-b/C-f    Page up/Page down.
-   M-v/C-v    Page up/Page down.
-   C-i/C-o    Move the item up/down
-   gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
-   d          Delete current candidate. (in case you use input file.)
-   s          Show detail of current candidate.
-   v/Space    Start Visual mode (multi-selection).
-   /          Search.
-   Esc        At search mode, first Esc takes it back to normal mode
-              with selected words.
-              Second Esc clear search mode.
-              Visual mode is cleared by first Esc.
-   q          Quit.
-   Ener       Select and Quit.
+Key operation at sentaku window
+  Common for all:
+    C-p/C-n     Up/Down.
+    C-u/C-d     Half page down/Half page down.
+    C-b/C-f     Page up/Page down.
+    M-v/C-v     Page up/Page down.
+    C-i/C-o     Move the item up/down.
+    C-x         Quit.
+    Esc         At search mode, first Esc takes it back to normal mode
+                with selected words.
+                Second Esc clear search mode.
+                Visual mode is cleared by first Esc.
+    Ener        Select and Quit.
 
-Key operation at sentaku window (Emacs mode):
-   C-p/C-n    Up/Down.
-   M-v/C-v    Page up/Page down.
-   C-i/C-o    Move the item up/down
-   C-x        Quit.
-   Space      Start Visual mode (multi-selection).
-              At search mode, it starts when space is pushed twice.
-   Ener       Select and Quit.
-   Esc        Clear Search/Visual mode.
-   Other normal keys start an incremental search
+  For Vim mode:
+    n(any number) Set number. Multi-digit can be used (13, 320, etc...).
+                  Used/reset by other key.
+    k/j         Up/Down (if n is given, n-th up/n-th down).
+    gg/G        Go to top/bottom. (If n is given, move to n-th candidate.)
+    d           Delete current candidate. (in case you use input file.)
+    s           Show detail of current candidate.
+    v/Space     Start Visual mode (multi-selection).
+    /           Search.
+    q           Quit.
+    Others      Nothing happens.
+
+  For Vim mode Emacs mode:
+    Space      Start Visual mode (multi-selection).
+               At search mode, it starts when space is pushed twice.
+    Others     Normal keys start an incremental search.
 "}
 
   # Lines and columns at beginning
@@ -920,16 +919,17 @@ _sf_search () { # {{{
           fi
           return
           ;;
-        $'\cp' ) # ^P
-          _sf_n_up; continue;;
-        $'\cn' ) # ^N
-          _sf_n_down; continue;;
-        $'\cv' ) # ^V
-          _s_n_move=$((_s_max_show)); _sf_n_down;;
-        ""|$'\n')
-          _sf_select
-          return
-          ;;
+        $'\cb' ) _sf_c_b; continue;;
+        $'\cd' ) _sf_c_d; continue;;
+        $'\cf' ) _sf_c_f; continue;;
+        $'\ci' ) _sf_c_i; continue;;
+        $'\cn' ) _sf_c_n; continue;;
+        $'\co' ) _sf_c_o; continue;;
+        $'\cp' ) _sf_c_p; continue;;
+        #$'\cu' ) _sf_c_u; continue;;
+        $'\cv' ) _sf_c_v; continue;;
+        $'\cx' ) _sf_c_x; return;;
+
         $'\ch') # ^H
           if [ "$_s_search_words" = "" ];then
             _s_search=""
@@ -1075,6 +1075,7 @@ _sf_n_move_inc () { # {{{
   [ $_s_n_move -gt 0 ] && _s_n_move="$_s_n_move""$n" || _s_n_move=$n
 } # }}}
 
+# function for 0-9 {{{
 _sf_0 () { # {{{
   _sf_n_move_inc 0
 } # }}}
@@ -1105,7 +1106,9 @@ _sf_8 () { # {{{
 _sf_9 () { # {{{
   _sf_n_move_inc 9
 } # }}}
+# }}} function for 0-9
 
+# function for a-z {{{
 _sf_a () { # {{{
   :
 } # }}}
@@ -1193,7 +1196,9 @@ _sf_y () { # {{{
 _sf_z () { # {{{
   :
 } # }}}
+# function for a-z }}}
 
+# function for A-Z {{{
 _sf_A () { # {{{
   :
 } # }}}
@@ -1276,6 +1281,137 @@ _sf_Z () { # {{{
   :
 } # }}}
 
+# function for C-a-C-Z {{{
+_sf_c_a () { # {{{
+  :
+} # }}}
+_sf_c_b () { # {{{
+  _s_n_move=$((_s_max_show))
+  _sf_n_up
+} # }}}
+_sf_c_c () { # {{{
+  :
+} # }}}
+_sf_c_d () { # {{{
+  _s_n_move=$((_s_max_show/2))
+  _sf_n_down
+} # }}}
+_sf_c_e () { # {{{
+  :
+} # }}}
+_sf_c_f () { # {{{
+  _s_n_move=$((_s_max_show))
+  _sf_n_down
+} # }}}
+_sf_c_g () { # {{{
+  :
+} # }}}
+_sf_c_h () { # {{{
+  :
+} # }}}
+_sf_c_i () { # {{{
+  _sf_item_move_up
+} # }}}
+_sf_c_j () { # {{{
+  :
+} # }}}
+_sf_c_k () { # {{{
+  :
+} # }}}
+_sf_c_l () { # {{{
+  :
+} # }}}
+_sf_c_m () { # {{{
+  :
+} # }}}
+_sf_c_n () { # {{{
+  _sf_n_down
+} # }}}
+_sf_c_o () { # {{{
+  _sf_item_move_down
+} # }}}
+_sf_c_p () { # {{{
+  _sf_n_up
+} # }}}
+_sf_c_q () { # {{{
+  :
+} # }}}
+_sf_c_r () { # {{{
+  :
+} # }}}
+_sf_c_s () { # {{{
+  :
+} # }}}
+_sf_c_t () { # {{{
+  :
+} # }}}
+_sf_c_u () { # {{{
+  _s_n_move=$((_s_max_show/2))
+  _sf_n_up
+} # }}}
+_sf_c_v () { # {{{
+  _s_n_move=$((_s_max_show))
+  _sf_n_down
+} # }}}
+_sf_c_w () { # {{{
+  :
+} # }}}
+_sf_c_x () { # {{{
+  _sf_quit
+} # }}}
+_sf_c_y () { # {{{
+  :
+} # }}}
+_sf_c_z () { # {{{
+  :
+} # }}}
+# function for C-a-C-Z }}}
+
+_sf_esc () { # {{{
+  _sf_read
+  local r2=$_s_read
+  if [ "$r2" = "v" ];then # M-v
+    _s_n_move=$((_s_max_show)); _sf_n_up
+    continue
+  elif [ "$r2" = "[" ];then
+    _sf_read
+    local r3=$_s_read
+    if [ "$r3" = "A" ];then # cursor up
+      _sf_n_up
+      continue
+    elif [ "$r3" = "B" ];then # cursor down
+      _sf_n_down
+      continue
+    fi
+  fi
+  if [ $_s_visual -ne -1 ];then
+    _s_visual=-1
+    _s_is_print=1
+  fi
+  if [ "$_s_search" != "" ];then
+    _s_inputs=("${_s_pre_inputs_0[@]}")
+    _s_n=${#_s_inputs[@]}
+    _s_search=""
+    _s_search_words=""
+    _sf_reset
+  fi
+} # }}}
+
+_sf_space () { # {{{
+  # Space to start visual
+  if [ "$_s_search_words" = "" ] || echo "$_s_search_words"|grep -q " $";then
+    _sf_visual_start
+  fi
+} # }}}
+
+_sf_enter () { # {{{
+  _sf_select
+} # }}}
+
+_sf_slash () { # {{{
+  _sf_search
+} # }}}
+
 _sf_push () { # {{{
 
   _sf_echo_debug "_sf_push start\n"
@@ -1344,183 +1480,111 @@ _sf_main () { # {{{
     _sf_printall 1
     _sf_read
     local r=$_s_read
-    if [ $_s_keymode -eq 0 ];then
-      # Vim mode
-      case $r in
-        $'\cd') # ^D
-          _s_n_move=$((_s_max_show/2)); _sf_n_down;;
-        $'\cf' ) # ^F
-          _s_n_move=$((_s_max_show)); _sf_n_down;;
-        $'\cu' ) # ^U
-          _s_n_move=$((_s_max_show/2)); _sf_n_up;;
-        $'\cb' ) # ^B
-          _s_n_move=$((_s_max_show)); _sf_n_up;;
-        $'\cp' ) # ^P
-          _sf_n_up;;
-        $'\cn' ) # ^N
-          _sf_n_down;;
-        $'\cv' ) # ^V
-          _s_n_move=$((_s_max_show)); _sf_n_down;;
-        $'\ci' ) # ^I
-          _sf_item_move_up;;
-        $'\co' ) # ^O
-          _sf_item_move_down;;
-        $'\E' ) # Esc
-          _sf_read
-          local r2=$_s_read
-          if [ "$r2" = "v" ];then # M-v
-            _s_n_move=$((_s_max_show)); _sf_n_up
-            continue
-          elif [ "$r2" = "[" ];then
-            _sf_read
-            local r3=$_s_read
-            if [ "$r3" = "A" ];then # cursor up
-              _sf_n_up
-              continue
-            elif [ "$r3" = "B" ];then # cursor down
-              _sf_n_down
-              continue
-            fi
-          fi
-          if [ $_s_visual -ne -1 ];then
-            _s_visual=-1
-            _s_is_print=1
-          fi
-          if [ "$_s_search" != "" ];then
-            _s_inputs=("${_s_pre_inputs_0[@]}")
-            _s_n=${#_s_inputs[@]}
-            _s_search=""
-            _s_search_words=""
-            _sf_reset
-          fi
-          ;;
-        / ) _sf_search;;
-        " " )
-          # Space to start visual
-          if [ "$_s_search_words" = "" ] || echo "$_s_search_words"|grep -q " $";then
-            _sf_visual_start
-          fi
-          ;;
-        ""|$'\n' ) _sf_select;; # Enter (Normally "" corresponds to Enter (line break before any key))
-        0 ) _sf_0;;
-        1 ) _sf_1;;
-        2 ) _sf_2;;
-        3 ) _sf_3;;
-        4 ) _sf_4;;
-        5 ) _sf_5;;
-        6 ) _sf_6;;
-        7 ) _sf_7;;
-        8 ) _sf_8;;
-        9 ) _sf_9;;
-        a ) _sf_a;;
-        b ) _sf_b;;
-        c ) _sf_c;;
-        d ) _sf_d;;
-        e ) _sf_e;;
-        f ) _sf_f;;
-        g ) _sf_g;;
-        h ) _sf_h;;
-        i ) _sf_i;;
-        j ) _sf_j;;
-        k ) _sf_k;;
-        l ) _sf_l;;
-        m ) _sf_m;;
-        n ) _sf_n;;
-        o ) _sf_o;;
-        p ) _sf_p;;
-        q ) _sf_q;;
-        r ) _sf_r;;
-        s ) _sf_s;;
-        t ) _sf_t;;
-        u ) _sf_u;;
-        v ) _sf_v;;
-        w ) _sf_w;;
-        x ) _sf_x;;
-        y ) _sf_y;;
-        z ) _sf_z;;
-        A ) _sf_A;;
-        B ) _sf_B;;
-        C ) _sf_C;;
-        D ) _sf_D;;
-        E ) _sf_E;;
-        F ) _sf_F;;
-        G ) _sf_G;;
-        H ) _sf_H;;
-        I ) _sf_I;;
-        J ) _sf_J;;
-        K ) _sf_K;;
-        L ) _sf_L;;
-        M ) _sf_M;;
-        N ) _sf_N;;
-        O ) _sf_O;;
-        P ) _sf_P;;
-        Q ) _sf_Q;;
-        R ) _sf_R;;
-        S ) _sf_S;;
-        T ) _sf_T;;
-        U ) _sf_U;;
-        V ) _sf_V;;
-        W ) _sf_W;;
-        X ) _sf_X;;
-        Y ) _sf_Y;;
-        Z ) _sf_Z;;
-        * ) continue;;
-      esac
-    else
-      # Emacs mode
-      case $r in
-        $'\cp' ) # ^P
-          _sf_n_up;;
-        $'\cn' ) # ^N
-          _sf_n_down;;
-        $'\cv' ) # ^V
-          _s_n_move=$((_s_max_show)); _sf_n_down;;
-        $'\ci' ) # ^I
-          _sf_item_move_up;;
-        $'\co' ) # ^O
-          _sf_item_move_down;;
-        $'\cx' ) # ^X
-          _sf_quit;;
-        $'\E' ) # Esc
-          _sf_read
-          local r2=$_s_read
-          if [ "$r2" = "v" ];then # M-v
-            _s_n_move=$((_s_max_show)); _sf_n_up
-            continue
-          elif [ "$r2" = "[" ];then
-            _sf_read
-            local r3=$_s_read
-            if [ "$r3" = "A" ];then # cursor up
-              _sf_n_up
-              continue
-            elif [ "$r3" = "B" ];then # cursor down
-              _sf_n_down
-              continue
-            fi
-          fi
-          if [ $_s_visual -ne -1 ];then
-            _s_visual=-1
-            _s_is_print=1
-          fi
-          if [ "$_s_search" != "" ];then
-            _s_inputs=("${_s_pre_inputs_0[@]}")
-            _s_n=${#_s_inputs[@]}
-            _s_search=""
-            _s_search_words=""
-            _sf_reset
-          fi
-          ;;
-        " " )
-          # Space to start visual
-          if [ "$_s_search_words" = "" ] || echo "$_s_search_words"|grep -q " $";then
-            _sf_visual_start
-          fi
-          ;;
-        [a-zA-Z0-9] ) _sf_search $r;;
-        ""|$'\n') _sf_select ;; # Enter
-        * ) continue;;
-      esac
-    fi
+    case $r in
+      # Use common functions of C-*, Esc, Space and Enter for both vim/emacs modes.
+      $'\ca' ) _sf_c_a;;
+      $'\cb' ) _sf_c_b;;
+      $'\cc' ) _sf_c_c;;
+      $'\cd' ) _sf_c_d;;
+      $'\ce' ) _sf_c_e;;
+      $'\cf' ) _sf_c_f;;
+      $'\cg' ) _sf_c_g;;
+      $'\ch' ) _sf_c_h;;
+      $'\ci' ) _sf_c_i;;
+      $'\cj' ) _sf_c_j;;
+      $'\ck' ) _sf_c_k;;
+      $'\cl' ) _sf_c_l;;
+      $'\cm' ) _sf_c_m;;
+      $'\cn' ) _sf_c_n;;
+      $'\co' ) _sf_c_o;;
+      $'\cp' ) _sf_c_p;;
+      $'\cr' ) _sf_c_r;;
+      $'\cs' ) _sf_c_s;;
+      $'\ct' ) _sf_c_t;;
+      $'\cu' ) _sf_c_u;;
+      $'\cv' ) _sf_c_v;;
+      $'\cw' ) _sf_c_w;;
+      $'\cx' ) _sf_c_x;;
+      $'\cy' ) _sf_c_y;;
+      $'\cz' ) _sf_c_z;;
+      $'\E' ) _sf_esc;;
+      " " ) _sf_space;;
+      ""|$'\n' ) _sf_enter;; # Enter (Normally "" corresponds to Enter (line break before any key))
+
+      # Differences for difference modes.
+      * )
+        if [ $_s_keymode -eq 0 ];then
+          case $r in
+            # Vim mode
+            0 ) _sf_0;;
+            1 ) _sf_1;;
+            2 ) _sf_2;;
+            3 ) _sf_3;;
+            4 ) _sf_4;;
+            5 ) _sf_5;;
+            6 ) _sf_6;;
+            7 ) _sf_7;;
+            8 ) _sf_8;;
+            9 ) _sf_9;;
+            a ) _sf_a;;
+            b ) _sf_b;;
+            c ) _sf_c;;
+            d ) _sf_d;;
+            e ) _sf_e;;
+            f ) _sf_f;;
+            g ) _sf_g;;
+            h ) _sf_h;;
+            i ) _sf_i;;
+            j ) _sf_j;;
+            k ) _sf_k;;
+            l ) _sf_l;;
+            m ) _sf_m;;
+            n ) _sf_n;;
+            o ) _sf_o;;
+            p ) _sf_p;;
+            q ) _sf_q;;
+            r ) _sf_r;;
+            s ) _sf_s;;
+            t ) _sf_t;;
+            u ) _sf_u;;
+            v ) _sf_v;;
+            w ) _sf_w;;
+            x ) _sf_x;;
+            y ) _sf_y;;
+            z ) _sf_z;;
+            A ) _sf_A;;
+            B ) _sf_B;;
+            C ) _sf_C;;
+            D ) _sf_D;;
+            E ) _sf_E;;
+            F ) _sf_F;;
+            G ) _sf_G;;
+            H ) _sf_H;;
+            I ) _sf_I;;
+            J ) _sf_J;;
+            K ) _sf_K;;
+            L ) _sf_L;;
+            M ) _sf_M;;
+            N ) _sf_N;;
+            O ) _sf_O;;
+            P ) _sf_P;;
+            Q ) _sf_Q;;
+            R ) _sf_R;;
+            S ) _sf_S;;
+            T ) _sf_T;;
+            U ) _sf_U;;
+            V ) _sf_V;;
+            W ) _sf_W;;
+            X ) _sf_X;;
+            Y ) _sf_Y;;
+            Z ) _sf_Z;;
+            / ) _sf_slash;;
+          esac
+        else
+          _sf_search $r
+        fi
+        ;;
+    esac
     [ $_s_break -eq 1 ] && break
   done
 
