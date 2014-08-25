@@ -22,20 +22,20 @@ On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
     $ brew tap rcmdnk/rcmdnkpac
     $ brew install sentaku
 
-If you have [brewall](https://github.com/rcmdnk/homebrew-brewall), add following lines to Brewfile:
+If you have [brew file](https://github.com/rcmdnk/homebrew-file), add following lines to Brewfile:
 
     tap 'rcmdnk/rcmdnkpac'
     brew 'sentaku'
 
 then, do:
 
-    $ brewall install
+    $ brew file install
 
 Or if you write like:
 
     tapall 'rcmdnk/rcmdnkpac'
 
-and do `brewall install`, you will have all useful scripts in
+and do `brew file install`, you will have all useful scripts in
 [rcmdnkpac](https://github.com/rcmdnk/homebrew-rcmdnkpac).
 
 Homebrew installation installs all scripts in `bin` directory including examples.
