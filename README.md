@@ -86,57 +86,59 @@ Other options and key operations at sentaku window are::
     Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
     
     Arguments:
-       -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-       -F <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-                  and use the list in the file for sentaku window instead of pipe's input.
-       -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
-                  If <sep> is \"line\", \$'\\n' is set as a separator.
-       -H         Header is shown at sentaku window.
-       -N         No nubmers are shown.
-       -l         Show last words instead of starting words for longer lines.
-       -a         Align input list (set selected one to the first).
-       -d         Enable Delete at sentaku window.
-       -m         Execute main function even if it is not after pipe.
-       -r <n>     Return nth value directly.
-                  (e.g. "-m -f <file>" == "-F <file>")
-       -p         Push words to the file.
-       -E         Use Emacs mode
-       -V         Use Vmacs mode
-       -c         Load functions as a child process in other sentaku process.
-       -n         Don't run functions, to just source this file
-       -h         Print this HELP and exit
+      -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+      -F <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+                 and use the list in the file for sentaku window instead of pipe's input.
+      -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+                 If <sep> is \"line\", \$'\\n' is set as a separator.
+      -H         Force to show a header at sentaku window.
+      -N         No nubmers are shown.
+      -l         Show last words instead of starting words for longer lines.
+      -a         Align input list (set selected one to the first).
+      -m         Execute main function even if it is not after pipe.
+                     (e.g. -m -f <file> == -F <file>)
+      -r <n>     Return nth value directly.
+      -p         Push words to the file.
+      -E         Use Emacs mode
+      -V         Use Vmacs mode
+      -c         Load functions as a child process in other sentaku process.
+      -n         Don't run functions, to just source this file
+      -v         Show version
+      -h         Print this HELP and exit
     
-    Key operation at sentaku window (Vim mode):
-       n(any number) Set number. Multi digit can be used (13, 320, etc...).
-                     Used/reset by other key.
-       k/j        Up/Down (if n is given, n-th up/n-th down).
-       C-p/C-n    Up/Down.
-       C-u/C-d    Half page down/Half page down.
-       C-b/C-f    Page up/Page down.
-       M-v/C-v    Page up/Page down.
-       C-i/C-o    Move the item up/down
-       gg/G       Go to top/bottom. (If n is given, move to n-th candidate.)
-       d          Delete current candidate. (in case you use input file.)
-       s          Show detail of current candidate.
-       v/Space    Start Visual mode (multiple selection).
-       /          Search.
-       Esc        At search mode, first Esc takes it back to normal mode
-                  with selected words.
-                  Second Esc clear search mode.
-                  Visual mode is cleared by first Esc.
-       q          Quit.
-       Ener/Space Select and Quit.
+    Key operation at sentaku window
+      Common for all:
+        C-p/C-n  Up/Down.
+        C-u/C-d  Half page down/Half page down.
+        C-b/C-f  Page up/Page down.
+        M-v/C-v  Page up/Page down.
+        C-a/C-e  Go to the beggining/end.
+        C-i/C-o  Move the item up/down.
+        C-x      Quit.
+        C-s      Start/Stop Visual mode (multi-selection).
+        Space    Select/unselect current line for multi-selection.
+                 At Emacs mode or search mode in Vim mode,
+                 it selects when space is pushed twice.
+        Esc      At search mode, first Esc takes it back to normal mode
+                 with selected words.
+                 Second Esc clear search mode.
+                 Visual mode is cleared by first Esc.
+        Ener     Select and Quit.
     
-    Key operation at sentaku window (Emacs mode):
-       C-p/C-n    Up/Down.
-       M-v/C-v    Page up/Page down.
-       C-i/C-o    Move the item up/down
-       C-x        Quit.
-       Space      Start Visual mode (multiple selection).
-                  At search mode, it starts when space is pushed twice.
-       Ener       Select and Quit.
-       Esc        Clear Search/Visual mode.
-       Other normal keys start an incremental search
+      For Vim mode:
+        n(any number) Set number. Multi-digit can be used (13, 320, etc...).
+                      Used/reset by other key.
+        k/j      Up/Down (if n is given, n-th up/n-th down).
+        gg/G     Go to top/bottom. (If n is given, move to n-th candidate.)
+        d        Delete current candidate. (in case you use input file.)
+        s        Show detail of current candidate.
+        v        Visual mode, same as C-s
+        /        Search.
+        q        Quit.
+        Others   Nothing happens.
+    
+      For Emacs mode:
+        Others   Normal keys start an incremental search.
 
 * Vim/Emacs mode
 
