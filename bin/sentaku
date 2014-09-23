@@ -36,16 +36,17 @@ SENTAKU_DATE="18/Aug/2014"
 # }}}
 
 # Default variables # {{{
-_SENTAKU_INPUT_FILE="$HOME/.sentaku_input"
-_SENTAKU_SEPARATOR=$IFS
-_SENTAKU_MAX=20
-_SENTAKU_NOHEADER=0
-_SENTAKU_NONUMBER=0
-_SENTAKU_SHOWLAST=0
-_SENTAKU_CHILD=0
-_SENTAKU_SEARCH_OPT=0 # 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive)
-_SENTAKU_KEYMODE=0
-_SENTAKU_DEBUG=0
+_SENTAKU_INPUT_FILE=${_SENTAKU_INPUT_FILE:-$HOME/.sentaku_input}
+_SENTAKU_SEPARATOR=${_SENTAKU_SEPARATOR:-$IFS}
+_SENTAKU_MAX=${_SENTAKU_MAX:-20}
+_SENTAKU_NOHEADER=${_SENTAKU_NOHEADER:-0}
+_SENTAKU_NONUMBER=${_SENTAKU_NONUMBER:-0}
+_SENTAKU_SHOWLAST=${_SENTAKU_SHOWLAST:-0}
+_SENTAKU_CHILD=${_SENTAKU_CHILD:-0}
+# 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive)
+_SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-0}
+_SENTAKU_KEYMODE=${_SENTAKU_KEYMODE:-0}
+_SENTAKU_DEBUG=${_SENTAKU_DEBUG:-0}
 # }}}
 
 _sf_initialize () { # {{{
@@ -678,7 +679,7 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
   clear >/dev/tty
 
   # Header
-  [ $_s_noheader != 1 ] && _sf_print "${_s_header}\n"
+  _sf_print "${_s_header}\n"
 
   local i=0
   for ((i=0; i<_s_max_show; i++));do
@@ -726,6 +727,7 @@ _sf_echo_printall () { # {{{
 _sf_set_header () { # {{{
   _s_header=""
   if [ $_s_noheader = 1 -o $_s_lines -lt 10 ];then
+    _s_header="\e[43;30m$_s_n values in total\e[0m "
     return
   fi
   if [ $_s_delete -eq 1 ];then
@@ -738,36 +740,26 @@ _sf_set_header () { # {{{
       _s_header=" $_s_n values in total
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- ${delete_key}/(search), Enter/Space(select), q(quit)"
+ ${delete_key}/(search), Enter/Space(select), q(quit)\n"
     elif [ $_s_cols -ge 40 ];then
       _s_header=" $_s_n values in total
  vimike updown, e.g)j:down, k:up, gg/G
- ${delete_key}Enter/Space(select), q(quit)"
+ ${delete_key}Enter/Space(select), q(quit)\n"
     fi
   else
     if [ $_s_cols -ge 50 ];then
       _s_header=" $_s_n values in total
  C-n(down), C-j(up), C-v(Page down), M-v(Page up)
  ${delete_key}Enter(select), C-x(quit)
- Other normal keys start an incremental search"
+ Other normal keys start an incremental search\n"
     fi
   fi
 }  # }}}
 
 _sf_setview () { # {{{
   _sf_set_header
-  _s_ext_row=-1
-  if [ "$_s_header" = "" ];then
-    if [ "$_s_search" = "" ];then
-      _s_ext_row=0
-    else
-      _s_header="${_s_search}"
-    fi
-  else
-    _s_header="${_s_header}
-$_s_search"
-  fi
-  [ $_s_ext_row -eq -1 ] && _s_ext_row=$(echo $(printf "${_s_header}\n"|wc -l))
+  _s_header="${_s_header}${_s_search}"
+  _s_ext_row=$(echo $(printf "${_s_header}\n"|wc -l))
 
   _s_max_show=$_s_n
   if [ $_s_n -gt $((_s_lines-_s_ext_row)) ];then
