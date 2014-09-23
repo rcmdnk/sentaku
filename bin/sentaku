@@ -113,7 +113,7 @@ Arguments:
              and use the list in the file for sentaku window instead of pipe's input.
   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
              If <sep> is \"line\", \$'\\n' is set as a separator.
-  -H         Header is shown at sentaku window.
+  -H         Force to show a header at sentaku window.
   -N         No nubmers are shown.
   -l         Show last words instead of starting words for longer lines.
   -a         Align input list (set selected one to the first).
@@ -137,6 +137,7 @@ Key operation at sentaku window
     C-a/C-e  Go to the beggining/end.
     C-i/C-o  Move the item up/down.
     C-x      Quit.
+    C-s      Start/Stop Visual mode (multi-selection).
     Space    Select/unselect current line for multi-selection.
              At Emacs mode or search mode in Vim mode,
              it selects when space is pushed twice.
@@ -153,7 +154,7 @@ Key operation at sentaku window
     gg/G     Go to top/bottom. (If n is given, move to n-th candidate.)
     d        Delete current candidate. (in case you use input file.)
     s        Show detail of current candidate.
-    v        Start/Stop Visual mode (multi-selection).
+    v        Visual mode, same as C-s
     /        Search.
     q        Quit.
     Others   Nothing happens.
@@ -755,13 +756,18 @@ _sf_set_header () { # {{{
 
 _sf_setview () { # {{{
   _sf_set_header
+  _s_ext_row=-1
   if [ "$_s_header" = "" ];then
-    _s_ext_row=0
+    if [ "$_s_search" = "" ];then
+      _s_ext_row=0
+    else
+      _s_header="${_s_search}"
+    fi
   else
     _s_header="${_s_header}
 $_s_search"
-  _s_ext_row=$(echo $(printf "${_s_header}\n"|wc -l))
   fi
+  [ $_s_ext_row -eq -1 ] && _s_ext_row=$(echo $(printf "${_s_header}\n"|wc -l))
 
   _s_max_show=$_s_n
   if [ $_s_n -gt $((_s_lines-_s_ext_row)) ];then
@@ -776,6 +782,7 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
   local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
   _s_current_n=$((_s_current_n+_s_n_move))
   [ $_s_current_n -ge $_s_n ] && _s_current_n=$((_s_n-1))
+  [ $_s_current_n -eq $old_current_n ] && return
   if [ $((_s_current_n-_s_max_show+1)) -gt $_s_n_offset ];then
     _s_n_offset=$((_s_current_n-_s_max_show+1))
     all=1
@@ -785,7 +792,8 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
   elif [ $_s_visual -lt 0 ];then
     _sf_printline 0 $old_cursor_r $old_current_n
     _sf_print_current_line
-  else
+  fi
+  if [ $_s_visual -ge 0 ];then
     local tmp_r=$old_cursor_r
     local tmp_n=$old_current_n
     while [ $tmp_n -lt $_s_current_n ];do
@@ -794,11 +802,11 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
       else
         _s_v_selected[$tmp_n]=1
       fi
-      _sf_printline 0 $tmp_r $tmp_n
+      [ $all -eq 1 ] || _sf_printline 0 $tmp_r $tmp_n
       ((tmp_r++));((tmp_n++))
     done
     _s_v_selected[$_s_current_n]=1
-    _sf_print_current_line
+    [ $all -eq 1 ] || _sf_print_current_line
   fi
   _s_g=0
   _s_n_move=-1
@@ -806,38 +814,36 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
 
 _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
   [ $_s_n_move -le 0 ] && _s_n_move=1
-  if [ $_s_current_n -ne 0 ];then
-    local all=0
-    local old_current_n=$_s_current_n
-    local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
-    _s_current_n=$((_s_current_n-_s_n_move))
-    [ $_s_current_n -lt 0 ] && _s_current_n=0
-    if [ $_s_current_n -lt $_s_n_offset ];then
-      _s_n_offset=$_s_current_n
-      all=1
-    fi
-    if [ $all -eq 1 ];then
-      _s_is_print=1
-    elif [ $_s_current_n -ne $old_current_n ];then
-      if [ $_s_visual -lt 0 ];then
-        _sf_printline 0 $old_cursor_r $old_current_n
-        _sf_print_current_line
+  local all=0
+  local old_current_n=$_s_current_n
+  local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
+  _s_current_n=$((_s_current_n-_s_n_move))
+  [ $_s_current_n -lt 0 ] && _s_current_n=0
+  [ $_s_current_n -eq $old_current_n ] && return
+  if [ $_s_current_n -lt $_s_n_offset ];then
+    _s_n_offset=$_s_current_n
+    all=1
+  fi
+  if [ $all -eq 1 ];then
+    _s_is_print=1
+  elif [ $_s_visual -lt 0 ];then
+    _sf_printline 0 $old_cursor_r $old_current_n
+    _sf_print_current_line
+  fi
+  if [ $_s_visual -ge 0 ];then
+    local tmp_r=$old_cursor_r
+    local tmp_n=$old_current_n
+    while [ $tmp_n -gt $_s_current_n ];do
+      if [ $tmp_n -gt $_s_visual ];then
+        _s_v_selected[$tmp_n]=0
       else
-        local tmp_r=$old_cursor_r
-        local tmp_n=$old_current_n
-        while [ $tmp_n -gt $_s_current_n ];do
-          if [ $tmp_n -gt $_s_visual ];then
-            _s_v_selected[$tmp_n]=0
-          else
-            _s_v_selected[$tmp_n]=1
-          fi
-          _sf_printline 0 $tmp_r $tmp_n
-          ((tmp_r--));((tmp_n--))
-        done
-        _s_v_selected[$_s_current_n]=1
-        _sf_print_current_line
+        _s_v_selected[$tmp_n]=1
       fi
-    fi
+      [ $all -eq 1 ] || _sf_printline 0 $tmp_r $tmp_n
+      ((tmp_r--));((tmp_n--))
+    done
+    _s_v_selected[$_s_current_n]=1
+    [ $all -eq 1 ] || _sf_print_current_line
   fi
   _s_g=0
   _s_n_move=-1
@@ -933,17 +939,6 @@ _sf_search () { # {{{
           fi
           return
           ;;
-        $'\cb' ) _sf_c_b; continue;;
-        $'\cd' ) _sf_c_d; continue;;
-        $'\cf' ) _sf_c_f; continue;;
-        $'\ci' ) _sf_c_i; continue;;
-        $'\cn' ) _sf_c_n; continue;;
-        $'\co' ) _sf_c_o; continue;;
-        $'\cp' ) _sf_c_p; continue;;
-        #$'\cu' ) _sf_c_u; continue;;
-        $'\cv' ) _sf_c_v; continue;;
-        $'\cx' ) _sf_c_x; return;;
-
         $'\ch') # ^H
           if [ "$_s_search_words" = "" ];then
             _s_search=""
@@ -969,16 +964,48 @@ _sf_search () { # {{{
         " " )
           # Space to start visual
           if [ "$_s_search_words" = "" ] || echo "$_s_search_words"|grep -q " $";then
-            _sf_visual_start
-            continue
+            if [ ${_s_v_selected[$_s_current_n]} -eq 1 ];then
+              _s_v_selected[$_s_current_n]=0
+            else
+              _s_v_selected[$_s_current_n]=1
+            fi
+            _s_visual=-2
+            _sf_print_current_line
           else
             _s_search_words="$_s_search_words$_s_read"
           fi
+          continue
           ;;
         ""|$'\n' )
           _sf_enter
           return
           ;;
+        $'\ca' ) _sf_c_a; continue;;
+        $'\cb' ) _sf_c_b; continue;;
+        $'\cc' ) _sf_c_c; continue;;
+        $'\cd' ) _sf_c_d; continue;;
+        $'\ce' ) _sf_c_e; continue;;
+        $'\cf' ) _sf_c_f; continue;;
+        $'\cg' ) _sf_c_g; continue;;
+        $'\ch' ) _sf_c_h; continue;;
+        $'\ci' ) _sf_c_i; continue;;
+        $'\cj' ) _sf_c_j; continue;;
+        $'\ck' ) _sf_c_k; continue;;
+        $'\cl' ) _sf_c_l; continue;;
+        $'\cm' ) _sf_c_m; continue;;
+        $'\cn' ) _sf_c_n; continue;;
+        $'\co' ) _sf_c_o; continue;;
+        $'\cp' ) _sf_c_p; continue;;
+        $'\cr' ) _sf_c_r; continue;;
+        $'\cs' ) _sf_c_s; continue;;
+        $'\ct' ) _sf_c_t; continue;;
+        $'\cu' ) _sf_c_u; continue;;
+        $'\cv' ) _sf_c_v; continue;;
+        $'\cw' ) _sf_c_w; continue;;
+        $'\cx' ) _sf_c_x; continue;;
+        $'\cy' ) _sf_c_y; continue;;
+        $'\cz' ) _sf_c_z; continue;;
+
         *)_s_search_words="$_s_search_words$_s_read";;
       esac
     fi
@@ -1063,33 +1090,12 @@ _sf_visual_start () { # {{{
 } # }}}
 
 _sf_gG () { # {{{
-  local old_current_n=$_s_current_n
-  local old_n_offset=$_s_n_offset
-  local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
-
-  if [ $_s_n_move -le 0 ];then
-    _s_n_move=0
-  elif [ $_s_n_move -ge $_s_n ];then
-    _s_n_move=$((_s_n-1))
-  fi
-  if [ $_s_n_move -le $_s_n_offset ];then
-    _s_current_n=$_s_n_move
-    _s_n_offset=$_s_current_n
-  elif [ $((_s_n_move)) -gt $((_s_n_offset+_s_max_show)) ];then
-    _s_current_n=$((_s_n_move))
-    _s_n_offset=$((_s_current_n-_s_max_show+1))
+  _s_n_move=$((_s_n_move-_s_current_n))
+  if [ $_s_n_move -lt 0 ];then
+    _s_n_move=$((0-_s_n_move))
+    _sf_n_up
   else
-    _s_current_n=$((_s_n_move))
-  fi
-
-  _s_n_move=-1
-  _s_g=0
-
-  if [ $_s_n_offset -eq $old_n_offset ];then
-    _sf_printline 0 $old_cursor_r $old_current_n
-    _sf_print_curent
-  else
-    _s_is_print=1
+    _sf_n_down
   fi
 } # }}}
 
@@ -1370,7 +1376,7 @@ _sf_c_r () { # {{{
   :
 } # }}}
 _sf_c_s () { # {{{
-  :
+  _sf_visual_start
 } # }}}
 _sf_c_t () { # {{{
   :
