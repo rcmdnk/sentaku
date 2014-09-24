@@ -501,6 +501,7 @@ _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
 _sf_delete () { # {{{
   echo -n > "$_s_file"
   local i
+  local old_current_n=$_s_current_n
   for ((i=0; i<$_s_n; i++));do
     if [ $_s_visual -ne -1 -a ${_s_v_selected[$i]} -eq 1 ] ||\
        [ $_s_visual -eq -1 -a $i -eq $old_current_n ];then
