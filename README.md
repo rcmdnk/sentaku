@@ -80,8 +80,7 @@ In cas there any directory/file names which have spaces, use line break as a sep
 If you want to use input file instead of pipe,
 use `sentaku -F <file>`.
 
-
-Other options and key operations at sentaku window are::
+Other options and key operations at sentaku window are:
 
     Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
     
@@ -140,7 +139,22 @@ Other options and key operations at sentaku window are::
       For Emacs mode:
         Others   Normal keys start an incremental search.
 
-* Vim/Emacs mode
+### Environment Variables
+
+Name| Description| Default
+:--:|:-----------|:------:
+_SENTAKU_INPUT_FILE|File used when stdin is not used (overwritten by -f).|"$HOME/.sentaku_input"
+_SENTAKU_SEPARATOR|Separator(overwritten by -s).|$IFS
+_SENTAKU_MAX|Max number to be written to the file (non-stdin usage).|20
+_SENTAKU_NOHEADER|Don't show the header (overwritten by -H). 0: show, 1: don't show.|0 (1 for noheader)
+_SENTAKU_NONUMBER|Don't show the line number (overwritten by -N). 0: show, 1: don't show.|0 (1 for nonumber)
+_SENTAKU_SHOWLAST|Show the number at the end of the line, too (overwritten by -l). 0: don'w show, 1: show.|0
+_SENTAKU_CHILD|If this sentaku is child process of parent sentaku or not.|0
+_SENTAKU_SEARCH_OPT|Search option, 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive).|0
+_SENTAKU_KEYMODE|Vim Mode or Emacs Mode, 0: Vim Mode, 1: Emacs Mode (overwritten by -V/-E).| 0
+_SENTAKU_DEBUG|If it is 1, `_sf_echo_debu` is executed.|0
+
+### Vim/Emacs mode
 
 Default mode is Vim mode, in which you can go up/down with k/j, respectively.
 
@@ -159,7 +173,7 @@ by pushing any normal keys.
 ![item_up_down](http://rcmdnk.github.io/images/post/20140621_sentaku_item_updown.gif)
 
 
-* Search mode
+### Search mode
 
 If you push `/`, sentaku enters search mode (at Vim mode).
 
@@ -191,14 +205,22 @@ You can set search option `SENTAKU_SEARCH_OPT`:
 
 ![sentaku_emacs](http://rcmdnk.github.io/images/post/20140805_emacs_search.gif)
 
-* Visual mode (multi-selection)
+### Visual mode (multi-selection)
 
 ![sentaku_vim_multi](http://rcmdnk.github.io/images/post/20140805_vim_multi.gif)
 
-By pushing `Space` (or `v` (only Vim mode)),
-you can start to choose multi-line.
+By pushing `Ctrl-s` (or `v` (only Vim mode)),
+you can start/stop to choose multi-line.
 
 Output will be separated by `SENTAKU_SEPARATOR` (default is $IFS).
+
+:new:
+
+You can choose non-sequential lines.
+
+In addition, you can toggle lines by `Space`.
+
+![sentaku_multi](http://rcmdnk.github.io/images/post/20140926_sentaku_multi.gif)
 
 ## Use as a library
 
@@ -209,6 +231,7 @@ At sentaku window, all normal keys are assigned to functions like:
 * a-z: `_sf_a ()` ~ `_sf_z ()`
 * A-Z: `_sf_A ()` ~ `_sf_z ()`
 * 0-9: `_sf_0 ()` ~ `_sf_9 ()`
+* Ctrl-a - Ctrl-z: `_sf_c_a ()` ~ `_sf_c_z ()`
 
 In addition following keys are assigned:
 
@@ -216,11 +239,11 @@ In addition following keys are assigned:
 * /: Start Search
 * Esc: Reset Search
 
-And `C-D`/`C-F`/`C-U`/`C-B` are assigned to move up down as described in the help.
-
 Following functions have default methods:
 
-* `_sf_j ()`/`_sf_k ()`/`_sf_g ()`/`_sf_G ()`/`_sf_d ()`/`_sf_s ()`/`_sf_q ()`
+* `_sf_0 ()` ~ `_sf_9 ()`
+* `_sf_d ()`/`_sf_g ()`/`_sf_j ()`/`_sf_k ()`/`_sf_q ()`/`_sf_s ()`/`_sf_v ()`/`_sf_G ()`
+* `_sf_c_a ()`/`_sf_c_b ()`/`_sf_c_c ()`/`_sf_c-e ()`/`_sf_c_f ()`/`_sf_c_c_n ()`/`_sf_c_s ()`/`_sf_c_u ()`/`_sf_c_v ()`/`_sf_c_x ()`
 
 And others are just set like `_sf_a () { :;}` (do nothing).
 
