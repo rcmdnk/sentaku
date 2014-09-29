@@ -1482,7 +1482,7 @@ _sf_main () { # {{{
 
   # Set trap
   trap "_sf_clear;_s_stdin=0;_s_ret=1;_sf_finalize;exit" HUP INT QUIT ABRT SEGV TERM
-  trap "_sf_printall; echo >/dev/stdin" WINCH
+  #trap "_sf_printall; echo >/dev/stdin" WINCH
 
   # Initializatoin
   _sf_initialize
