@@ -6,8 +6,8 @@
 #
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
-SENTAKU_VERSION=v0.2.1
-SENTAKU_DATE="24/Sep/2014"
+SENTAKU_VERSION=v0.2.2
+SENTAKU_DATE="18/Oct/2014"
 #
 # }}}
 
@@ -54,7 +54,7 @@ _sf_initialize () { # {{{
   _s_file="${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE}"
   _s_use_file=0
   _s_s="${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR}"
-  # If a separator is IFS, use space for file write out.
+  # If a separator is normal IFS, use space for file write out.
   # note: $' \t\n' should not be surrounded by '"'.
   if [ "$_s_s" = $' \t\n' ];then
     _s_s_push=" "
@@ -101,6 +101,7 @@ _sf_initialize () { # {{{
   done
   _s_read=""
   _s_zsh_ksharrays=0
+  _s_stty=""
 
   _s_ret=0
 
@@ -201,7 +202,7 @@ _sf_finalize () { # {{{
     tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
     # Enable echo input
-    [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty echo 2>/dev/null
+    [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty $_s_stty 2>/dev/null
   fi
 
   # Release variables
@@ -259,6 +260,7 @@ _sf_finalize () { # {{{
   unset _s_is_file
   unset _s_is_main
   unset _s_is_push
+  unset _s_stty
 
   _sf_finalize_user
 
@@ -292,6 +294,9 @@ _sf_execute () { # {{{
 
 _sf_hide () { # {{{
   if [ $_SENTAKU_CHILD -eq 0 -a $_s_noshow -eq 0 ];then
+    # Save current stty
+    _s_stty=$(stty -g)
+
     # Hide cursor
     tput civis >/dev/tty 2>/dev/null || tput vi >/dev/tty 2>/dev/null
 
@@ -299,7 +304,10 @@ _sf_hide () { # {{{
     tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
 
     # Hide any input
-    [ $_s_stdin -eq 0 ] && stty -echo
+    if [ $_s_stdin -eq 0 ];then
+      #stty raw
+      stty -echo
+    fi
 
     _s_normal_echo=0
   fi
@@ -428,7 +436,7 @@ Check \"$(basename $0) -h\" for further information" >/dev/tty
 } # }}}
 
 _sf_get_values_wrapper () { # {{{ _sf_get_values_wrapper [<is_stdin> [<is_check>]]
-  _sf_get_values
+  _sf_get_values $1 $2
   _sf_setview
 } # }}}
 
@@ -1469,8 +1477,8 @@ _sf_push () { # {{{
   # Renew values
   _sf_get_values_wrapper 0 0
   local orig_ifs=$IFS
-  IFS="$_s_s"
-  _s_inputs=("$input""${_s_s_push}""${_s_inputs[@]}")
+  IFS="$_s_s_push"
+  _s_inputs=("$input"${_s_s_push}"${_s_inputs[@]}")
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
