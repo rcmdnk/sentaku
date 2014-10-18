@@ -489,7 +489,7 @@ _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
   printf "%s$_s_s_push" "$v" > "$_s_file"
   local i=0
   for ((i=0; i<_s_n && i<_s_max; i++));do
-    if [ ! $i -eq $n -a "${_s_inputs[$i]}" != "$v" ];then
+    if [ "${_s_inputs[$i]}" != "$v" ];then
       printf "%s$_s_s_push" "${_s_inputs[$i]}" >> "$_s_file"
     fi
   done
