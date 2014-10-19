@@ -514,6 +514,7 @@ _sf_select () { # {{{
   elif [ $_s_current_n -eq 3 ];then
     _sf_3
   fi
+  _s_is_print=1
 } # }}}
 
 _sf_main "$@"

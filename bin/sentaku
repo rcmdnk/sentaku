@@ -6,8 +6,8 @@
 #
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
-SENTAKU_VERSION=v0.2.2
-SENTAKU_DATE="18/Oct/2014"
+SENTAKU_VERSION=v0.2.3
+SENTAKU_DATE="19/Oct/2014"
 #
 # }}}
 
@@ -202,7 +202,14 @@ _sf_finalize () { # {{{
     tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
     # Enable echo input
-    [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ] && stty $_s_stty 2>/dev/null
+    if [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ];then
+      if [ "$_s_stty" != "" ];then
+        stty $_s_stty
+        # followings are for fixing problems of previous commands...
+        stty echo
+        stty -raw
+      fi
+    fi
   fi
 
   # Release variables
