@@ -61,8 +61,8 @@ if [ ! -d "$_s_first_dir" ] || [ ! -d "$_s_second_dir" ];then
   exit 1
 fi
 
-diff_ret=$(diff $opt -r "$_s_first_dir" "$_s_second_dir" |grep "^diff" |grep -v .svn| grep -v .git|grep -v Binary|\
-  sed "s!.*${_s_second_dir}!!g")
+diff_ret=$(diff $opt -rq "$_s_first_dir" "$_s_second_dir" |grep "^Files" |grep -v .svn| grep -v .git|grep -v Binary|\
+  sed "s|.*${_s_second_dir}||g"|sed "s| differ$||")
 if [ "$diff_ret" = "" ];then
   echo "There are no remained diff files"
 else
