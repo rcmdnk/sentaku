@@ -6,8 +6,8 @@
 #
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
-SENTAKU_VERSION=v0.2.3
-SENTAKU_DATE="19/Oct/2014"
+SENTAKU_VERSION=v0.2.4
+SENTAKU_DATE="24/Nov/2014"
 #
 # }}}
 
@@ -1099,6 +1099,9 @@ _sf_visual_start () { # {{{
 
 _sf_gG () { # {{{
   _s_n_move=$((_s_n_move-_s_current_n))
+  if [ $_s_n_move -eq 0 ];then
+    return
+  fi
   if [ $_s_n_move -lt 0 ];then
     _s_n_move=$((0-_s_n_move))
     _sf_n_up
