@@ -650,6 +650,7 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F\n -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||')"
 
   tput cup $n_line 0 >/dev/tty
+  tput el
   if [ ${_s_v_selected[$n_input]} -eq 1 ];then
     printf "\e[36m" >/dev/tty
   fi
