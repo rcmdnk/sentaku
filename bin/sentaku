@@ -195,9 +195,17 @@ _sf_finalize () { # {{{
 
     # Align values
     if [ "$_s_search" != "" ];then
+      local val="${_s_inputs[$_s_current_n]}"
       _s_inputs=("${_s_pre_inputs_0[@]}")
       _s_n=${#_s_inputs[@]}
       _s_current_n=0
+      for((i=0; i<$_s_n; i++));do
+        if [ "$val" = "${_s_inputs[$i]}" ];then
+          _s_current_n=$i
+          break
+        fi
+      done
+      _s_search=""
     fi
     [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n 0
   fi
