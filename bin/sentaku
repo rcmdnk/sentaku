@@ -191,9 +191,14 @@ _sf_initialize_user () { # {{{
 _sf_finalize () { # {{{
   if [ $_s_ret -eq 0 ] && [ $_s_current_n -ge 0 ];then
     # Execution for selected value
-    _sf_execute $_s_current_n
+    _sf_execute
 
     # Align values
+    if [ "$_s_search" != "" ];then
+      _s_inputs=("${_s_pre_inputs_0[@]}")
+      _s_n=${#_s_inputs[@]}
+      _s_current_n=0
+    fi
     [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n 0
   fi
 
