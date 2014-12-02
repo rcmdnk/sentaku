@@ -463,10 +463,10 @@ _sf_get_values_wrapper () { # {{{ _sf_get_values_wrapper [<is_stdin> [<is_check>
 _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   local stdin=$_s_stdin
   local check=1
-  if [ $# -gt 0 ];then
+  if [ "$1" != "" ];then
     stdin=$1
   fi
-  if [ $# -gt 1 ];then
+  if [ "$2" != "" ];then
     check=$2
   fi
   # Get values
