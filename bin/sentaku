@@ -766,7 +766,7 @@ _sf_set_header () { # {{{
     local delete_key=""
   fi
   if [ $_s_keymode -eq 0 ];then
-    if [ $"_s_cols" -ge 67 ];then
+    if [ "$_s_cols" -ge 67 ];then
       _s_header=" $_s_n values in total
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
