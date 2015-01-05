@@ -7,7 +7,7 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 SENTAKU_VERSION=v0.2.9
-SENTAKU_DATE="03/Dec/2014"
+SENTAKU_DATE="05/Jan/2015"
 #
 # }}}
 
@@ -215,7 +215,7 @@ _sf_finalize () { # {{{
     tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
     # Enable echo input
-    if [ "x$_s_stdin" != "x" ] && [ $_s_stdin -eq 0 ];then
+    if [ $_s_stdin -eq 0 ];then
       if [ "$_s_stty" != "" ];then
         stty $_s_stty
         # followings are for fixing problems of previous commands...
@@ -314,20 +314,20 @@ _sf_execute () { # {{{
 
 _sf_hide () { # {{{
   if [ "$_SENTAKU_CHILD" -eq 0 -a "$_s_noshow" -eq 0 ];then
-    # Save current stty
-    _s_stty=$(stty -g)
+    if [ $_s_stdin -eq 0 ];then
+      # Save current stty
+      _s_stty=$(stty -g)
+
+      # Hide any input
+      #stty raw
+      stty -echo
+    fi
 
     # Hide cursor
     tput civis >/dev/tty 2>/dev/null || tput vi >/dev/tty 2>/dev/null
 
     # Save current display
     tput smcup >/dev/tty 2>/dev/null || tput ti >/dev/tty 2>/dev/null
-
-    # Hide any input
-    if [ $_s_stdin -eq 0 ];then
-      #stty raw
-      stty -echo
-    fi
 
     _s_normal_echo=0
   fi
