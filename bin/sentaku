@@ -6,7 +6,7 @@
 #
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
-SENTAKU_VERSION=v0.2.9
+SENTAKU_VERSION=v0.2.11
 SENTAKU_DATE="05/Jan/2015"
 #
 # }}}
@@ -618,6 +618,8 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
         _s_show="${_s_show: $((${#_s_show}-n_show))}"
       fi
     fi
+  else
+    _s_show=$(printf "%-${n_show}s" "${_s_show}")
   fi
 
   # Color search words
@@ -663,7 +665,6 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F\n -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||')"
 
   tput cup "$n_line" 0 >/dev/tty
-  tput el
   if [ ${_s_v_selected[$n_input]} -eq 1 ];then
     printf "\e[36m" >/dev/tty
   fi
