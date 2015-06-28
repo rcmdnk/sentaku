@@ -192,23 +192,59 @@ _sf_initialize_user () { # {{{
 
 _sf_finalize () { # {{{
   if [ $_s_ret -eq 0 ] && [ $_s_current_n -ge 0 ];then
-    # Execution for selected value
-    _sf_execute
-
     # Align values
     if [ "$_s_search" != "" ];then
       local val="${_s_inputs[$_s_current_n]}"
+      local orig_ifs=$IFS
+      local selected=()
+      local i
+      IFS="$_s_s"
+      if [ $_s_visual -ne -1 ];then
+        local is_first=1
+        for((i=0; i<_s_n; i++));do
+          if [ "${_s_v_selected[$i]}" -eq 1 ];then
+            if [ $is_first -eq 1 ];then
+              selected=(${_s_inputs[$i]})
+              is_first=0
+            else
+              selected=("${selected[@]}"$_s_s${_s_inputs[$i]})
+            fi
+          fi
+        done
+      fi
       _s_inputs=("${_s_pre_inputs_0[@]}")
+      IFS=$orig_ifs
       _s_n=${#_s_inputs[@]}
+      if [ $_s_visual -ne -1 ];then
+        for((i=0; i<_s_n; i++));do
+          _s_v_selected[$i]=0
+        done
+      fi
       _s_current_n=0
-      for((i=0; i<_s_n; i++));do
-        if [ "$val" = "${_s_inputs[$i]}" ];then
-          _s_current_n=$i
-          break
-        fi
-      done
+      if [ $_s_visual -ne -1 ];then
+        local j
+        for((i=0; i<_s_n; i++));do
+          for((j=0; j<${#selected[@]}; j++));do
+            if [ "${selected[$j]}" = "${_s_inputs[$i]}" ];then
+              _s_current_n=$i
+              _s_v_selected[$i]=1
+            fi
+          done
+        done
+      else
+        for((i=0; i<_s_n; i++));do
+          if [ "$val" = "${_s_inputs[$i]}" ];then
+            _s_current_n=$i
+            break
+          fi
+        done
+      fi
       _s_search=""
     fi
+
+    # Execution for selected value
+    _sf_execute
+
     [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n 0
   fi
 
@@ -460,7 +496,11 @@ Check \"$(basename "$0") -h\" for further information" >/dev/tty
 
 _sf_get_values_wrapper () { # {{{ _sf_get_values_wrapper [<is_stdin> [<is_check>]]
   _sf_get_values "$1" "$2"
-  _sf_setview
+  if [ "$_s_n" -eq 0 ];then
+    return 1
+  else
+    _sf_setview
+  fi
 } # }}}
 
 _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
@@ -535,8 +575,8 @@ _sf_delete () { # {{{
   local old_current_n=$_s_current_n
   for ((i=0; i<_s_n; i++));do
     if [ $_s_visual -ne -1 -a ${_s_v_selected[$i]} -eq 1 ] ||\
-       [ "$_s_visual" -eq -1 -a "$i" -eq "$old_current_n" ];then
-      if [ "$i" -lt "$old_current_n" ];then
+       [ $_s_visual -eq -1 -a $i -eq "$old_current_n" ];then
+      if [ $i -lt "$old_current_n" ];then
         ((_s_current_n--))
       fi
       continue
@@ -552,9 +592,9 @@ _sf_remove () { # {{{
   local i
   local old_current_n=$_s_current_n
   for ((i=0; i<_s_n; i++));do
-    if [ "$_s_visual" -ne -1 -a "${_s_v_selected[$i]}" -eq 1 ] ||\
-       [ "$_s_visual" -eq -1 -a "$i" -eq "$old_current_n" ];then
-      if [ "$i" -lt "$old_current_n" ];then
+    if [ $_s_visual -ne -1 -a ${_s_v_selected[$i]} -eq 1 ] ||\
+       [ $_s_visual -eq -1 -a $i -eq "$old_current_n" ];then
+      if [ $i -lt "$old_current_n" ];then
         ((_s_current_n--))
       fi
       continue
@@ -575,7 +615,7 @@ _sf_rm_del () { # {{{
   else
     _sf_delete
   fi
-  if [ $_s_n -eq 0 ];then
+  if [ "$_s_n" -eq 0 ];then
     _sf_echo "There are no remained entries\n"
     _s_ret=1
   fi
@@ -640,7 +680,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
       local words=(${_s_search_words})
       local w
       for w in "${words[@]}";do
-        _s_show=$(echo $_s_show|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
+        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
       done
     else
       if [ "$_s_search_opt" -eq 2 ];then
@@ -665,7 +705,7 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   local n_input=$3
 
   # Change line breaks to \n (to be shown), and remove the last line break
-  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F\n -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||')"
+  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||')"
 
   tput cup "$n_line" 0 >/dev/tty
   if [ ${_s_v_selected[$n_input]} -eq 1 ];then
@@ -793,10 +833,10 @@ _sf_set_header () { # {{{
 _sf_setview () { # {{{
   _sf_set_header
   _s_header="${_s_header}${_s_search}"
-  _s_ext_row=$(echo $(printf "${_s_header}\n"|wc -l))
+  _s_ext_row=$(printf "%s\n" "${_s_header}"|wc -l|awk '{print $1}')
 
   _s_max_show=$_s_n
-  if [ $_s_n -gt $((_s_lines-_s_ext_row)) ];then
+  if [ "$_s_n" -gt $((_s_lines-_s_ext_row)) ];then
     _s_max_show=$((_s_lines-_s_ext_row))
   fi
 } # }}}
@@ -807,13 +847,13 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
   local old_current_n=$_s_current_n
   local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
   _s_current_n=$((_s_current_n+_s_n_move))
-  [ $_s_current_n -ge $_s_n ] && _s_n_move=-1 && _s_current_n=$((_s_n-1))
+  [ "$_s_current_n" -ge "$_s_n" ] && _s_n_move=-1 && _s_current_n=$((_s_n-1))
   if [ $_s_current_n -eq $old_current_n ];then
     _s_g=0
     _s_n_move=-1
   fi
   if [ $((_s_current_n+1-_s_max_show)) -gt $_s_n_offset ];then
-    if [ $_s_page_change -eq 0 ];then
+    if [ "$_s_page_change" -eq 0 ];then
       _s_n_offset=$((_s_current_n+1-_s_max_show))
     else
       _s_n_offset=$((_s_current_n-(_s_current_n)%_s_max_show))
@@ -857,7 +897,7 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
     _s_n_move=-1
   fi
   if [ $_s_current_n -lt $_s_n_offset ];then
-    if [ $_s_page_change -eq 0 ];then
+    if [ "$_s_page_change" -eq 0 ];then
       _s_n_offset=$_s_current_n
     else
       _s_n_offset=$((_s_current_n-(_s_current_n)%_s_max_show))
@@ -970,7 +1010,7 @@ _sf_search () { # {{{
               continue
             fi
           fi
-          if [ $_s_n -eq 0 ] || [ $_s_keymode -eq 1 ];then
+          if [ "$_s_n" -eq 0 ] || [ "$_s_keymode" -eq 1 ];then
             _s_inputs=("${_s_pre_inputs_0[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
@@ -1060,7 +1100,6 @@ _sf_search () { # {{{
     else
       local inputs
       inputs=()
-      local n_before=${#_s_inputs[@]}
       local i
       for ((i=0; i<_s_n; i++));do
         _sf_search_check "${_s_inputs[$i]}"
@@ -1352,6 +1391,7 @@ _sf_Y () { # {{{
 _sf_Z () { # {{{
   :
 } # }}}
+# function for A-Z }}}
 
 # function for <C-a>-<C-Z>, <C-Space> {{{
 _sf_c_a () { # {{{
@@ -1521,7 +1561,7 @@ _sf_push () { # {{{
   _sf_get_values_wrapper 0 0
   local orig_ifs=$IFS
   IFS="$_s_s_push"
-  _s_inputs=("$input"${_s_s_push}"${_s_inputs[@]}")
+  _s_inputs=(${input}${_s_s_push}${_s_inputs[@]})
   IFS=$orig_ifs
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
