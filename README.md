@@ -14,9 +14,9 @@ Requirement:
 - Bash 3.X or later
 - Zsh 4.X or later
 
-# Installation
+## Installation
 
-## Homebrew on Mac
+### Homebrew on Mac
 On Mac, you can install scripts by [Homebrew](https://github.com/mxcl/homebrew):
 
     $ brew tap rcmdnk/rcmdnkpac
@@ -41,7 +41,7 @@ and do `brew file install`, you will have all useful scripts in
 Homebrew installation installs all scripts in `bin` directory including examples.
 
 
-## cURL
+### cURL
 
 You can also use an install script on the web like:
 
@@ -56,13 +56,13 @@ If you want to install other directory, do like:
 
 This method installs only `sentaku` and `ddv`.
 
-## By hand
+### By hand
 
 Or, simply download scripts and set where you like.
 
-# Usage
+## Usage
 
-## Standalone
+### Standalone
 
 Use with pipe at command line.
 If you run sentaku alone, nothing happens.
@@ -139,7 +139,7 @@ Other options and key operations at sentaku window are:
       For Emacs mode:
         Others   Normal keys start an incremental search.
 
-### Environment Variables
+#### Environment Variables
 
 Name| Description| Default
 :--:|:-----------|:------:
@@ -154,7 +154,7 @@ _SENTAKU_SEARCH_OPT|Search option, 0: AND (ignore case), 1: AND (case sensitive)
 _SENTAKU_KEYMODE|Vim Mode or Emacs Mode, 0: Vim Mode, 1: Emacs Mode (overwritten by -V/-E).| 0
 _SENTAKU_DEBUG|If it is 1, `_sf_echo_debu` is executed.|0
 
-### Vim/Emacs mode
+#### Vim/Emacs mode
 
 Default mode is Vim mode, in which you can go up/down with k/j, respectively.
 
@@ -173,7 +173,7 @@ by pushing any normal keys.
 ![item_up_down](http://rcmdnk.github.io/images/post/20140621_sentaku_item_updown.gif)
 
 
-### Search mode
+#### Search mode
 
 If you push `/`, sentaku enters search mode (at Vim mode).
 
@@ -205,7 +205,7 @@ You can set search option `SENTAKU_SEARCH_OPT`:
 
 ![sentaku_emacs](http://rcmdnk.github.io/images/post/20140805_emacs_search.gif)
 
-### Visual mode (multi-selection)
+#### Visual mode (multi-selection)
 
 ![sentaku_vim_multi](http://rcmdnk.github.io/images/post/20140805_vim_multi.gif)
 
@@ -222,7 +222,7 @@ In addition, you can toggle lines by `Space`.
 
 ![sentaku_multi](http://rcmdnk.github.io/images/post/20140926_sentaku_multi.gif)
 
-## Use as a library
+### Use as a library
 
 You can use sentaku as a library for your shell script.
 
@@ -271,7 +271,7 @@ To show something, use `_sf_echo` instead of `echo`.
 
 More examples can be found below.
 
-### Simple examples to use like snippet
+#### Simple examples to use like snippet
 
 The easiest examples are:
 
@@ -286,7 +286,7 @@ The separator is `$'\x07'` (BELL), therefore you can store even sentences in the
 These two are examples for Bash and Zsh, respectively.
 (only the shebang is different.)
 
-### Example: Explorer
+#### Example: Explorer
 
 * [ex_explorer.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_explorer.sh)
 
@@ -302,7 +302,7 @@ At sentaku window:
 * `Enter`/`Space`: Move the directly
 * `q`: Quit
 
-#### Tips
+##### Tips
 
 The original `_sf_select` function, which is executed when you push `Enter` or `Space`, is defined as:
 
@@ -349,7 +349,7 @@ _sf_l () { # {{{
 
 In this script, it opens selected file: `${_s_inputs[$_s_current_n]}`.
 
-### Example: menu program
+#### Example: menu program
 
 * [ex_menu.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_menu.sh)
 
@@ -375,7 +375,7 @@ Each command return such `aaa`.
 
 If you put `q` here, you will be back to the first window.
 
-#### Tips
+##### Tips
 
 In this script, new sentaku instance is made in the function (at `more`).
 
@@ -386,7 +386,7 @@ To load sentaku in sentaku functions, do like
 `-c` option avoid to execute some functions which should not call
 twice in the same process.
 
-### Example: command game
+#### Example: command game
 
 * [ex_slime.sh](https://github.com/rcmdnk/sentaku/blob/master/bin/ex_slime.sh)
 
@@ -400,7 +400,7 @@ Usage:
 
 [![slime](http://rcmdnk.github.io/images/post/20140124_slime.jpg)](http://asciinema.org/a/7340)
 
-### Example: ddv (Diff Directories and open with Vim)
+#### Example: ddv (Diff Directories and open with Vim)
 
 * [ddv](https://github.com/rcmdnk/sentaku/blob/master/bin/ddv)
 
@@ -420,26 +420,26 @@ once you edited and file becomes fine or you think the file is not needed to be 
 
 [![ddv](http://rcmdnk.github.io/images/post/20140127_ddv.jpg)](http://asciinema.org/a/7373)
 
-### Other examples from other repositories
+#### Other examples from other repositories
 
-#### sd_cl
+##### sd_cl
 
 [rcmdnk/sd_cl](https://github.com/rcmdnk/sd_cl)
 
 Useful functions to change directories for Bash/Zsh and GNU screen/tmux.
 
-#### trash
+##### trash
 
 [rcmdnk/trash](https://github.com/rcmdnk/trash)
 
 Remove Command using a trash box.
 
-#### multi_clipbaord
+##### multi_clipbaord
 
 [rcmdnk/multi_clipboard](https://github.com/rcmdnk/multi_clipboard)
 
 Clipboard manager for GNU screen.
 
-# References
+## References
 
 * [シェルスクリプトで対話的な選択を出来るようにするスクリプトを作った:sentaku](http://rcmdnk.github.io/blog/2014/01/24/computer-bash-zsh/)
