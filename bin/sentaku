@@ -4,10 +4,13 @@
 #
 # Utility to make sentaku (selection) window with shell command.
 #
+# Homepage: https://github.com/rcmdnk/sentaku
+#
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
-SENTAKU_VERSION=v0.3.0
-SENTAKU_DATE="16/Mar/2015"
+#
+SENTAKU_VERSION=v0.3.1
+SENTAKU_DATE="23/Aug/2015"
 #
 # }}}
 
