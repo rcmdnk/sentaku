@@ -802,9 +802,8 @@ _sf_echo_printall () { # {{{
 } # }}}
 
 _sf_set_header () { # {{{
-  _s_header=""
+  _s_header="\e[41;30m$_s_n values in total\e[0m "
   if [ "$_s_noheader" = 1 -o "$_s_lines" -lt 10 ];then
-    _s_header="\e[43;30m$_s_n values in total\e[0m "
     return
   fi
   if [ $_s_delete -eq 1 ];then
@@ -813,22 +812,22 @@ _sf_set_header () { # {{{
     local delete_key=""
   fi
   if [ $_s_keymode -eq 0 ];then
-    if [ "$_s_cols" -ge 67 ];then
-      _s_header=" $_s_n values in total
- [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
- ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- ${delete_key}/(search), Enter/Space(select), q(quit)"
-    elif [ "$_s_cols" -ge 40 ];then
-      _s_header=" $_s_n values in total
- vimike updown, e.g)j:down, k:up, gg/G
- ${delete_key}Enter/Space(select), q(quit)"
+    if [ "$_s_cols" -ge 68 ];then
+      _s_header="$_s_header
+  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
+  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
+  ${delete_key}/(search), Enter/Space(select), q(quit)"
+    elif [ "$_s_cols" -ge 41 ];then
+      _s_header="$_s_header
+  vimike updown, e.g)j:down, k:up, gg/G
+  ${delete_key}Enter/Space(select), q(quit)"
     fi
   else
-    if [ "$_s_cols" -ge 50 ];then
-      _s_header=" $_s_n values in total
- C-n(down), C-j(up), C-v(Page down), M-v(Page up)
- ${delete_key}Enter(select), C-x(quit)
- Other normal keys start an incremental search"
+    if [ "$_s_cols" -ge 51 ];then
+      _s_header="$_s_header
+  C-n(down), C-j(up), C-v(Page down), M-v(Page up)
+  ${delete_key}Enter(select), C-x(quit)
+  Other normal keys start an incremental search"
     fi
   fi
 }  # }}}
@@ -985,7 +984,7 @@ _sf_search () { # {{{
   if [ "$_s_search" = "" ];then
     _s_pre_inputs_0=("${_s_inputs[@]}")
     _s_pre_inputs_n=0
-    _s_search="Search:"
+    _s_search="\e[45;30mSearch:\e[0m"
   fi
 
   if [ "$first_char" = "" ];then
@@ -1097,7 +1096,7 @@ _sf_search () { # {{{
       esac
     fi
 
-    _s_search="Search: \e[31m$_s_search_words\e[0m"
+    _s_search="\e[41;30mSearch:\e[0m \e[31m$_s_search_words\e[0m"
 
     if [ "$_s_search_words" = "" ];then
       _s_inputs=("${_s_pre_inputs_0[@]}")
