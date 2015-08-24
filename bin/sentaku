@@ -836,7 +836,8 @@ _sf_set_header () { # {{{
 _sf_setview () { # {{{
   _sf_set_header
   _s_header="$(printf "%b" "$_s_header"|\
-                 sed -e :loop -e 'N; $!b loop' -e 's/ *\n*$//g')${_s_search}"
+                 sed -e :loop -e 'N; s/ *$//; $!b loop'  -e 's/\n*$//')\
+               ${_s_search}"
   _s_ext_row=$(($(printf "%b" "${_s_header}"|wc -l)+2))
 
   _s_max_show=$_s_n
