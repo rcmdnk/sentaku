@@ -835,10 +835,12 @@ _sf_set_header () { # {{{
 
 _sf_setview () { # {{{
   _sf_set_header
-  _s_header="$(printf "%b" "$_s_header"|\
-                 sed -e :loop -e 'N; s/ *$//; $!b loop'  -e 's/\n*$//')\
-               ${_s_search}"
-  _s_ext_row=$(($(printf "%b" "${_s_header}"|wc -l)+2))
+  _s_header="$(printf "%b\n\n" "$_s_header"|\
+               sed -e :loop -e 'N; s/ *$//; $!b loop'  -e 's/\n*$//')\
+             \n${_s_search}"
+  local line_count
+  _s_ext_row=$(($(readarray -t line_count <<<"${_s_header}";
+                  echo ${#line_count[@]})+1))
 
   _s_max_show=$_s_n
   if [ "$_s_n" -gt $((_s_lines-_s_ext_row)) ];then
