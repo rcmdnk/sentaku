@@ -817,26 +817,27 @@ _sf_set_header () { # {{{
       _s_header=" $_s_n values in total
  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
- ${delete_key}/(search), Enter/Space(select), q(quit)\n"
+ ${delete_key}/(search), Enter/Space(select), q(quit)"
     elif [ "$_s_cols" -ge 40 ];then
       _s_header=" $_s_n values in total
  vimike updown, e.g)j:down, k:up, gg/G
- ${delete_key}Enter/Space(select), q(quit)\n"
+ ${delete_key}Enter/Space(select), q(quit)"
     fi
   else
     if [ "$_s_cols" -ge 50 ];then
       _s_header=" $_s_n values in total
  C-n(down), C-j(up), C-v(Page down), M-v(Page up)
  ${delete_key}Enter(select), C-x(quit)
- Other normal keys start an incremental search\n"
+ Other normal keys start an incremental search"
     fi
   fi
 }  # }}}
 
 _sf_setview () { # {{{
   _sf_set_header
-  _s_header="${_s_header}${_s_search}"
-  _s_ext_row=$(printf "%s\n" "${_s_header}"|wc -l|awk '{print $1}')
+  _s_header="$(printf "%b" "$_s_header"|\
+                 sed -e :loop -e 'N; $!b loop' -e 's/ *\n*$//g')${_s_search}"
+  _s_ext_row=$(($(printf "%b" "${_s_header}"|wc -l)+2))
 
   _s_max_show=$_s_n
   if [ "$_s_n" -gt $((_s_lines-_s_ext_row)) ];then
