@@ -9,7 +9,7 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.4.2
+SENTAKU_VERSION=v0.4.3
 SENTAKU_DATE="25/Aug/2015"
 #
 # }}}
@@ -835,7 +835,7 @@ _sf_set_header () { # {{{
 _sf_setview () { # {{{
   _sf_set_header
   _s_header="$(printf "%b\n\n" "$_s_header"|\
-               sed -e :loop -e 'N; s/ *$//; $!b loop'  -e 's/\n*$//')\
+               sed -e :loop -e 'N; $!b loop'  -e 's/[[:space:]\n]*$//')\
              \n${_s_search}"
   _s_ext_row=$(($(readarray -t line_count <<<"${_s_header}";
                   echo ${#line_count[@]})+1))
