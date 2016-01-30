@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.4.4
-SENTAKU_DATE="25/Aug/2015"
+SENTAKU_VERSION=v0.4.5
+SENTAKU_DATE="31/Jan/2016"
 #
 # }}}
 
@@ -199,7 +199,8 @@ _sf_finalize () { # {{{
     if [ "$_s_search" != "" ];then
       local val="${_s_inputs[$_s_current_n]}"
       local orig_ifs=$IFS
-      local selected=()
+      local -a selected
+      selected=()
       local i
       IFS="$_s_s"
       if [ $_s_visual -ne -1 ];then
@@ -689,7 +690,8 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
       else
         local ic=""
       fi
-      local words=(${_s_search_words})
+      local -a words
+      words=(${_s_search_words})
       local w
       for w in "${words[@]}";do
         _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
@@ -1112,7 +1114,7 @@ _sf_search () { # {{{
     elif [ $del -eq 1 ];then
       :
     else
-      local inputs
+      local -a inputs
       inputs=()
       local i
       for i in $(seq 0 $((_s_n-1)));do
@@ -1139,7 +1141,8 @@ _sf_search_check () { # {{{
     else
       local ic=""
     fi
-    local words=(${_s_search_words})
+    local -a words
+    words=(${_s_search_words})
     local w
     for w in "${words[@]}";do
       if ! echo "${input}"| grep $ic -q "${w}";then
