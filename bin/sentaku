@@ -406,9 +406,9 @@ _sf_read () { # {{{
   local orig_ifs=$IFS
   IFS=
   if [ "x$ZSH_VERSION" != "x" ];then
-    read -sk 1 _s_read </dev/tty
+    read -srk 1 _s_read </dev/tty
   else
-    read -sn 1 _s_read </dev/tty
+    read -srn 1 _s_read </dev/tty
   fi
   IFS=$orig_ifs
 } # }}}
