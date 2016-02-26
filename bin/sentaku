@@ -201,19 +201,15 @@ _sf_finalize () { # {{{
       local orig_ifs=$IFS
       local -a selected
       selected=()
-      local i
       IFS="$_s_s"
       if [ $_s_visual -ne -1 ];then
         local is_first=1
         local i
+        local j=0
         for i in $(seq 0 $((_s_n-1)));do
           if [ "${_s_v_selected[$i]}" -eq 1 ];then
-            if [ $is_first -eq 1 ];then
-              selected=(${_s_inputs[$i]})
-              is_first=0
-            else
-              selected=("${selected[@]}"$_s_s${_s_inputs[$i]})
-            fi
+            selected[$j]=${_s_inputs[$i]}
+            ((j++))
           fi
         done
       fi
@@ -554,7 +550,7 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
     _s_v_selected=()
     local i
     for i in $(seq 0 $((_s_n-1)));do
-      _s_v_selected=(${_s_v_selected[@]} 0)
+      _s_v_selected[$i]=0
     done
   fi
   _s_ret=0
@@ -1117,10 +1113,12 @@ _sf_search () { # {{{
       local -a inputs
       inputs=()
       local i
+      local j
       for i in $(seq 0 $((_s_n-1)));do
         _sf_search_check "${_s_inputs[$i]}"
         if [ $? -eq 0 ];then
-          inputs=("${inputs[@]}" "${_s_inputs[$i]}")
+          inputs[j]="${_s_inputs[$i]}"
+          ((j++))
         fi
       done
       _s_inputs=("${inputs[@]}")
@@ -1171,7 +1169,7 @@ _sf_reset () { # {{{
   _s_v_selected=()
   local i
   for i in $(seq 0 $((_s_n-1)));do
-    _s_v_selected=(${_s_v_selected[@]} 0)
+    _s_v_selected[$i]=0
   done
   tput cup "$_s_ext_row" 0 >/dev/tty
   _sf_printall
