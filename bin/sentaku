@@ -249,10 +249,11 @@ _sf_finalize () { # {{{
     # Execution for selected value
     _sf_execute
 
-    [ $_s_align -eq 1 -a $_s_stdin -eq 0 ] && _sf_align_values $_s_current_n 0
+    [ "$_s_align" -eq 1 ] && [ "$_s_stdin" -eq 0 ] &&\
+      _sf_align_values "$_s_current_n" 0
   fi
 
-  if [ "$_SENTAKU_CHILD" -eq 0 -a "$_s_noshow" -eq 0 ];then
+  if [ "$_SENTAKU_CHILD" -eq 0 ] && [ "$_s_noshow" -eq 0 ];then
     # Show cursor
     tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
@@ -356,7 +357,7 @@ _sf_execute () { # {{{
 } # }}}
 
 _sf_hide () { # {{{
-  if [ "$_SENTAKU_CHILD" -eq 0 -a "$_s_noshow" -eq 0 ];then
+  if [ "$_SENTAKU_CHILD" -eq 0 ] && [ "$_s_noshow" -eq 0 ];then
     if [ $_s_stdin -eq 0 ];then
       # Save current stty
       _s_stty=$(stty -g)
@@ -377,7 +378,7 @@ _sf_hide () { # {{{
 } # }}}
 
 _sf_clear () { # {{{
-  if [ "$_SENTAKU_CHILD" -eq 0 -a "$_s_noshow" -eq 0 ];then
+  if [ "$_SENTAKU_CHILD" -eq 0 ] && [ "$_s_noshow" -eq 0 ];then
     _sf_echo_debug "sf_clear execute\n"
     # clear after selection
     clear >/dev/tty
@@ -520,7 +521,7 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   touch "$_s_file"
   local orig_ifs=$IFS
   IFS="$_s_s"
-  if [ "$stdin" -eq 0 -o "$_s_use_file" -eq 1 ];then
+  if [ "$stdin" -eq 0 ] || [ "$_s_use_file" -eq 1 ];then
     _s_inputs=($(cat "$_s_file"))
   else
     _s_inputs=($(cat -))
@@ -582,9 +583,9 @@ _sf_delete () { # {{{
   local i
   local old_current_n=$_s_current_n
   for i in $(seq 0 $((_s_n-1)));do
-    if [ $_s_visual -ne -1 -a ${_s_v_selected[$i]} -eq 1 ] ||\
-       [ $_s_visual -eq -1 -a $i -eq "$old_current_n" ];then
-      if [ $i -lt "$old_current_n" ];then
+    if ( [ "$_s_visual" -ne -1 ] && [ "${_s_v_selected[$i]}" -eq 1 ] ) ||\
+       ( [ "$_s_visual" -eq -1 ] && [ "$i" -eq "$old_current_n" ] );then
+      if [ "$i" -lt "$old_current_n" ];then
         ((_s_current_n--))
       fi
       continue
@@ -600,9 +601,9 @@ _sf_remove () { # {{{
   local i
   local old_current_n=$_s_current_n
   for i in $(seq 0 $((_s_n-1)));do
-    if [ $_s_visual -ne -1 -a ${_s_v_selected[$i]} -eq 1 ] ||\
-       [ $_s_visual -eq -1 -a $i -eq "$old_current_n" ];then
-      if [ $i -lt "$old_current_n" ];then
+    if ( [ "$_s_visual" -ne -1 ] && [ "${_s_v_selected[$i]}" -eq 1 ] ) ||\
+       ( [ "$_s_visual" -eq -1 ] && [ "$i" -eq "$old_current_n" ] );then
+      if [ "$i" -lt "$old_current_n" ];then
         ((_s_current_n--))
       fi
       continue
@@ -811,7 +812,7 @@ _sf_echo_printall () { # {{{
 
 _sf_set_header () { # {{{
   _s_header="\e[43;30m$_s_n values in total\e[0m "
-  if [ "$_s_noheader" = 1 -o "$_s_lines" -lt 10 ];then
+  if [ "$_s_noheader" = 1 ] || [ "$_s_lines" -lt 10 ];then
     return
   fi
   if [ $_s_delete -eq 1 ];then
@@ -1118,7 +1119,6 @@ _sf_search () { # {{{
         _sf_search_check "${_s_inputs[$i]}"
         if [ $? -eq 0 ];then
           inputs[j]="${_s_inputs[$i]}"
-          ((j++))
         fi
       done
       _s_inputs=("${inputs[@]}")
