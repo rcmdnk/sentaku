@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.4.6
-SENTAKU_DATE="26/Feb/2016"
+SENTAKU_VERSION=v0.4.7
+SENTAKU_DATE="17/Apr/2016"
 #
 # }}}
 
@@ -1119,6 +1119,7 @@ _sf_search () { # {{{
         _sf_search_check "${_s_inputs[$i]}"
         if [ $? -eq 0 ];then
           inputs[j]="${_s_inputs[$i]}"
+          ((j++))
         fi
       done
       _s_inputs=("${inputs[@]}")
