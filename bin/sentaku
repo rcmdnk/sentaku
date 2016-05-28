@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.4.7
-SENTAKU_DATE="17/Apr/2016"
+SENTAKU_VERSION=v0.4.8
+SENTAKU_DATE="28/May/2016"
 #
 # }}}
 
@@ -1032,7 +1032,7 @@ _sf_search () { # {{{
           fi
           return
           ;;
-        $'\ch') # ^H
+        $'\ch'|$'\x7f') # ^H/Backspace
           if [ "$_s_search_words" = "" ];then
             _s_search=""
             _s_search_words=""
