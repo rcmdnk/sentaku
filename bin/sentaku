@@ -9,7 +9,7 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.4.8
+SENTAKU_VERSION=v0.4.9
 SENTAKU_DATE="28/May/2016"
 #
 # }}}
@@ -50,6 +50,7 @@ _SENTAKU_CHILD=${_SENTAKU_CHILD:-0}
 _SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-0}
 _SENTAKU_PAGE_CHANGE=${_SENTAKU_PAGE_CHANGE:-1}
 _SENTAKU_KEYMODE=${_SENTAKU_KEYMODE:-0}
+_SENTAKU_COLOR_NUM_ONLY=${_SENTAKU_COLOR_NUM_ONLY:-0}
 _SENTAKU_DEBUG=${_SENTAKU_DEBUG:-0}
 # }}}
 
@@ -75,6 +76,7 @@ _sf_initialize () { # {{{
   _s_search_opt=${SENTAKU_SEARCH_OPT:-$_SENTAKU_SEARCH_OPT}
   _s_page_change=${SENTAKU_PAGE_CHANGE:-$_SENTAKU_PAGE_CHANGE}
   _s_keymode=${SENTAKU_KEYMODE:-$_SENTAKU_KEYMODE}
+  _s_col_n_only=${SENTAKU_COLOR_NUM_ONLY:-$_SENTAKU_COLOR_NUM_ONLY}
   _s_debug=${SENTAKU_DEBUG:-$_SENTAKU_DEBUG}
   _s_show=""
   _s_lines=0
@@ -283,6 +285,7 @@ _sf_finalize () { # {{{
   unset _s_search_opt
   unset _s_page_change
   unset _s_keymode
+  unset _s_col_n_only
   unset _s_debug
   unset _s_show
   unset _s_lines
@@ -676,7 +679,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   fi
 
   # Color search words
-  if [ "$_s_search_words" != "" ];then
+  if [ "$_s_col_n_only" -eq 0 ] && [ "$_s_search_words" != "" ];then
     local negative=""
     if [ "$is_selected" -eq 1 ];then
       negative=";7"
@@ -691,7 +694,9 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
       words=(${_s_search_words})
       local w
       for w in "${words[@]}";do
-        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
+        if ! echo "${_s_show}"|grep -q "";then
+          _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
+        fi
       done
     else
       if [ "$_s_search_opt" -eq 2 ];then
@@ -700,7 +705,9 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
         local ic=""
       fi
       w="${_s_search_words}"
-      _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
+      if ! echo "${_s_show}"|grep -q "";then
+        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
+      fi
     fi
   fi
 } # }}}
@@ -731,10 +738,14 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     local nmax=$((_s_n-1))
     local num_width=${#nmax}
     n_show=$((_s_cols-num_width-2))
-    num=$(printf "%${num_width}d: " "$n_input")
+    num=$(printf "%${num_width}d" "$n_input")
   fi
   _sf_show "$is_selected" "$n_show"
-  printf "%s\e[m" "$num$_s_show" >/dev/tty
+  if [ "$_s_col_n_only" -eq 1 ] || echo "${_s_show}"|grep -q "";then
+    printf "%s\e[m: %s" "${num}" "${_s_show}" >/dev/tty
+  else
+    printf "%s\e[m" "${num}: ${_s_show}" >/dev/tty
+  fi
   tput cup "$n_line" 0 >/dev/tty
 } # }}}
 
