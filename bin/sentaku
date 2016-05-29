@@ -277,8 +277,8 @@ _sf_finalize () { # {{{
   fi
   if [ $_s_trapped -eq 1 ];then
     # fixed at C-c
-    stty echo
-    stty -raw
+    stty echo 2>/dev/null
+    stty -raw 2>/dev/null
   fi
 
   # Release variables
