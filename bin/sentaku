@@ -9,7 +9,7 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.5.0
+SENTAKU_VERSION=v0.5.1
 SENTAKU_DATE="29/May/2016"
 #
 # }}}
@@ -111,6 +111,7 @@ _sf_initialize () { # {{{
   _s_read=""
   _s_zsh_ksharrays=0
   _s_stty=""
+  _s_IFS=$IFS
 
   _s_ret=0
 
@@ -199,11 +200,12 @@ _sf_initialize_user () { # {{{
 } # }}}
 
 _sf_finalize () { # {{{
+  IFS=$_s_IFS
+
   if [ $_s_ret -eq 0 ] && [ $_s_current_n -ge 0 ];then
     # Align values
     if [ "$_s_search" != "" ];then
       local val="${_s_inputs[$_s_current_n]}"
-      local orig_ifs=$IFS
       local -a selected
       selected=()
       IFS="$_s_s"
@@ -219,7 +221,7 @@ _sf_finalize () { # {{{
         done
       fi
       _s_inputs=("${_s_pre_inputs_0[@]}")
-      IFS=$orig_ifs
+      IFS=$_s_IFS
       _s_n=${#_s_inputs[@]}
       if [ $_s_visual -ne -1 ];then
         local i
@@ -332,6 +334,7 @@ _sf_finalize () { # {{{
   unset _s_is_main
   unset _s_is_push
   unset _s_stty
+  unset _s_IFS
 
   _sf_finalize_user
 
@@ -410,14 +413,13 @@ _sf_nth () { # {{{
 } # }}}
 
 _sf_read () { # {{{
-  local orig_ifs=$IFS
   IFS=
   if [ "x$ZSH_VERSION" != "x" ];then
     read -srk 1 _s_read </dev/tty
   else
     read -srn 1 _s_read </dev/tty
   fi
-  IFS=$orig_ifs
+  IFS=$_s_IFS
 } # }}}
 
 _sf_wait () { # {{{
@@ -526,14 +528,13 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   fi
   # Get values
   touch "$_s_file"
-  local orig_ifs=$IFS
   IFS="$_s_s"
   if [ "$stdin" -eq 0 ] || [ "$_s_use_file" -eq 1 ];then
     _s_inputs=($(cat "$_s_file"))
   else
     _s_inputs=($(cat -))
   fi
-  IFS=$orig_ifs
+  IFS=$_s_IFS
   if [ "x$ZSH_VERSION" != "x" ];then
     # Fix array for ZSH
     # Zsh's array adds additional empty value to array if IFS is in the end of file.
@@ -1597,10 +1598,9 @@ _sf_push () { # {{{
 
   # Renew values
   _sf_get_values_wrapper 0 0
-  local orig_ifs=$IFS
   IFS="$_s_s_push"
   _s_inputs=(${input}${_s_s_push}${_s_inputs[@]})
-  IFS=$orig_ifs
+  IFS=$_s_IFS
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
 
