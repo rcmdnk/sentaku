@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.4.9
-SENTAKU_DATE="28/May/2016"
+SENTAKU_VERSION=v0.5.0
+SENTAKU_DATE="29/May/2016"
 #
 # }}}
 
@@ -51,6 +51,7 @@ _SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-0}
 _SENTAKU_PAGE_CHANGE=${_SENTAKU_PAGE_CHANGE:-1}
 _SENTAKU_KEYMODE=${_SENTAKU_KEYMODE:-0}
 _SENTAKU_COLOR_NUM_ONLY=${_SENTAKU_COLOR_NUM_ONLY:-0}
+_SENTAKU_LINE_HIGHLIGHT=${_SENTAKU_LINE_HIGHLIGHT:-1}
 _SENTAKU_DEBUG=${_SENTAKU_DEBUG:-0}
 # }}}
 
@@ -77,6 +78,7 @@ _sf_initialize () { # {{{
   _s_page_change=${SENTAKU_PAGE_CHANGE:-$_SENTAKU_PAGE_CHANGE}
   _s_keymode=${SENTAKU_KEYMODE:-$_SENTAKU_KEYMODE}
   _s_col_n_only=${SENTAKU_COLOR_NUM_ONLY:-$_SENTAKU_COLOR_NUM_ONLY}
+  _s_line_highlight=${SENTAKU_LINE_HIGHLIGHT:-$_SENTAKU_LINE_HIGHLIGHT}
   _s_debug=${SENTAKU_DEBUG:-$_SENTAKU_DEBUG}
   _s_show=""
   _s_lines=0
@@ -124,6 +126,7 @@ Arguments:
              If <sep> is \"line\", \$'\\n' is set as a separator.
   -H         Force to show a header at sentaku window.
   -N         No nubmers are shown.
+  -U         Use underline to show selected line, instead of highlighting.
   -l         Show last words instead of starting words for longer lines.
   -a         Align input list (set selected one to the first).
   -m         Execute main function even if it is not after pipe.
@@ -286,6 +289,7 @@ _sf_finalize () { # {{{
   unset _s_page_change
   unset _s_keymode
   unset _s_col_n_only
+  unset _s_line_highlight
   unset _s_debug
   unset _s_show
   unset _s_lines
@@ -463,6 +467,7 @@ _sf_check_args () { # {{{
         ;;
       "-H" ) _s_noheader=0;;
       "-N" ) _s_nonumber=1;;
+      "-U" ) _s_line_highlight=0;;
       "-l" ) _s_showlast=1;;
       "-a" ) _s_align=1;;
       "-m" ) ;;
@@ -480,7 +485,6 @@ _sf_check_args () { # {{{
         _sf_push "$@"
         return $?
         ;;
-      "-N" ) _s_nonumber=1;;
       "-E" ) _s_keymode=1;;
       "-V" ) _s_keymode=0;;
       "-c" ) ;;
@@ -679,7 +683,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   fi
 
   # Color search words
-  if [ "$_s_col_n_only" -eq 0 ] && [ "$_s_search_words" != "" ];then
+  if [ "$_s_search_words" != "" ];then
     local negative=""
     if [ "$is_selected" -eq 1 ];then
       negative=";7"
@@ -694,9 +698,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
       words=(${_s_search_words})
       local w
       for w in "${words[@]}";do
-        if ! echo "${_s_show}"|grep -q "";then
-          _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
-        fi
+        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
       done
     else
       if [ "$_s_search_opt" -eq 2 ];then
@@ -705,9 +707,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
         local ic=""
       fi
       w="${_s_search_words}"
-      if ! echo "${_s_show}"|grep -q "";then
-        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
-      fi
+      _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
     fi
   fi
 } # }}}
@@ -722,16 +722,22 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   local n_line=$2
   local n_input=$3
 
-  # Change line breaks to \n (to be shown), and remove the last line break
-  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||')"
-
-  tput cup "$n_line" 0 >/dev/tty
+  local color=""
   if [ ${_s_v_selected[$n_input]} -eq 1 ];then
-    printf "\e[36m" >/dev/tty
+    color="[36m"
   fi
   if [ "$is_selected" -eq 1 ];then
-    printf "\e[7m" >/dev/tty
+    if [ "$_s_line_highlight" -eq 1 ];then
+      color="${color}[7m"
+    else
+      color="${color}[4m"
+    fi
   fi
+
+  # Change line breaks to \n (to be shown), and remove the last line break
+  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||'|sed "s/\[m/[m$color/g")"
+
+  tput cup "$n_line" 0 >/dev/tty
   local n_show=$_s_cols
   local num=""
   if [ $_s_nonumber -eq 0 ];then
@@ -741,10 +747,11 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     num=$(printf "%${num_width}d" "$n_input")
   fi
   _sf_show "$is_selected" "$n_show"
-  if [ "$_s_col_n_only" -eq 1 ] || echo "${_s_show}"|grep -q "";then
-    printf "%s\e[m: %s" "${num}" "${_s_show}" >/dev/tty
+  #if [ "$_s_line_highlight" -eq 1 ] && ( [ "$_s_col_n_only" -eq 1 ] || echo "${_s_show}"|grep -q "" );then
+  if [ "$_s_col_n_only" -eq 1 ];then
+    printf "%s%s[m: %s" "${color}" "${num}" "${_s_show}" >/dev/tty
   else
-    printf "%s\e[m" "${num}: ${_s_show}" >/dev/tty
+    printf "%s%s[m" "${color}" "${num}: ${_s_show}" >/dev/tty
   fi
   tput cup "$n_line" 0 >/dev/tty
 } # }}}
