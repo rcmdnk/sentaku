@@ -745,14 +745,13 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     local nmax=$((_s_n-1))
     local num_width=${#nmax}
     n_show=$((_s_cols-num_width-2))
-    num=$(printf "%${num_width}d" "$n_input")
+    num=$(printf "%${num_width}d: " "$n_input")
   fi
   _sf_show "$is_selected" "$n_show"
-  #if [ "$_s_line_highlight" -eq 1 ] && ( [ "$_s_col_n_only" -eq 1 ] || echo "${_s_show}"|grep -q "" );then
   if [ "$_s_col_n_only" -eq 1 ];then
-    printf "%s%s[m: %s" "${color}" "${num}" "${_s_show}" >/dev/tty
+    printf "${color}${num}[m${_s_show}" >/dev/tty
   else
-    printf "%s%s[m" "${color}" "${num}: ${_s_show}" >/dev/tty
+    printf "${color}${num}${_s_show}[m" >/dev/tty
   fi
   tput cup "$n_line" 0 >/dev/tty
 } # }}}
