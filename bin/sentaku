@@ -664,7 +664,8 @@ _sf_rm_del () { # {{{
 
 _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   local is_selected=${1:-0}
-  local n_show=${2:-$_s_cols}
+  local real_show=$(printf "${_s_show}"|sed "s/\[[0-9;]*m//g"|sed "s/\[K//g")
+  local n_show=$((${2:-$_s_cols}+${#_s_show}-${#real_show}))
   if [ "${#_s_show}" -gt "$n_show" ];then
     if [ $_s_showlast -eq 0 ];then
       if [ "x$ZSH_VERSION" != "x" ];then
