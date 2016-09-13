@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.5.4
-SENTAKU_DATE="29/May/2016"
+SENTAKU_VERSION=v0.5.5
+SENTAKU_DATE="13/Sep/2016"
 #
 # }}}
 
@@ -743,8 +743,8 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     fi
   fi
 
-  # Change line breaks to \n (to be shown), and remove the last line break
-  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||'|sed "s/\[m/[m$color/g")"
+  # Change line breaks to \n (to be shown), remove the last line break, replace tab to space
+  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||'|sed "s/\[m/[m$color/g"|sed $'s/\t/ /g')"
 
   tput cup "$n_line" 0 >/dev/tty
   local n_show=$_s_cols
