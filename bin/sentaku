@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.5.5
-SENTAKU_DATE="13/Sep/2016"
+SENTAKU_VERSION=v0.5.6
+SENTAKU_DATE="15/Nov/2016"
 #
 # }}}
 
@@ -671,7 +671,7 @@ _sf_rm_del () { # {{{
 
 _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   local is_selected=${1:-0}
-  local real_show=$(printf "${_s_show}"|sed "s/\[[0-9;]*m//g"|sed "s/\[K//g")
+  local real_show=$(printf -- "${_s_show}"|sed "s/\[[0-9;]*m//g"|sed "s/\[K//g")
   local n_show=$((${2:-$_s_cols}+${#_s_show}-${#real_show}))
   if [ "${#_s_show}" -gt "$n_show" ];then
     if [ $_s_showlast -eq 0 ];then
@@ -1142,8 +1142,7 @@ _sf_search () { # {{{
       local i
       local j
       for i in $(seq 0 $((_s_n-1)));do
-        _sf_search_check "${_s_inputs[$i]}"
-        if [ $? -eq 0 ];then
+        if _sf_search_check "${_s_inputs[$i]}";then
           inputs[j]="${_s_inputs[$i]}"
           ((j++))
         fi
