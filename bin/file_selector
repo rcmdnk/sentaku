@@ -2,8 +2,10 @@
 
 . sentaku -n
 
-SENTAKU_FILE_CONTENT_LINE=10
-SENTAKU_CONTENT_SHOW_UNDER=0
+_SENTAKU_FILE_CONTENT_LINE=${_SENTAKU_FILE_CONTENT_LINE:-10}
+_SENTAKU_CONTENT_SHOW_UNDER=${_SENTAKU_CONTENT_SHOW_UNDER:-0}
+
+_s_content_show_under=$_SENTAKU_CONTENT_SHOW_UNDER
 
 _sf_file_content () {
   if [ $_s_file_content -eq 0 ];then
@@ -15,7 +17,7 @@ _sf_file_content () {
   local start_col=0
   local n_cols=$_s_cols
 
-  if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 0 ];then
+  if [ $_s_content_show_under -eq 0 ];then
     start_line=0
     start_col=$_s_cols
     n_cols=$_s_content_cols
@@ -26,7 +28,7 @@ _sf_file_content () {
     printf "%-${n_cols}s" "" >/dev/tty
   done
 
-  if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 1 ];then
+  if [ $_s_content_show_under -eq 1 ];then
     tput cup "$_s_lines" 0 >/dev/tty
     if [ $n_cols -ge 20 ];then
       printf "====File content===="
@@ -36,7 +38,7 @@ _sf_file_content () {
   fi
 
   if ! file "${_s_inputs[$_s_current_n]}"|grep -q text;then
-    if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 0 ];then
+    if [ $_s_content_show_under -eq 0 ];then
       if [ $n_cols -ge 15 ];then
         tput cup "$start_line" "$start_col" >/dev/tty
         printf "Not a text file"
@@ -50,7 +52,7 @@ _sf_file_content () {
   else
     i=$start_line
     while read line;do
-      if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 0 ];then
+      if [ $_s_content_show_under -eq 0 ];then
         line="|$line"
       fi
       if [ "${#line}" -gt "$n_cols" ];then
@@ -85,9 +87,9 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
   local cols=$_s_cols
   _s_lines=$(tput lines)
   _s_cols=$(tput cols)
-  if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 1 ];then
-    if [ $((_s_lines-SENTAKU_FILE_CONTENT_LINE-10)) -ge 0 ];then
-      _s_lines=$((_s_lines-SENTAKU_FILE_CONTENT_LINE-2))
+  if [ $_s_content_show_under -eq 1 ];then
+    if [ $((_s_lines-_SENTAKU_FILE_CONTENT_LINE-10)) -ge 0 ];then
+      _s_lines=$((_s_lines-_SENTAKU_FILE_CONTENT_LINE-2))
       _s_file_content=1
     else
       _s_file_content=0
@@ -183,11 +185,11 @@ _sf_s () {
 }
 
 if echo -- "$1"|grep -q -- "--under";then
-  SENTAKU_CONTENT_SHOW_UNDER=1
+  _s_content_show_under=1
   shift
 fi
 if echo -- "$1"|grep -q -- "--right";then
-  SENTAKU_CONTENT_SHOW_UNDER=0
+  _s_content_show_under=0
   shift
 fi
 if [ -p /dev/stdin ];then
