@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+
+. sentaku -n
+
+SENTAKU_FILE_CONTENT_LINE=10
+SENTAKU_CONTENT_SHOW_UNDER=0
+
+_sf_file_content () {
+  if [ $_s_file_content -eq 0 ];then
+    return
+  fi
+  local i
+  local start_line=$((_s_lines+1))
+  local end_line=$(($(tput lines)-1))
+  local start_col=0
+  local n_cols=$_s_cols
+
+  if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 0 ];then
+    start_line=0
+    start_col=$_s_cols
+    n_cols=$_s_content_cols
+  fi
+
+  for i in $(seq $start_line $end_line);do
+    tput cup "$i" "$start_col" >/dev/tty
+    printf "%-${n_cols}s" "" >/dev/tty
+  done
+
+  if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 1 ];then
+    tput cup "$_s_lines" 0 >/dev/tty
+    if [ $n_cols -ge 20 ];then
+      printf "====File content===="
+    else
+      printf "=="
+    fi
+  fi
+
+  if ! file "${_s_inputs[$_s_current_n]}"|grep -q text;then
+    if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 0 ];then
+      if [ $n_cols -ge 15 ];then
+        tput cup "$start_line" "$start_col" >/dev/tty
+        printf "Not a text file"
+      fi
+    else
+      if [ $n_cols -ge 16 ];then
+        tput cup "$start_line" "$start_col" >/dev/tty
+        printf "|Not a text file"
+      fi
+    fi
+  else
+    i=$start_line
+    while read line;do
+      if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 0 ];then
+        line="|$line"
+      fi
+      if [ "${#line}" -gt "$n_cols" ];then
+        if [ "x$ZSH_VERSION" != "x" ];then
+          line="${line[0,$((n_cols-1))]}"
+        else
+          line="${line: 0: $n_cols}"
+        fi
+      fi
+      tput cup "$i" $start_col >/dev/tty
+      printf "%s" "$line"
+      ((i++))
+      if [ $i -gt $end_line ];then
+        break
+      fi
+    done < ${_s_inputs[$_s_current_n]}
+    while [ $i -lt $end_line ];do
+      tput cup "$i" $start_col >/dev/tty
+      printf "|"
+      ((i++))
+    done
+  fi
+}
+
+_sf_printall () { # usage: _sf_printall [not force] {{{
+  # if any argument is given, check if echoed or not.
+  if [ $# -ge 1 ] && [ $_s_is_print -eq 0 ];then
+    return
+  fi
+
+  local lines=$_s_lines
+  local cols=$_s_cols
+  _s_lines=$(tput lines)
+  _s_cols=$(tput cols)
+  if [ $SENTAKU_CONTENT_SHOW_UNDER -eq 1 ];then
+    if [ $((_s_lines-SENTAKU_FILE_CONTENT_LINE-10)) -ge 0 ];then
+      _s_lines=$((_s_lines-SENTAKU_FILE_CONTENT_LINE-2))
+      _s_file_content=1
+    else
+      _s_file_content=0
+    fi
+  else
+    _s_file_content=1
+    local full_cols=$_s_cols
+    _s_cols=$((full_cols/2))
+    _s_content_cols=$((full_cols-_s_cols))
+  fi
+
+  _sf_setview
+
+  if [ "$lines" -ne "$_s_lines" ] || [ "$cols" -ne "$_s_cols" ];then
+    _s_current_n=0
+    _s_n_offset=0
+  fi
+
+  clear >/dev/tty
+
+  # Header
+  _sf_print "${_s_header}\n"
+
+  local i
+  for i in $(seq 0 $((_s_max_show-1)));do
+    if [ $((i+_s_n_offset)) -ge "$_s_n" ];then break;fi
+    if [ $((i+_s_n_offset)) -eq $_s_current_n ];then
+      _sf_printline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
+    else
+      _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
+    fi
+  done
+
+  _s_is_print=0
+} # }}}
+
+_sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
+  if [ $# -lt 3 ];then
+    _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input), exit\n"
+    _sf_quit 1
+    return
+  fi
+  local is_selected=$1
+  local n_line=$2
+  local n_input=$3
+
+  local color=""
+  if [ ${_s_v_selected[$n_input]} -eq 1 ];then
+    color="[36m"
+  fi
+  if [ "$is_selected" -eq 1 ];then
+    if [ "$_s_line_highlight" -eq 1 ];then
+      color="${color}[7m"
+    else
+      color="${color}[4m"
+    fi
+  fi
+
+  # Change line breaks to \n (to be shown), remove the last line break, replace tab to space
+  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||'|sed "s/\[m/[m$color/g"|sed $'s/\t/ /g')"
+
+  tput cup "$n_line" 0 >/dev/tty
+  local n_show=$_s_cols
+  local num=""
+  if [ $_s_nonumber -eq 0 ];then
+    local nmax=$((_s_n-1))
+    local num_width=${#nmax}
+    n_show=$((_s_cols-num_width-2))
+    num=$(printf "%${num_width}d: " "$n_input")
+  fi
+  _sf_show "$is_selected" "$n_show"
+  if [ "$_s_col_n_only" -eq 1 ];then
+    printf "${color}${num}[m${_s_show}" >/dev/tty
+  else
+    printf "${color}${num}${_s_show}[m" >/dev/tty
+  fi
+  if [ "$is_selected" -eq 1 ];then
+    _sf_file_content
+  fi
+  tput cup "$n_line" 0 >/dev/tty
+} # }}}
+
+_sf_s () {
+  output="$(_sf_nth $((_s_current_n))) value: ${_s_inputs[$_s_current_n]}
+===============
+"
+  if [ -f ${_s_inputs[$_s_current_n]} ];then
+    output="$output$(head -n $(($(tput lines)-2)) ${_s_inputs[$_s_current_n]})"
+  else
+    output="$output${_s_inputs[$_s_current_n]} is not a file\n"
+  fi
+  _sf_echo "$output"
+}
+
+if echo -- "$1"|grep -q -- "--under";then
+  SENTAKU_CONTENT_SHOW_UNDER=1
+  shift
+fi
+if echo -- "$1"|grep -q -- "--right";then
+  SENTAKU_CONTENT_SHOW_UNDER=0
+  shift
+fi
+if [ -p /dev/stdin ];then
+  echo $(cat -) | _sf_main "$@"
+else
+  _sf_main "$@"
+fi
