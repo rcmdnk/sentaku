@@ -2,10 +2,11 @@
 
 . sentaku -n
 
-_SENTAKU_FILE_CONTENT_LINE=${_SENTAKU_FILE_CONTENT_LINE:-10}
+_SENTAKU_FILE_CONTENT_LINES=${_SENTAKU_FILE_CONTENT_LINES:-10}
 _SENTAKU_CONTENT_SHOW_UNDER=${_SENTAKU_CONTENT_SHOW_UNDER:-0}
 
-_s_content_show_under=$_SENTAKU_CONTENT_SHOW_UNDER
+_s_file_content_lines=${SENTAKU_FILE_CONTENT_LINES:-$_SENTAKU_FILE_CONTENT_LINES}
+_s_content_show_under=${SENTAKU_CONTENT_SHOW_UNDER:-$_SENTAKU_CONTENT_SHOW_UNDER}
 
 _sf_file_content () {
   if [ $_s_file_content -eq 0 ];then
@@ -78,22 +79,8 @@ _sf_file_content () {
 }
 
 _sf_set_header () { # {{{
-  if [ $_s_content_show_under -eq 1 ];then
-    if [ $((_s_lines-_SENTAKU_FILE_CONTENT_LINE-10)) -ge 0 ];then
-      _s_lines=$((_s_lines-_SENTAKU_FILE_CONTENT_LINE-2))
-      _s_file_content=1
-    else
-      _s_file_content=0
-    fi
-  else
-    _s_file_content=1
-    local full_cols=$_s_cols
-    _s_cols=$((full_cols/2))
-    _s_content_cols=$((full_cols-_s_cols))
-  fi
-
   _s_header="\e[43;30m$_s_n values in total\e[0m "
-  if [ "$_s_noheader" = 1 ] || [ "$_s_lines" -lt 10 ];then
+  if [ "$_s_noheader" = 1 ];then
     return
   fi
   if [ $_s_delete -eq 1 ];then
@@ -102,82 +89,80 @@ _sf_set_header () { # {{{
     local delete_key=""
   fi
   if [ $_s_keymode -eq 0 ];then
-    if [ "$_s_cols" -ge 68 ];then
+    if [ "$_s_cols" -ge 41 ];then
       _s_header="$_s_header
-  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
-  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
-  ${delete_key}/(search), Enter/Space(select), q(quit)"
-    elif [ "$_s_cols" -ge 41 ];then
-      _s_header="$_s_header
-  vimike updown, e.g)j:down, k:up, gg/G
+  vimike updown, e.g)j:down, k:up, gg/G,
+  s(show content by \$VISUAL)
   ${delete_key}Enter/Space(select), q(quit)"
     fi
   else
     if [ "$_s_cols" -ge 51 ];then
       _s_header="$_s_header
   C-n(down), C-j(up), C-v(Page down), M-v(Page up)
-  ${delete_key}Enter(select), C-x(quit)
+  Enter(select), C-x(quit)
   Other normal keys start an incremental search"
     fi
   fi
 }  # }}}
 
-_sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
-  if [ $# -lt 3 ];then
-    _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input), exit\n"
-    _sf_quit 1
-    return
+_sf_setview () { # {{{
+  if [ $_s_content_show_under -eq 0 ];then
+    _s_file_content=1
+    local full_cols=$_s_cols
+    _s_cols=$((full_cols/2))
+    _s_content_cols=$((full_cols-_s_cols))
   fi
-  local is_selected=$1
-  local n_line=$2
-  local n_input=$3
 
-  local color=""
-  if [ ${_s_v_selected[$n_input]} -eq 1 ];then
-    color="[36m"
+  if [ "$_s_lines" -le "$((_s_min_show))" ];then
+    _s_header=""
+    _s_ext_row=0
+  elif [ "$_s_lines" -eq "$((_s_min_show+1))" ];then
+    _s_header="${_s_search}"
+    _s_ext_row=1
+  else
+    _sf_set_header
+    _s_header="$(printf "%b\n\n" "$_s_header"|\
+                 sed -e :loop -e 'N; $!b loop'  -e 's/[[:space:]\n]*$//')\
+               \n${_s_search}"
+    if [ "$(printf "%b\n" "$_s_header"|wc -l)" -gt "$((_s_lines-_s_min_show))" ];then
+      _s_header="\e[43;30m$_s_n values in total\e[0m\n${_s_search}"
+    fi
+    _s_ext_row=$(printf "%b\n" "$_s_header"|wc -l)
   fi
-  if [ "$is_selected" -eq 1 ];then
-    if [ "$_s_line_highlight" -eq 1 ];then
-      color="${color}[7m"
+
+  if [ $_s_content_show_under -eq 1 ];then
+    if [ $((_s_lines-_ext_row-_s_file_content_lines-1)) -ge 0 ];then
+      _s_lines=$((_s_lines-_s_file_content_lines-1))
+      _s_file_content=1
     else
-      color="${color}[4m"
+      _s_file_content=0
     fi
   fi
 
-  # Change line breaks to \n (to be shown), remove the last line break, replace tab to space
-  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||'|sed "s/\[m/[m$color/g"|sed $'s/\t/ /g')"
+  _s_max_show=$_s_n
+  if [ "$_s_n" -gt $((_s_lines-_s_ext_row)) ];then
+    _s_max_show=$((_s_lines-_s_ext_row))
+  fi
+} # }}}
 
-  tput cup "$n_line" 0 >/dev/tty
-  local n_show=$_s_cols
-  local num=""
-  if [ $_s_nonumber -eq 0 ];then
-    local nmax=$((_s_n-1))
-    local num_width=${#nmax}
-    n_show=$((_s_cols-num_width-2))
-    num=$(printf "%${num_width}d: " "$n_input")
-  fi
-  _sf_show "$is_selected" "$n_show"
-  if [ "$_s_col_n_only" -eq 1 ];then
-    printf "${color}${num}[m${_s_show}" >/dev/tty
-  else
-    printf "${color}${num}${_s_show}[m" >/dev/tty
-  fi
-  if [ "$is_selected" -eq 1 ];then
-    _sf_file_content
-  fi
-  tput cup "$n_line" 0 >/dev/tty
+_sf_print_current_line () { # print current line {{{
+  local cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
+  _sf_printline 1 $cursor_r $_s_current_n
+  _sf_file_content
 } # }}}
 
 _sf_s () {
-  output="$(_sf_nth $((_s_current_n))) value: ${_s_inputs[$_s_current_n]}
+  if [ ! -f ${_s_inputs[$_s_current_n]} ];then
+    output="$(_sf_nth $((_s_current_n))) value: ${_s_inputs[$_s_current_n]}
 ===============
+Not a file.
 "
-  if [ -f ${_s_inputs[$_s_current_n]} ];then
-    output="$output$(head -n $(($(tput lines)-2)) ${_s_inputs[$_s_current_n]})"
+    _sf_echo "$output"
   else
-    output="$output${_s_inputs[$_s_current_n]} is not a file\n"
+    clear >/dev/tty
+    ${VISUAL:-less} "${_s_inputs[$_s_current_n]}" >/dev/tty </dev/tty
+    _s_is_print=1
   fi
-  _sf_echo "$output"
 }
 
 if echo -- "$1"|grep -q -- "--under";then
