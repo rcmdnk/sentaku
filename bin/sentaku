@@ -682,7 +682,7 @@ _sf_cut_word () { # {{{ _sf_cut_word <word> <max_length> [<is_last_show>]
   fi
   if [ "$is_last_show" -eq 0 ];then
     if [ "x$ZSH_VERSION" != "x" ];then
-      echo "${word[0,$((max_length-1))]}" # need for zsh version < 5
+      printf "%s" "${word[0,$((max_length-1))]}" # need for zsh version < 5
       return
     else
       printf "%s" "${word: 0: $max_length}"
@@ -806,7 +806,7 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
   for i in $(seq 0 $((_s_max_show-1)));do
     if [ $((i+_s_n_offset)) -ge "$_s_n" ];then break;fi
     if [ $((i+_s_n_offset)) -eq $_s_current_n ];then
-      _sf_printline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
+      _sf_print_current_line
     else
       _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
     fi
@@ -871,7 +871,7 @@ _sf_set_header () { # {{{
     if [ "$_s_cols" -ge 51 ];then
       _s_header="$_s_header
   C-n(down), C-j(up), C-v(Page down), M-v(Page up)
-  ${delete_key}Enter(select), C-x(quit)
+  Enter(select), C-x(quit)
   Other normal keys start an incremental search"
     fi
   fi
