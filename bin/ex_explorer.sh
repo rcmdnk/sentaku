@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Example to make menu program
+# Example of explorer
 . sentaku -n
 
 _SENTAKU_SEPARATOR=$'\n'
@@ -14,11 +14,11 @@ _s_help="
 Usage: ex_explorer.sh [-aHNl] [-f <file>] [-s <sep>]
 
 Arguments:
-   -a         Show
-   -H         Header is shown at sentaku window
-   -N         No nubmers are shown
-   -l         Show last words instead of starting words for longer lines
-   -h         Print this HELP and exit
+   -a         Show hidden files/directories.
+   -H         Header is shown at sentaku window.
+   -N         No nubmers are shown.
+   -l         Show last words instead of starting words for longer lines.
+   -h         Print this HELP and exit.
 "
 
 _sf_get_values () { # {{{
@@ -173,5 +173,5 @@ _sf_e () { # {{{
   _sf_quit
 } # }}}
 
-echo "$menu" | _sf_main "$@"
+_sf_main "$@"
 
