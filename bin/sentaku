@@ -42,6 +42,7 @@ SENTAKU_DATE="15/Nov/2016"
 _SENTAKU_INPUT_FILE=${_SENTAKU_INPUT_FILE:-$HOME/.sentaku_input}
 _SENTAKU_SEPARATOR=${_SENTAKU_SEPARATOR:-$IFS}
 _SENTAKU_MAX=${_SENTAKU_MAX:-20}
+_SENTAKU_MIN_SHOW=${_SENTAKU_MIN_SHOW:-3}
 _SENTAKU_NOHEADER=${_SENTAKU_NOHEADER:-0}
 _SENTAKU_NONUMBER=${_SENTAKU_NONUMBER:-0}
 _SENTAKU_SHOWLAST=${_SENTAKU_SHOWLAST:-0}
@@ -70,6 +71,7 @@ _sf_initialize () { # {{{
   _s_inputs=()
   _s_n=0
   _s_max=${SENTAKU_MAX:-$_SENTAKU_MAX}
+  _s_min_show=${SENTAKU_MIN_SHOW:-$_SENTAKU_MIN_SHOW}
   _s_header=""
   _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
@@ -289,6 +291,7 @@ _sf_finalize () { # {{{
   unset _s_inputs
   unset _s_n
   unset _s_max
+  unset _s_min_show
   unset _s_header
   unset _s_noheader
   unset _s_nonumber
@@ -734,11 +737,6 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
 } # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
-  if [ $# -lt 3 ];then
-    _sf_echo "_sf_printline needs 3 arguments (is_selected, n_line, n_input), exit\n"
-    _sf_quit 1
-    return
-  fi
   local is_selected=$1
   local n_line=$2
   local n_input=$3
@@ -802,7 +800,7 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
   clear >/dev/tty
 
   # Header
-  _sf_print "${_s_header}\n"
+  _sf_print "${_s_header}"
 
   local i
   for i in $(seq 0 $((_s_max_show-1)));do
@@ -850,7 +848,7 @@ _sf_echo_printall () { # {{{
 
 _sf_set_header () { # {{{
   _s_header="\e[43;30m$_s_n values in total\e[0m "
-  if [ "$_s_noheader" = 1 ] || [ "$_s_lines" -lt 10 ];then
+  if [ "$_s_noheader" = 1 ];then
     return
   fi
   if [ $_s_delete -eq 1 ];then
@@ -880,11 +878,22 @@ _sf_set_header () { # {{{
 }  # }}}
 
 _sf_setview () { # {{{
-  _sf_set_header
-  _s_header="$(printf "%b\n\n" "$_s_header"|\
-               sed -e :loop -e 'N; $!b loop'  -e 's/[[:space:]\n]*$//')\
-             \n${_s_search}"
-  _s_ext_row=$(printf "%b\n" "$_s_header"|wc -l)
+  if [ "$_s_lines" -le "$((_s_min_show))" ];then
+    _s_header=""
+    _s_ext_row=0
+  elif [ "$_s_lines" -eq "$((_s_min_show+1))" ];then
+    _s_header="${_s_search}"
+    _s_ext_row=1
+  else
+    _sf_set_header
+    _s_header="$(printf "%b\n\n" "$_s_header"|\
+                 sed -e :loop -e 'N; $!b loop'  -e 's/[[:space:]\n]*$//')\
+               \n${_s_search}"
+    if [ "$(printf "%b\n" "$_s_header"|wc -l)" -gt "$((_s_lines-_s_min_show))" ];then
+      _s_header="\e[43;30m$_s_n values in total\e[0m\n${_s_search}"
+    fi
+    _s_ext_row=$(printf "%b\n" "$_s_header"|wc -l)
+  fi
 
   _s_max_show=$_s_n
   if [ "$_s_n" -gt $((_s_lines-_s_ext_row)) ];then
@@ -1025,6 +1034,10 @@ _sf_select () { # {{{
 } # }}}
 
 _sf_search () { # {{{
+  if [ "$_s_ext_row" -eq 0 ];then
+    _sf_echo "Too few lines for search mode."
+    return
+  fi
   local first_char=$1
   if [ "$_s_search" = "" ];then
     _s_pre_inputs_0=("${_s_inputs[@]}")
