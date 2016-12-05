@@ -775,8 +775,7 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
 } # }}}
 
 _sf_print_current_line () { # print current line {{{
-  local cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
-  _sf_printline 1 $cursor_r $_s_current_n
+  _sf_printline 1 $((_s_current_n-_s_n_offset+_s_ext_row)) $_s_current_n
 } # }}}
 
 _sf_printall () { # usage: _sf_printall [not force] {{{
