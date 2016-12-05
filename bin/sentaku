@@ -669,27 +669,39 @@ _sf_rm_del () { # {{{
   _s_is_print=1
 } # }}}
 
-_sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
-  local is_selected=${1:-0}
-  local real_show=$(printf -- "${_s_show}"|sed "s/\[[0-9;]*m//g"|sed "s/\[K//g")
-  local n_show=$((${2:-$_s_cols}+${#_s_show}-${#real_show}))
-  if [ "${#_s_show}" -gt "$n_show" ];then
-    if [ $_s_showlast -eq 0 ];then
-      if [ "x$ZSH_VERSION" != "x" ];then
-        _s_show="${_s_show[0,$((n_show-1))]}" # need for zsh version < 5
-      else
-        _s_show="${_s_show: 0: $n_show}"
-      fi
+_sf_cut_word () { # {{{ _sf_cut_word <word> <max_length> [<is_last_show>]
+  local word=$1
+  local max_length=$2
+  local is_last_show=${3:-0}
+  if [ "${#word}" -le "$max_length" ];then
+    printf "%-${max_length}s" "${word}"
+    return
+  fi
+  if [ "$is_last_show" -eq 0 ];then
+    if [ "x$ZSH_VERSION" != "x" ];then
+      echo "${word[0,$((max_length-1))]}" # need for zsh version < 5
+      return
     else
-      if [ "x$ZSH_VERSION" != "x" ];then
-        _s_show="${_s_show[$((${#_s_show}-n_show)),-1]}"
-      else
-        _s_show="${_s_show: $((${#_s_show}-n_show))}"
-      fi
+      printf "%s" "${word: 0: $max_length}"
+      return
     fi
   else
-    _s_show=$(printf "%-${n_show}s" "${_s_show}")
+    if [ "x$ZSH_VERSION" != "x" ];then
+      printf "%s" "${word[$((${#word}-max_length)),-1]}"
+      return
+    else
+      printf "%s" "${word: $((${#word}-max_length))}"
+      return
+    fi
   fi
+} # }}}
+
+_sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
+  local is_selected=${1:-0}
+  local real_show
+  real_show=$(printf -- "%s" "${_s_show}"|sed "s/\[[0-9;]*m//g"|sed "s/\[K//g")
+  local n_show=$((${2:-$_s_cols}+${#_s_show}-${#real_show}))
+  _s_show="$(_sf_cut_word "$_s_show" "$n_show" "$_s_showlast")"
 
   # Color search words
   if [ "$_s_search_words" != "" ];then
@@ -757,9 +769,9 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   fi
   _sf_show "$is_selected" "$n_show"
   if [ "$_s_col_n_only" -eq 1 ];then
-    printf "${color}${num}[m${_s_show}" >/dev/tty
+    printf "%s%s[m%s" "${color}" "${num}" "${_s_show}" >/dev/tty
   else
-    printf "${color}${num}${_s_show}[m" >/dev/tty
+    printf "%s%s%s[m" "${color}" "${num}" "${_s_show}" >/dev/tty
   fi
   tput cup "$n_line" 0 >/dev/tty
 } # }}}
@@ -1065,12 +1077,7 @@ _sf_search () { # {{{
             _sf_reset
             return
           fi
-          if [ "x$ZSH_VERSION" != "x" ];then
-            # need for zsh version < 5
-            _s_search_words="${_s_search_words[0,$((${#_s_search_words}-2))]}"
-          else
-            _s_search_words="${_s_search_words: 0: ((${#_s_search_words}-1))}"
-          fi
+          _s_search_words="$(_sf_cut_word "$_s_search_words" $((${#_s_search_words}-1)))"
           ((_s_pre_inputs_n--))
           eval "_s_inputs=(\"\${_s_pre_inputs_$((_s_pre_inputs_n))[@]}\")"
           _s_n=${#_s_inputs[@]}

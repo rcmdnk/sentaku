@@ -77,16 +77,7 @@ _sf_file_content () {
   fi
 }
 
-_sf_printall () { # usage: _sf_printall [not force] {{{
-  # if any argument is given, check if echoed or not.
-  if [ $# -ge 1 ] && [ $_s_is_print -eq 0 ];then
-    return
-  fi
-
-  local lines=$_s_lines
-  local cols=$_s_cols
-  _s_lines=$(tput lines)
-  _s_cols=$(tput cols)
+_sf_set_header () { # {{{
   if [ $_s_content_show_under -eq 1 ];then
     if [ $((_s_lines-_SENTAKU_FILE_CONTENT_LINE-10)) -ge 0 ];then
       _s_lines=$((_s_lines-_SENTAKU_FILE_CONTENT_LINE-2))
@@ -101,30 +92,35 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
     _s_content_cols=$((full_cols-_s_cols))
   fi
 
-  _sf_setview
-
-  if [ "$lines" -ne "$_s_lines" ] || [ "$cols" -ne "$_s_cols" ];then
-    _s_current_n=0
-    _s_n_offset=0
+  _s_header="\e[43;30m$_s_n values in total\e[0m "
+  if [ "$_s_noheader" = 1 ] || [ "$_s_lines" -lt 10 ];then
+    return
   fi
-
-  clear >/dev/tty
-
-  # Header
-  _sf_print "${_s_header}\n"
-
-  local i
-  for i in $(seq 0 $((_s_max_show-1)));do
-    if [ $((i+_s_n_offset)) -ge "$_s_n" ];then break;fi
-    if [ $((i+_s_n_offset)) -eq $_s_current_n ];then
-      _sf_printline 1 $((i+_s_ext_row)) $((i+_s_n_offset))
-    else
-      _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
+  if [ $_s_delete -eq 1 ];then
+    local delete_key="d(delete), "
+  else
+    local delete_key=""
+  fi
+  if [ $_s_keymode -eq 0 ];then
+    if [ "$_s_cols" -ge 68 ];then
+      _s_header="$_s_header
+  [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
+  ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
+  ${delete_key}/(search), Enter/Space(select), q(quit)"
+    elif [ "$_s_cols" -ge 41 ];then
+      _s_header="$_s_header
+  vimike updown, e.g)j:down, k:up, gg/G
+  ${delete_key}Enter/Space(select), q(quit)"
     fi
-  done
-
-  _s_is_print=0
-} # }}}
+  else
+    if [ "$_s_cols" -ge 51 ];then
+      _s_header="$_s_header
+  C-n(down), C-j(up), C-v(Page down), M-v(Page up)
+  ${delete_key}Enter(select), C-x(quit)
+  Other normal keys start an incremental search"
+    fi
+  fi
+}  # }}}
 
 _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   if [ $# -lt 3 ];then
