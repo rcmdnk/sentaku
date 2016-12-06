@@ -440,12 +440,11 @@ _sf_yn () { # {{{
   local message="$*"
   while : ;do
     clear >/dev/tty
-    echo "$message [y/n]: " >/dev/tty
+    printf "%b [y/n]: " "$message" >/dev/tty
     _sf_read
     if [ "$_s_read" = "y" ];then
       return 0
     elif [ "$_s_read" = "n" ];then
-      _sf_quit
       return 1
     fi
   done
