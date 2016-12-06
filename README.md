@@ -143,16 +143,16 @@ Other options and key operations at sentaku window are:
 
 Name| Description| Default
 :--:|:-----------|:------:
-_SENTAKU_INPUT_FILE|File used when stdin is not used (overwritten by -f).|"$HOME/.sentaku_input"
-_SENTAKU_SEPARATOR|Separator(overwritten by -s).|$IFS
-_SENTAKU_MAX|Max number to be written to the file (non-stdin usage).|20
-_SENTAKU_NOHEADER|Don't show the header (overwritten by -H). 0: show, 1: don't show.|0 (1 for noheader)
-_SENTAKU_NONUMBER|Don't show the line number (overwritten by -N). 0: show, 1: don't show.|0 (1 for nonumber)
-_SENTAKU_SHOWLAST|Show the number at the end of the line, too (overwritten by -l). 0: don'w show, 1: show.|0
-_SENTAKU_CHILD|If this sentaku is child process of parent sentaku or not.|0
-_SENTAKU_SEARCH_OPT|Search option, 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive).|0
-_SENTAKU_KEYMODE|Vim Mode or Emacs Mode, 0: Vim Mode, 1: Emacs Mode (overwritten by -V/-E).| 0
-_SENTAKU_DEBUG|If it is 1, `_sf_echo_debu` is executed.|0
+SENTAKU_INPUT_FILE|File used when stdin is not used (overwritten by -f).|"$HOME/.sentaku_input"
+SENTAKU_SEPARATOR|Separator(overwritten by -s).|$IFS
+SENTAKU_MAX|Max number to be written to the file (non-stdin usage).|20
+SENTAKU_NOHEADER|Don't show the header (overwritten by -H). 0: show, 1: don't show.|0 (1 for noheader)
+SENTAKU_NONUMBER|Don't show the line number (overwritten by -N). 0: show, 1: don't show.|0 (1 for nonumber)
+SENTAKU_SHOWLAST|Show the number at the end of the line, too (overwritten by -l). 0: don'w show, 1: show.|0
+SENTAKU_CHILD|If this sentaku is child process of parent sentaku or not.|0
+SENTAKU_SEARCH_OPT|Search option, 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive).|0
+SENTAKU_KEYMODE|Vim Mode or Emacs Mode, 0: Vim Mode, 1: Emacs Mode (overwritten by -V/-E).| 0
+SENTAKU_DEBUG|If it is 1, `_sf_echo_debu` is executed.|0
 
 #### Vim/Emacs mode
 
