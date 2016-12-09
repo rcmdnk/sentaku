@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.6.1
-SENTAKU_DATE="6/Dec/2016"
+SENTAKU_VERSION=v0.6.0
+SENTAKU_DATE="5/Dec/2016"
 #
 # }}}
 
@@ -440,11 +440,12 @@ _sf_yn () { # {{{
   local message="$*"
   while : ;do
     clear >/dev/tty
-    printf "%b [y/n]: " "$message" >/dev/tty
+    echo "$message [y/n]: " >/dev/tty
     _sf_read
     if [ "$_s_read" = "y" ];then
       return 0
     elif [ "$_s_read" = "n" ];then
+      _sf_quit
       return 1
     fi
   done
