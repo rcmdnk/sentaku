@@ -273,14 +273,12 @@ _sf_finalize () { # {{{
         stty $_s_stty
         # followings are for fixing problems of previous commands...
         stty echo
-        stty -raw
       fi
     fi
   fi
   if [ $_s_trapped -eq 1 ];then
     # fixed at C-c
     stty echo 2>/dev/null
-    stty -raw 2>/dev/null
   fi
 
   # Release variables
@@ -383,8 +381,7 @@ _sf_hide () { # {{{
       _s_stty=$(stty -g)
 
       # Hide any input
-      #stty raw
-      stty -echo
+      stty sane -echo
     fi
 
     # Hide cursor
