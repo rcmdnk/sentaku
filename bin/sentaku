@@ -123,8 +123,8 @@ _sf_initialize () { # {{{
 Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 
 Arguments:
-  -f <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-  -F <file>  Set iput file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+  -f <file>  Set input file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
+  -F <file>  Set input file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
              and use the list in the file for sentaku window instead of pipe's input.
   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
              If <sep> is \"line\", \$'\\n' is set as a separator.
