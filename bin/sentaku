@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.6.0
-SENTAKU_DATE="5/Dec/2016"
+SENTAKU_VERSION=v0.6.2
+SENTAKU_DATE="4/Jun/2017"
 #
 # }}}
 
@@ -534,9 +534,9 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
     check=$2
   fi
   # Get values
-  touch "$_s_file"
   IFS="$_s_s"
   if [ "$stdin" -eq 0 ] || [ "$_s_use_file" -eq 1 ];then
+    touch "$_s_file"
     _s_inputs=($(cat "$_s_file"))
   else
     _s_inputs=($(cat -))
