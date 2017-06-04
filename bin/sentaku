@@ -9,7 +9,7 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.6.2
+SENTAKU_VERSION=v0.6.3
 SENTAKU_DATE="4/Jun/2017"
 #
 # }}}
