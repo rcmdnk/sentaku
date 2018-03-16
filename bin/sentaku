@@ -396,7 +396,7 @@ _sf_hide () { # {{{
 
 _sf_clear () { # {{{
   if [ "$_SENTAKU_CHILD" -eq 0 ] && [ "$_s_noshow" -eq 0 ];then
-    _sf_echo_debug "sf_clear execute\n"
+    _sf_echoln_debug "sf_clear execute"
     # clear after selection
     clear >/dev/tty
 
@@ -556,9 +556,9 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
 
   if [ "$check" -eq 1 ] && [ "$_s_n" -eq 0 ];then
     if [ "$stdin" -eq 0 ] || [ "$_s_use_file" -eq 1 ];then
-      _sf_echo "No value in $_s_file\n"
+      _sf_echoln "No value in $_s_file\\n"
     else
-      _sf_echo "No value in stdin\n"
+      _sf_echoln "No value in stdin\\n"
     fi
     _s_ret=1
     return
@@ -576,7 +576,7 @@ _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
   local n=${1:-$_s_current_n}
   local is_get=${2:-1}
   if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "$_s_n" ];then
-    _sf_echo "$n is not valid for _sf_align_values\n"
+    _sf_echoln "$n is not valid for _sf_align_values"
     return 1
   fi
   local v="${_s_inputs[$n]}"
@@ -640,7 +640,7 @@ _sf_rm_del () { # {{{
     _sf_delete
   fi
   if [ "$_s_n" -eq 0 ];then
-    _sf_echo "There are no remained entries\n"
+    _sf_echoln "There are no remained entries"
     _s_ret=1
   fi
   if [ $_s_ret -ne 0 ];then
@@ -827,23 +827,31 @@ _sf_echo () { # {{{
   fi
 } # }}}
 
+_sf_echoln () { # {{{
+  _sf_echo "$*\\n"
+} # }}}
+
 _sf_echo_debug () { # {{{
   if [ "$_s_debug" = "" ];then
     # Temporarily use default value for debug_echo before initialization.
     _s_debug=$_SENTAKU_DEBUG
   fi
   if [ "$_s_debug" -gt 0 ];then
-    _sf_echo "$@"
+    _sf_echo "$*"
   fi
 } # }}}
 
+_sf_echoln_debug () { # {{{
+  _sf_echo_debug "$*\\n"
+} # }}}
+
 _sf_echo_printall () { # {{{
-  _sf_echo "$@"
+  _sf_echo "$*"
   _sf_printall
 } # }}}
 
 _sf_set_header () { # {{{
-  _s_header="\e[43;30m$_s_n values in total\e[0m "
+  _s_header="\\e[43;30m$_s_n values in total\\e[0m "
   if [ "$_s_noheader" = 1 ];then
     return
   fi
@@ -1604,7 +1612,7 @@ _sf_slash () { # {{{
 
 _sf_push () { # {{{
 
-  _sf_echo_debug "_sf_push start\n"
+  _sf_echoln_debug "_sf_push start"
 
   # Set input
   local input="$*"
@@ -1626,7 +1634,7 @@ _sf_push () { # {{{
   _s_n=${#_s_inputs[@]}
   _sf_align_values 0 0
 
-  _sf_echo "$input is stored in $_s_file\n"
+  _sf_echoln "$input is stored in $_s_file"
 } # }}}
 
 _sf_main () { # {{{
