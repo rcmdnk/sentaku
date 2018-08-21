@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 #
 #
-SENTAKU_VERSION=v0.6.3
-SENTAKU_DATE="4/Jun/2017"
+SENTAKU_VERSION=v0.6.4
+SENTAKU_DATE="21/Aug/2018"
 #
 # }}}
 
@@ -55,6 +55,14 @@ _SENTAKU_COLOR_NUM_ONLY=${_SENTAKU_COLOR_NUM_ONLY:-0}
 _SENTAKU_LINE_HIGHLIGHT=${_SENTAKU_LINE_HIGHLIGHT:-1}
 _SENTAKU_DEBUG=${_SENTAKU_DEBUG:-0}
 # }}}
+
+_sf_help () { # {{{
+  if [ -t 1 ];then
+    echo "$_s_help"|${PAGER:-less} >/dev/tty
+  else
+    echo "$_s_help"
+  fi
+} # }}}
 
 _sf_initialize () { # {{{
   # Set variables
@@ -119,8 +127,7 @@ _sf_initialize () { # {{{
   _s_ret=0
 
   # Help
-  _s_help=${_s_help:-"
-Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
+  _s_help=${_s_help:-"Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
 
 Arguments:
   -f <file>  Set input file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
@@ -500,7 +507,7 @@ _sf_check_args () { # {{{
       "-n" ) ;;
       "-v" ) echo "$(basename "$0") $SENTAKU_VERSION $SENTAKU_DATE" >/dev/tty; return 0;;
       "-h" )
-        echo "$_s_help"|${PAGER:-less} >/dev/tty
+        _sf_help
         return 0
         ;;
       * )
