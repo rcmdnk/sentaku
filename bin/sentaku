@@ -191,7 +191,7 @@ Key operation at sentaku window
   _s_cols=$(tput cols)
 
   # Fix array for zsh
-  if [ "x$ZSH_VERSION" != "x" ];then
+  if [ -n "$ZSH_VERSION" ];then
     if ! setopt|grep -q ksharrays;then
       _s_zsh_ksharrays=1
       setopt ksharrays
@@ -428,7 +428,7 @@ _sf_nth () { # {{{
 
 _sf_read () { # {{{
   IFS=
-  if [ "x$ZSH_VERSION" != "x" ];then
+  if [ -n "$ZSH_VERSION" ];then
     read -srk 1 _s_read </dev/tty
   else
     read -srn 1 _s_read </dev/tty
@@ -549,7 +549,7 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
     _s_inputs=($(cat -))
   fi
   IFS=$_s_IFS
-  if [ "x$ZSH_VERSION" != "x" ];then
+  if [ -n "$ZSH_VERSION" ];then
     # Fix array for ZSH
     # Zsh's array adds additional empty value to array if IFS is in the end of file.
     if [ ${#_s_inputs[@]} -gt 0 ];then
@@ -685,7 +685,7 @@ _sf_cut_word () { # {{{ _sf_cut_word <word> <max_length> [<is_last_show>]
     return
   fi
   if [ "$is_last_show" -eq 0 ];then
-    if [ "x$ZSH_VERSION" != "x" ];then
+    if [ -n "$ZSH_VERSION" ];then
       printf "%s" "${word[0,$((max_length-1))]}" # need for zsh version < 5
       return
     else
@@ -693,7 +693,7 @@ _sf_cut_word () { # {{{ _sf_cut_word <word> <max_length> [<is_last_show>]
       return
     fi
   else
-    if [ "x$ZSH_VERSION" != "x" ];then
+    if [ -n "$ZSH_VERSION" ];then
       printf "%s" "${word[$((${#word}-max_length)),-1]}"
       return
     else
