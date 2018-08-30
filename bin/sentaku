@@ -488,7 +488,7 @@ _sf_check_args () { # {{{
       "-a" ) _s_align=1;;
       "-m" ) ;;
       "-r" )
-        if expr "$2" : '[0-9]*' > /dev/null;then
+        if (($2+1)) >&/dev/null;then
           _s_current_n=$2
           shift
         else
@@ -582,7 +582,7 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
 _sf_align_values () { # {{{ _sf_align_values [<n> [<is_get>]]
   local n=${1:-$_s_current_n}
   local is_get=${2:-1}
-  if ! expr "$n" : '[0-9]*' >/dev/null || [ "$n" -ge "$_s_n" ];then
+  if ! ((n+1)) >&/dev/null || [ "$n" -ge "$_s_n" ];then
     _sf_echoln "$n is not valid for _sf_align_values"
     return 1
   fi
