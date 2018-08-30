@@ -692,28 +692,28 @@ _sf_add_spaces () { # {{{ _sf_add_spaces <var> <n> [is_prepend]
   done
 }
 
-_sf_cut_word () { # {{{ _sf_cut_word <word> <max_length> [<is_last_show>]
-  local word=$1
+_sf_cut_word () { # {{{ _sf_cut_word <var> <max_length> [<is_last_show>]
+  local var=$1
   local max_length=$2
   local is_last_show=${3:-0}
-  if [[ "${#word}" -le "$max_length" ]];then
-    printf "%-${max_length}s" "${word}"
+  if eval "[[ \${#$var} -le $max_length ]]";then
+    eval "_sf_add_spaces $var \$(($max_length-\${#$var}))"
     return
   fi
   if [[ "$is_last_show" -eq 0 ]];then
     if [[ -n "$ZSH_VERSION" ]];then
-      printf "%s" "${word[0,$((max_length-1))]}" # need for zsh version < 5
+      eval "$var=\${$var[0, $((max_length-1))]}" # need for zsh version < 5
       return
     else
-      printf "%s" "${word: 0: $max_length}"
+      eval "$var=\${$var: 0: $max_length}"
       return
     fi
   else
     if [[ -n "$ZSH_VERSION" ]];then
-      printf "%s" "${word[$((${#word}-max_length)),-1]}"
+      eval "$var=\${$var[$((${#word}-max_length)),-1]}"
       return
     else
-      printf "%s" "${word: $((${#word}-max_length))}"
+      eval "$var=\${$var: $((${#word}-max_length))}"
       return
     fi
   fi
@@ -722,7 +722,7 @@ _sf_cut_word () { # {{{ _sf_cut_word <word> <max_length> [<is_last_show>]
 _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   local is_selected=${1:-0}
   local n_show=${2:-$_s_cols}
-  _s_show="$(_sf_cut_word "$_s_show" "$n_show" "$_s_showlast")"
+  _sf_cut_word _s_show "$n_show" "$_s_showlast"
 
   # Color search words
   if [[ "$_s_search_words" != "" ]];then
@@ -1110,7 +1110,7 @@ _sf_search () { # {{{
             _sf_reset
             return
           fi
-          _s_search_words="$(_sf_cut_word "$_s_search_words" $((${#_s_search_words}-1)))"
+          _sf_cut_word _s_search_words $((${#_s_search_words}-1))
           ((_s_pre_inputs_n--))
           eval "_s_inputs=(\"\${_s_pre_inputs_$((_s_pre_inputs_n))[@]}\")"
           _s_n=${#_s_inputs[@]}
