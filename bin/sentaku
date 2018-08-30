@@ -48,7 +48,7 @@ _SENTAKU_NONUMBER=${_SENTAKU_NONUMBER:-0}
 _SENTAKU_SHOWLAST=${_SENTAKU_SHOWLAST:-0}
 _SENTAKU_CHILD=${_SENTAKU_CHILD:-0}
 # 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive)
-_SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-0}
+_SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-1}
 _SENTAKU_PAGE_CHANGE=${_SENTAKU_PAGE_CHANGE:-1}
 _SENTAKU_KEYMODE=${_SENTAKU_KEYMODE:-0}
 _SENTAKU_COLOR_NUM_ONLY=${_SENTAKU_COLOR_NUM_ONLY:-0}
@@ -705,38 +705,30 @@ _sf_cut_word () { # {{{ _sf_cut_word <word> <max_length> [<is_last_show>]
 
 _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   local is_selected=${1:-0}
-  local real_show
-  real_show=$(printf -- "%s" "${_s_show}"|sed "s/\[[0-9;]*m//g"|sed "s/\[K//g")
-  local n_show=$((${2:-$_s_cols}+${#_s_show}-${#real_show}))
+  local n_show=${2:-$_s_cols}
   _s_show="$(_sf_cut_word "$_s_show" "$n_show" "$_s_showlast")"
 
   # Color search words
   if [ "$_s_search_words" != "" ];then
+    local -a words
+    if [ "$_s_search_opt" -le 1 ];then
+      words=($_s_search_words)
+    else
+      words=$_s_search_words
+    fi
     local negative=""
     if [ "$is_selected" -eq 1 ];then
       negative=";7"
     fi
-    if [ "$_s_search_opt" -le 1 ];then
-      if [ "$_s_search_opt" -eq 0 ];then
-        local ic="i"
+    local w
+    for w in "${words[@]}";do
+      if [ "$_s_search_opt" -eq 0 ] || [ "$_s_search_opt" -eq 2 ];then
+        # Similar replace can be done by GNU sed, BSD sed doesn't support ignore case option
+        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|gi")
       else
-        local ic=""
+        _s_show="${_s_show//$w/\\e[31${negative}m$w\\e[${negative}m}"
       fi
-      local -a words
-      words=(${_s_search_words})
-      local w
-      for w in "${words[@]}";do
-        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
-      done
-    else
-      if [ "$_s_search_opt" -eq 2 ];then
-        local ic="i"
-      else
-        local ic=""
-      fi
-      w="${_s_search_words}"
-      _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\e[31${negative}m\1\e[0${negative}m|g$ic")
-    fi
+    done
   fi
 } # }}}
 
@@ -758,7 +750,9 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
   fi
 
   # Change line breaks to \n (to be shown), remove the last line break, replace tab to space
-  _s_show="$(echo "${_s_inputs[$n_input]}"|awk -F"\n" -v ORS="\\\\\\\\n" '{print}' |sed 's|\\\\n$||'|sed "s/\[m/[m$color/g"|sed $'s/\t/ /g')"
+  _s_show=${_s_inputs[$n_input]//$'\n'/\\\\n}
+  _s_show=${_s_show%\\\\n}
+  _s_show=${_s_show//$'\t'/ }
 
   tput cup "$n_line" 0 >/dev/tty
   local n_show=$_s_cols
@@ -767,13 +761,18 @@ _sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
     local nmax=$((_s_n-1))
     local num_width=${#nmax}
     n_show=$((_s_cols-num_width-2))
-    num=$(printf "%${num_width}d: " "$n_input")
+    local n_diff=$((num_width-${#n_input}))
+    while [ $n_diff -gt 0 ];do
+      num="$num "
+      ((n_diff--))
+    done
+    num="$num$n_input: "
   fi
   _sf_show "$is_selected" "$n_show"
   if [ "$_s_col_n_only" -eq 1 ];then
-    printf "%s%s[m%s" "${color}" "${num}" "${_s_show}" >/dev/tty
+    printf "${color}${num}[m${_s_show}" >/dev/tty
   else
-    printf "%s%s%s[m" "${color}" "${num}" "${_s_show}" >/dev/tty
+    printf "${color}${num}${_s_show}[m" >/dev/tty
   fi
   tput cup "$n_line" 0 >/dev/tty
 } # }}}
@@ -886,6 +885,7 @@ _sf_set_header () { # {{{
   Other normal keys start an incremental search"
     fi
   fi
+  _s_header="$_s_header\\n$_s_search"
 }  # }}}
 
 _sf_setview () { # {{{
@@ -897,9 +897,6 @@ _sf_setview () { # {{{
     _s_ext_row=1
   else
     _sf_set_header
-    _s_header="$(printf "%b\n\n" "$_s_header"|\
-                 sed -e :loop -e 'N; $!b loop'  -e 's/[[:space:]\n]*$//')\
-               \n${_s_search}"
     if [ "$(printf "%b\n" "$_s_header"|wc -l)" -gt "$((_s_lines-_s_min_show))" ];then
       _s_header="\e[43;30m$_s_n values in total\e[0m\n${_s_search}"
     fi
