@@ -701,21 +701,11 @@ _sf_cut_word () { # {{{ _sf_cut_word <var> <max_length> [<is_last_show>]
     return
   fi
   if [[ "$is_last_show" -eq 0 ]];then
-    if [[ -n "$ZSH_VERSION" ]];then
-      eval "$var=\${$var[0, $((max_length-1))]}" # need for zsh version < 5
-      return
-    else
-      eval "$var=\${$var: 0: $max_length}"
-      return
-    fi
+    eval "$var=\${$var: 0: $max_length}"
+    return
   else
-    if [[ -n "$ZSH_VERSION" ]];then
-      eval "$var=\${$var[$((${#word}-max_length)),-1]}"
-      return
-    else
-      eval "$var=\${$var: $((${#word}-max_length))}"
-      return
-    fi
+    eval "$var=\${$var: \$((\${#$var}-max_length))}"
+    return
   fi
 } # }}}
 
