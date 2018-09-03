@@ -47,8 +47,8 @@ _SENTAKU_NOHEADER=${_SENTAKU_NOHEADER:-0}
 _SENTAKU_NONUMBER=${_SENTAKU_NONUMBER:-0}
 _SENTAKU_SHOWLAST=${_SENTAKU_SHOWLAST:-0}
 _SENTAKU_CHILD=${_SENTAKU_CHILD:-0}
-# 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive)
-_SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-1}
+# 0: AND (smart case), 1: AND (case sensitive), 2: starts with (smart case), 3: starts with (case sensitive)
+_SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-0}
 _SENTAKU_PAGE_CHANGE=${_SENTAKU_PAGE_CHANGE:-1}
 _SENTAKU_KEYMODE=${_SENTAKU_KEYMODE:-0}
 _SENTAKU_COLOR_NUM_ONLY=${_SENTAKU_COLOR_NUM_ONLY:-0}
@@ -1189,30 +1189,38 @@ _sf_search () { # {{{
 
 _sf_search_check () { # {{{
   local input="$1"
-  if [[ "$_s_search_opt" -le 1 ]];then
-    if [[ "$_s_search_opt" -eq 0 ]];then
-      local ic="-i"
-    else
-      local ic=""
+
+  local -a words
+  words=(${_s_search_words})
+  local w
+  for w in "${words[@]}";do
+    if [[ "$_s_search_opt" -eq 0 ]] || [[ "$_s_search_opt" -eq 2 ]];then
+      if [[ -n "$ZSH_VERSION" ]];then
+        local input_lower=$input:l
+        local w_lower=$w:l
+      elif [[ -n ${BASH_VERSINFO[0]} ]] && [[ ${BASH_VERSINFO[0]} -ge 4 ]];then
+        local input_lower=${input,,}
+        local w_lower=${w,,}
+      else
+        local input_lower=$(echo ${input}|tr [:upper:] [:lower:])
+        local w_lower=$(echo ${w}|tr [:upper:] [:lower:])
+      fi
+      if [[ $w = $w_lower ]];then
+        input=$input_lower
+        w=$w_lower
+      fi
     fi
-    local -a words
-    words=(${_s_search_words})
-    local w
-    for w in "${words[@]}";do
-      if ! echo "${input}"| grep $ic -q "${w}";then
+
+    if [[ "$_s_search_opt" -le 1 ]];then
+      if [[ ! $input = *$w* ]];then
         return 1
       fi
-    done
-  else
-    if [[ "$_s_search_opt" -eq 2 ]];then
-      local ic="-i"
     else
-      local ic=""
+      if [[ ! $input = *$w ]];then
+        return 1
+      fi
     fi
-    if ! echo "${input}"| grep $ic -q "^${_s_search_words}";then
-      return 1
-    fi
-  fi
+  done
   return 0
 } # }}}
 

@@ -191,9 +191,9 @@ When you push `Esc` again, the original list will come back.
 
 You can set search option `SENTAKU_SEARCH_OPT`:
 
-* 0: AND search (ignore case) (Default)
+* 0: AND search (smart case, i.e. all lower case word search is case insensitive, otherwise case sensitive) (Default)
 * 1: AND search (case sensitive)
-* 2: Starts with (ignore case)
+* 2: Starts with (smart case)
 * 3: Starts with(case sensitive)
 
 * [Search Demo for Vim mode, SENTAKU_KEYMODE = 3](http://rcmdnk.github.io/images/post/20140805_vim_search.gif)
