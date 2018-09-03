@@ -716,25 +716,46 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
 
   # Color search words
   if [[ "$_s_search_words" != "" ]];then
-    local -a words
-    if [[ "$_s_search_opt" -le 1 ]];then
-      words=($_s_search_words)
-    else
-      words=$_s_search_words
+    local ignore_case=0
+    local search_words=$_s_search_words
+    if [[ "$_s_search_opt" -eq 0 ]] || [[ "$_s_search_opt" -eq 2 ]];then
+      if [[ -n "$ZSH_VERSION" ]];then
+        local words_lower=$_s_search_words:l
+      elif [[ -n ${BASH_VERSINFO[0]} ]] && [[ ${BASH_VERSINFO[0]} -ge 4 ]];then
+        local words_lower=${_s_search_words,,}
+      else
+        local words_lower=$(echo ${_s_search_words}|tr "[:upper:]" "[:lower:]")
+      fi
+      if [[ $words_lower = "$_s_search_words" ]];then
+        local ignore_case=1
+        search_words=$words_lower
+      fi
     fi
+
     local negative=""
     if [[ "$is_selected" -eq 1 ]];then
       negative=";7"
     fi
-    local w
-    for w in "${words[@]}";do
-      if [[ "$_s_search_opt" -eq 0 || "$_s_search_opt" -eq 2 ]];then
-        # Similar replace can be done by GNU sed, BSD sed doesn't support ignore case option
-        _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\\e[31${negative}m\\1\\e[0${negative}m|gi")
+
+    if [[ "$_s_search_opt" -le 1 ]];then
+      local -a words
+      words=($search_words)
+      local w
+      for w in "${words[@]}";do
+        if [[ $ignore_case -eq 1 ]];then
+          # Similar replace can be done by GNU sed, BSD sed doesn't support ignore case option
+          _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\\e[31${negative}m\\1\\e[0${negative}m|gi")
+        else
+          _s_show="${_s_show//$w/\\e[31${negative}m$w\\e[${negative}m}"
+        fi
+      done
+    else
+      if [[ $ignore_case -eq 1 ]];then
+        _s_show=$(echo "$_s_show"|perl -pe "s|(^$search_words)|\\e[31${negative}m\\1\\e[0${negative}m|gi")
       else
-        _s_show="${_s_show//$w/\\e[31${negative}m$w\\e[${negative}m}"
+        _s_show="\\e[31${negative}m$search_words\\e[${negative}m${_s_show#$search_words}"
       fi
-    done
+    fi
   fi
 } # }}}
 
@@ -1174,38 +1195,40 @@ _sf_search () { # {{{
 
 _sf_search_check () { # {{{
   local input="$1"
+  local search_words=$_s_search_words
 
-  local -a words
-  words=(${_s_search_words})
-  local w
-  for w in "${words[@]}";do
-    if [[ "$_s_search_opt" -eq 0 ]] || [[ "$_s_search_opt" -eq 2 ]];then
-      if [[ -n "$ZSH_VERSION" ]];then
-        local input_lower=$input:l
-        local w_lower=$w:l
-      elif [[ -n ${BASH_VERSINFO[0]} ]] && [[ ${BASH_VERSINFO[0]} -ge 4 ]];then
-        local input_lower=${input,,}
-        local w_lower=${w,,}
-      else
-        local input_lower=$(echo ${input}|tr [:upper:] [:lower:])
-        local w_lower=$(echo ${w}|tr [:upper:] [:lower:])
-      fi
-      if [[ $w = $w_lower ]];then
-        input=$input_lower
-        w=$w_lower
-      fi
-    fi
-
-    if [[ "$_s_search_opt" -le 1 ]];then
-      if [[ ! $input = *$w* ]];then
-        return 1
-      fi
+  if [[ "$_s_search_opt" -eq 0 || "$_s_search_opt" -eq 2 ]];then
+    if [[ -n "$ZSH_VERSION" ]];then
+      local input_lower=$input:l
+      local words_lower=$_s_search_words:l
+    elif [[ -n ${BASH_VERSINFO[0]} && ${BASH_VERSINFO[0]} -ge 4 ]];then
+      local input_lower=${input,,}
+      local words_lower=${_s_search_words,,}
     else
-      if [[ ! $input = *$w ]];then
-        return 1
-      fi
+      local input_lower=$(echo "${input}"|tr "[:upper:]" "[:lower:]")
+      local words_lower=$(echo "${_s_search_words}"|tr "[:upper:]" "[:lower:]")
     fi
-  done
+    if [[ $words_lower = "$_s_search_words" ]];then
+      input=$input_lower
+      search_words=$words_lower
+    fi
+  fi
+  if [[ "$_s_search_opt" -le 1 ]];then
+    local -a words
+    words=(${search_words})
+    local w
+    for w in "${words[@]}";do
+      if [[ "$_s_search_opt" -le 1 ]];then
+        if [[ ! $input = *$w* ]];then
+          return 1
+        fi
+      fi
+    done
+  else
+    if [[ ! $input = $search_words* ]];then
+      return 1
+    fi
+  fi
   return 0
 } # }}}
 
