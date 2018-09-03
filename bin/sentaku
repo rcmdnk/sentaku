@@ -1110,21 +1110,6 @@ _sf_search () { # {{{
           _s_search_words=""
           _s_pre_inputs_n=0
           ;;
-        " " )
-          # Space to start visual
-          if [[ "$_s_search_words" = "" ]] || echo "$_s_search_words"|grep -q " $";then
-            if [[ ${_s_v_selected[$_s_current_n]} -eq 1 ]];then
-              _s_v_selected[$_s_current_n]=0
-            else
-              _s_v_selected[$_s_current_n]=1
-            fi
-            _s_visual=-2
-            _sf_print_current_line
-          else
-            _s_search_words="$_s_search_words$_s_read"
-          fi
-          continue
-          ;;
         ""|$'\n' )
           _sf_enter
           return
