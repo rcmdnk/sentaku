@@ -1605,15 +1605,13 @@ _sf_esc () { # {{{
 
 _sf_space () { # {{{
   # Space to start visual
-  if [[ "$_s_search_words" = "" ]] || echo "$_s_search_words"|grep -q " $";then
-    if [[ ${_s_v_selected[$_s_current_n]} -eq 1 ]];then
-      _s_v_selected[$_s_current_n]=0
-    else
-      _s_v_selected[$_s_current_n]=1
-    fi
-    _s_visual=-2
-    _sf_print_current_line
+  if [[ ${_s_v_selected[$_s_current_n]} -eq 1 ]];then
+    _s_v_selected[$_s_current_n]=0
+  else
+    _s_v_selected[$_s_current_n]=1
   fi
+  _s_visual=-2
+  _sf_print_current_line
 } # }}}
 
 _sf_enter () { # {{{
