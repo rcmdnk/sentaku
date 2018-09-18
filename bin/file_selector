@@ -176,5 +176,5 @@ fi
 if [ -p /dev/stdin ];then
   echo $(cat -) | _sf_main "$@"
 else
-  _sf_main "$@"
+  ls | _sf_main "$@"
 fi

@@ -690,7 +690,7 @@ _sf_add_spaces () { # {{{ _sf_add_spaces <var> <n> [is_prepend]
     fi
     ((n--))
   done
-}
+} # }}}
 
 _sf_cut_word () { # {{{ _sf_cut_word <var> <max_length> [<is_last_show>]
   local var=$1
