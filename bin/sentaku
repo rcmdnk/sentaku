@@ -908,7 +908,6 @@ _sf_set_header () { # {{{
   Other normal keys start an incremental search"
     fi
   fi
-  _s_header="$_s_header\\n$_s_search"
 }  # }}}
 
 _sf_setview () { # {{{
@@ -920,6 +919,7 @@ _sf_setview () { # {{{
     _s_ext_row=1
   else
     _sf_set_header
+    _s_header="$_s_header\\n$_s_search"
     if [[ "$(printf "%b\n" "$_s_header"|wc -l)" -gt "$((_s_lines-_s_min_show))" ]];then
       _s_header="\e[43;30m$_s_n values in total\e[0m\n${_s_search}"
     fi
