@@ -405,7 +405,6 @@ _sf_hide () { # {{{
 
 _sf_clear () { # {{{
   if [[ "$_SENTAKU_CHILD" -eq 0 && "$_s_noshow" -eq 0 ]];then
-    _sf_echoln_debug "sf_clear execute"
     # clear after selection
     clear >/dev/tty
 
@@ -1631,9 +1630,6 @@ _sf_slash () { # {{{
 } # }}}
 
 _sf_push () { # {{{
-
-  _sf_echoln_debug "_sf_push start"
-
   # Set input
   local input="$*"
   shift $#
