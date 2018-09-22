@@ -1,11 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env bash
 repo=https://raw.github.com/rcmdnk/sentaku/master
 scripts=($repo/bin/sentaku $repo/bin/ddv)
-if [ x"$prefix" = x ];then
-  prefix=/usr/local
+if [[ $# -ge 1 ]];then
+  if [[ "$1" = --prefix=* ]];then
+    prefix="${$1#*=}"
+  elif [[ "$1" = "--prefix" || "$1" = "-p" ]];then
+    prefix="$2"
+  fi
 fi
-
-prefix=`echo $prefix|sed 's|--prefix=||'|sed "s|^~|$HOME|"|sed "s|^\./|$(pwd)/|"`
+if [ -z "$prefix" ];then
+  prefix=/usr
+fi
 
 echo
 echo "###############################################"
