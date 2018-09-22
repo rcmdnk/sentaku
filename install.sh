@@ -5,7 +5,7 @@ if [ x"$prefix" = x ];then
   prefix=/usr/local
 fi
 
-prefix=`echo $prefix|sed 's|--prefix=||'|sed "s|^~|$HOME|"|sed "s|^\.|$(pwd)|"`
+prefix=`echo $prefix|sed 's|--prefix=||'|sed "s|^~|$HOME|"|sed "s|^\./|$(pwd)/|"`
 
 echo
 echo "###############################################"
