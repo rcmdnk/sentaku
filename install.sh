@@ -11,6 +11,7 @@ fi
 if [ -z "$prefix" ];then
   prefix=/usr
 fi
+prefix=$(eval echo "$prefix")
 
 echo
 echo "###############################################"
