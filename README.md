@@ -82,20 +82,16 @@ use `sentaku -F <file>`.
 
 Other options and key operations at sentaku window are:
 
-    Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
-    
+    Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
+
     Arguments:
-      -f <file>  Set input file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-      -F <file>  Set input file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-                 and use the list in the file for sentaku window instead of pipe's input.
+      -f <file>  Set input file
       -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
                  If <sep> is \"line\", \$'\\n' is set as a separator.
       -H         Force to show a header at sentaku window.
       -N         No nubmers are shown.
       -l         Show last words instead of starting words for longer lines.
       -a         Align input list (set selected one to the first).
-      -m         Execute main function even if it is not after pipe.
-                     (e.g. -m -f <file> == -F <file>)
       -r <n>     Return nth value directly.
       -p         Push words to the file.
       -E         Use Emacs mode
@@ -104,7 +100,7 @@ Other options and key operations at sentaku window are:
       -n         Don't run functions, to just source this file
       -v         Show version
       -h         Print this HELP and exit
-    
+
     Key operation at sentaku window
       Common for all:
         C-p/C-n  Up/Down.
@@ -123,7 +119,7 @@ Other options and key operations at sentaku window are:
                  Second Esc clear search mode.
                  Visual mode is cleared by first Esc.
         Ener     Select and Quit.
-    
+
       For Vim mode:
         n(any number) Set number. Multi-digit can be used (13, 320, etc...).
                       Used/reset by other key.
@@ -135,7 +131,7 @@ Other options and key operations at sentaku window are:
         /        Search.
         q        Quit.
         Others   Nothing happens.
-    
+
       For Emacs mode:
         Others   Normal keys start an incremental search.
 
@@ -333,7 +329,7 @@ Therefore, `${_s_inputs[$_s_current_n]}` is currently selected value.
 And it does not set `_s_break` flag,
 therefore it stays in key operation (sentaku window).
 
-If you want to break with any key, you can change `_s_break` flag in 
+If you want to break with any key, you can change `_s_break` flag in
 corresponding function.
 
 

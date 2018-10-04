@@ -6,11 +6,11 @@
 #
 # Homepage: https://github.com/rcmdnk/sentaku
 #
-# Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
+# Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
 #
 #
-SENTAKU_VERSION=v0.6.7
-SENTAKU_DATE="05/Sep/2018"
+SENTAKU_VERSION=v0.7.0
+SENTAKU_DATE="04/Oct/2018"
 #
 # }}}
 
@@ -39,7 +39,7 @@ SENTAKU_DATE="05/Sep/2018"
 # }}}
 
 # Default variables # {{{
-_SENTAKU_INPUT_FILE=${_SENTAKU_INPUT_FILE:-$HOME/.sentaku_input}
+_SENTAKU_INPUT_FILE=${_SENTAKU_INPUT_FILE:-}
 _SENTAKU_SEPARATOR=${_SENTAKU_SEPARATOR:-$IFS}
 _SENTAKU_MAX=${_SENTAKU_MAX:-20}
 _SENTAKU_MIN_SHOW=${_SENTAKU_MIN_SHOW:-3}
@@ -77,6 +77,7 @@ _sf_initialize () { # {{{
     _s_s_push="$_s_s"
   fi
   _s_inputs=()
+  _s_cmd_line_inputs=""
   _s_n=0
   _s_max=${SENTAKU_MAX:-$_SENTAKU_MAX}
   _s_min_show=${SENTAKU_MIN_SHOW:-$_SENTAKU_MIN_SHOW}
@@ -128,12 +129,10 @@ _sf_initialize () { # {{{
   _s_ret=0
 
   # Help
-  _s_help=${_s_help:-"Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>]
+  _s_help=${_s_help:-"Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
 
 Arguments:
-  -f <file>  Set input file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-  -F <file>  Set input file (default: ${SENTAKU_INPUT_FILE:-$_SENTAKU_INPUT_FILE})
-             and use the list in the file for sentaku window instead of pipe's input.
+  -f <file>  Set input file
   -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
              If <sep> is \"line\", \$'\\n' is set as a separator.
   -H         Force to show a header at sentaku window.
@@ -141,8 +140,6 @@ Arguments:
   -U         Use underline to show selected line, instead of highlighting.
   -l         Show last words instead of starting words for longer lines.
   -a         Align input list (set selected one to the first).
-  -m         Execute main function even if it is not after pipe.
-                 (e.g. -m -f <file> == -F <file>)
   -r <n>     Return nth value directly.
   -p         Push words to the file.
   -E         Use Emacs mode
@@ -295,6 +292,7 @@ _sf_finalize () { # {{{
   unset _s_s
   unset _s_s_push
   unset _s_inputs
+  unset _s_cmd_line_inputs
   unset _s_n
   unset _s_max
   unset _s_min_show
@@ -504,21 +502,24 @@ _sf_check_args () { # {{{
         ;;
       "-E" ) _s_keymode=1;;
       "-V" ) _s_keymode=0;;
-      "-c" ) ;;
-      "-n" ) ;;
+      "-c" ) _SENTAKU_CHILD=1;;
+      "-n" ) return 0;;
       "-v" ) echo "$(basename "$0") $SENTAKU_VERSION $SENTAKU_DATE" >/dev/tty; return 0;;
       "-h" )
         _sf_help
         return 0
         ;;
-      * )
+      -* )
         echo "$(basename "$0") $1: unknown argument
 Check \"$(basename "$0") -h\" for further information" >/dev/tty
         return 1
         ;;
+      * )
+        break
     esac
     shift
   done
+  _s_cmd_line_inputs="$*"
   _s_continue=1
   return 0
 } # }}}
@@ -544,8 +545,12 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   # Get values
   IFS="$_s_s"
   if [[ "$stdin" -eq 0 || "$_s_use_file" -eq 1 ]];then
-    touch "$_s_file"
-    _s_inputs=($(cat "$_s_file"))
+    if [[ "$_s_use_file" -eq 0 && -z "$_s_file" ]];then
+      _s_inputs=($(echo "$_s_cmd_line_inputs"))
+    else
+      touch "$_s_file"
+      _s_inputs=($(cat "$_s_file"))
+    fi
   else
     _s_inputs=($(cat -))
   fi
@@ -1813,27 +1818,4 @@ _sf_main () { # {{{
 } # }}}
 
 # Execution part {{{
-_s_is_exec=1
-_sf_check_args_first () { # {{{
-  while [[ $# -gt 0 ]];do
-    case $1 in
-      "-h"|"-N"|"-m"|"-p"|"-F"|"-v" ) _s_is_exec=2;shift;;
-      "-n" ) _s_is_exec=0;shift;;
-      "-c" ) _SENTAKU_CHILD=1;shift;;
-    * )break;;
-    esac
-  done
-} # }}}
-
-_sf_check_args_first "$@"
-
-# Execute if stdin is available, or any of help/file/push is on
-if [[ $_s_is_exec -ne 0 ]];then
-  if [[ -p /dev/stdin || $_s_is_exec -eq 2 ]];then
-    _sf_main "$@"
-  fi
-fi
-
-# Clean up
-unset _s_is_exec
-# }}}
+_sf_main "$@"
