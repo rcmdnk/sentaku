@@ -124,10 +124,10 @@ _sf_setview () { # {{{
     _s_header="$(printf "%b\n\n" "$_s_header"|\
                  sed -e :loop -e 'N; $!b loop'  -e 's/[[:space:]\n]*$//')\
                \n${_s_search}"
-    if [ "$(printf "%b\n" "$_s_header"|wc -l)" -gt "$((_s_lines-_s_min_show))" ];then
+    if [ "$(printf "%b\n" "$_s_header"|grep -c ^)" -gt "$((_s_lines-_s_min_show))" ];then
       _s_header="\e[43;30m$_s_n values in total\e[0m\n${_s_search}"
     fi
-    _s_ext_row=$(printf "%b\n" "$_s_header"|wc -l)
+    _s_ext_row=$(printf "%b\n" "$_s_header"|grep -c ^)
   fi
 
   if [ $_s_content_show_under -eq 1 ];then
@@ -176,5 +176,5 @@ fi
 if [ -p /dev/stdin ];then
   echo $(cat -) | _sf_main "$@"
 else
-  ls | _sf_main "$@"
+  _sf_main "$@" $(ls)
 fi

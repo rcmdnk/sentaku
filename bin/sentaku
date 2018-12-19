@@ -388,7 +388,8 @@ _sf_hide () { # {{{
       _s_stty=$(stty -g)
 
       # Hide any input
-      stty sane -echo
+      stty -echo
+
     fi
 
     # Hide cursor
@@ -924,10 +925,10 @@ _sf_setview () { # {{{
   else
     _sf_set_header
     _s_header="$_s_header\\n$_s_search"
-    if [[ "$(printf "%b\n" "$_s_header"|wc -l)" -gt "$((_s_lines-_s_min_show))" ]];then
+    if [[ "$(printf "%b\n" "$_s_header"|grep -c ^)" -gt "$((_s_lines-_s_min_show))" ]];then
       _s_header="\e[43;30m$_s_n values in total\e[0m\n${_s_search}"
     fi
-    _s_ext_row=$(printf "%b\n" "$_s_header"|wc -l)
+    _s_ext_row=$(printf "%b\n" "$_s_header"|grep -c ^)
   fi
 
   _s_max_show=$_s_n
