@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
 #
 #
-SENTAKU_VERSION=v0.7.1
-SENTAKU_DATE="12/Dec/2018"
+SENTAKU_VERSION=v0.7.2
+SENTAKU_DATE="10/May/2019"
 #
 # }}}
 
@@ -504,7 +504,6 @@ _sf_check_args () { # {{{
       "-E" ) _s_keymode=1;;
       "-V" ) _s_keymode=0;;
       "-c" ) _SENTAKU_CHILD=1;;
-      "-n" ) return 0;;
       "-v" ) echo "$(basename "$0") $SENTAKU_VERSION $SENTAKU_DATE" >/dev/tty; return 0;;
       "-h" )
         _sf_help
@@ -1819,4 +1818,6 @@ _sf_main () { # {{{
 } # }}}
 
 # Execution part {{{
-_sf_main "$@"
+if [ "$1" != "-n" ];then
+  _sf_main "$@"
+fi
