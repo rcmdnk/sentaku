@@ -343,11 +343,6 @@ _sf_finalize () { # {{{
   [[ "x$_s_zsh_ksharrays" != "x" && $_s_zsh_ksharrays -eq 1 ]] && unsetopt ksharrays
   unset _s_zsh_ksharrays
 
-  unset _s_is_noexec
-  unset _s_is_help
-  unset _s_is_file
-  unset _s_is_main
-  unset _s_is_push
   unset _s_stty
   unset _s_IFS
 
