@@ -641,7 +641,6 @@ _sf_remove () { # {{{
 } # }}}
 
 _sf_rm_del () { # {{{
-  local old_current_n=$_s_current_n
   if [[ $_s_delete -eq 0 || $_s_stdin -eq 1 ]];then
     _sf_remove
   else
