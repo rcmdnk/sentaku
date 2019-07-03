@@ -448,8 +448,6 @@ _sf_1 () { # SPELL {{{
 _sf_spell () { # {{{
   . sentaku -n -c
 
-  spells="${_s_your_spells[@]}"
-
   _sf_set_header () {
     _sf_set_header_mine
   }
