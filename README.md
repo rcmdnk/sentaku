@@ -73,7 +73,7 @@ The default separator is `$IFS`.
 If you want to use different separator,
 use `-s <sep>` option.
 
-In cas there any directory/file names which have spaces, use line break as a separator, i.e.:
+In case there any directory/file names which have spaces, use line break as a separator, i.e.:
 
     $ ls | sentaku -s $'\n'
 
@@ -86,16 +86,16 @@ Other options and key operations at sentaku window are:
 
     Arguments:
       -f <file>  Set input file
-      -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+      -s <sep>   Set separator (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
                  If <sep> is \"line\", \$'\\n' is set as a separator.
       -H         Force to show a header at sentaku window.
-      -N         No nubmers are shown.
+      -N         No numbers are shown.
       -l         Show last words instead of starting words for longer lines.
       -a         Align input list (set selected one to the first).
       -r <n>     Return nth value directly.
       -p         Push words to the file.
       -E         Use Emacs mode
-      -V         Use Vmacs mode
+      -V         Use Vim mode
       -c         Load functions as a child process in other sentaku process.
       -n         Don't run functions, to just source this file
       -v         Show version
@@ -107,7 +107,7 @@ Other options and key operations at sentaku window are:
         C-u/C-d  Half page down/Half page down.
         C-b/C-f  Page up/Page down.
         M-v/C-v  Page up/Page down.
-        C-a/C-e  Go to the beggining/end.
+        C-a/C-e  Go to the beginning/end.
         C-i/C-o  Move the item up/down.
         C-x      Quit.
         C-s      Start/Stop Visual mode (multi-selection).
@@ -118,7 +118,7 @@ Other options and key operations at sentaku window are:
                  with selected words.
                  Second Esc clear search mode.
                  Visual mode is cleared by first Esc.
-        Ener     Select and Quit.
+        Enter    Select and Quit.
 
       For Vim mode:
         n(any number) Set number. Multi-digit can be used (13, 320, etc...).
@@ -144,11 +144,11 @@ SENTAKU_SEPARATOR|Separator(overwritten by -s).|$IFS
 SENTAKU_MAX|Max number to be written to the file (non-stdin usage).|20
 SENTAKU_NOHEADER|Don't show the header (overwritten by -H). 0: show, 1: don't show.|0 (1 for noheader)
 SENTAKU_NONUMBER|Don't show the line number (overwritten by -N). 0: show, 1: don't show.|0 (1 for nonumber)
-SENTAKU_SHOWLAST|Show the number at the end of the line, too (overwritten by -l). 0: don'w show, 1: show.|0
+SENTAKU_SHOWLAST|Show the number at the end of the line, too (overwritten by -l). 0: don't show, 1: show.|0
 SENTAKU_CHILD|If this sentaku is child process of parent sentaku or not.|0
 SENTAKU_SEARCH_OPT|Search option, 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive).|1
 SENTAKU_KEYMODE|Vim Mode or Emacs Mode, 0: Vim Mode, 1: Emacs Mode (overwritten by -V/-E).| 0
-SENTAKU_DEBUG|If it is 1, `_sf_echo_debu` is executed.|0
+SENTAKU_DEBUG|If it is 1, `_sf_echo_debug` is executed.|0
 
 #### Vim/Emacs mode
 
@@ -197,7 +197,7 @@ You can set search option `SENTAKU_SEARCH_OPT`:
 ![sentaku_vim](http://rcmdnk.github.io/images/post/20140805_vim_search.gif)
 
 
-* [Search Demo for Emacs mdoe, SENTAKU_KEYMODE = 1](http://rcmdnk.github.io/images/post/20140805_emacs_search.gif)
+* [Search Demo for Emacs mode, SENTAKU_KEYMODE = 1](http://rcmdnk.github.io/images/post/20140805_emacs_search.gif)
 
 ![sentaku_emacs](http://rcmdnk.github.io/images/post/20140805_emacs_search.gif)
 
@@ -351,7 +351,7 @@ In this script, it opens selected file: `${_s_inputs[$_s_current_n]}`.
 
 For the first window, you can choose:
 
-* Keybaord Input
+* Keyboard Input
 * ls
 * pwd
 * date
@@ -430,7 +430,7 @@ Useful functions to change directories for Bash/Zsh and GNU screen/tmux.
 
 Remove Command using a trash box.
 
-##### multi_clipbaord
+##### multi_clipboard
 
 [rcmdnk/multi_clipboard](https://github.com/rcmdnk/multi_clipboard)
 
