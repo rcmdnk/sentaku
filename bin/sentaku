@@ -133,17 +133,17 @@ _sf_initialize () { # {{{
 
 Arguments:
   -f <file>  Set input file
-  -s <sep>   Set separtor (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+  -s <sep>   Set separator (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
              If <sep> is \"line\", \$'\\n' is set as a separator.
   -H         Force to show a header at sentaku window.
-  -N         No nubmers are shown.
+  -N         No numbers are shown.
   -U         Use underline to show selected line, instead of highlighting.
   -l         Show last words instead of starting words for longer lines.
   -a         Align input list (set selected one to the first).
   -r <n>     Return nth value directly.
   -p         Push words to the file.
   -E         Use Emacs mode
-  -V         Use Vmacs mode
+  -V         Use Vim mode
   -c         Load functions as a child process in other sentaku process.
   -n         Don't run functions, to just source this file
   -v         Show version
@@ -155,7 +155,7 @@ Key operation at sentaku window
     C-u/C-d  Half page down/Half page down.
     C-b/C-f  Page up/Page down.
     M-v/C-v  Page up/Page down.
-    C-a/C-e  Go to the beggining/end.
+    C-a/C-e  Go to the beginning/end.
     C-i/C-o  Move the item up/down.
     C-x      Quit.
     C-s      Start/Stop Visual mode (multi-selection).
@@ -166,7 +166,7 @@ Key operation at sentaku window
              with selected words.
              Second Esc clear search mode.
              Visual mode is cleared by first Esc.
-    Ener     Select and Quit.
+    Enter    Select and Quit.
 
   For Vim mode:
     n(any number) Set number. Multi-digit can be used (13, 320, etc...).
@@ -763,7 +763,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   fi
 } # }}}
 
-_sf_printline () { # useage: _sf_printline is_selected n_line n_input {{{
+_sf_printline () { # usage: _sf_printline is_selected n_line n_input {{{
   local is_selected=$1
   local n_line=$2
   local n_input=$3
@@ -1665,7 +1665,7 @@ _sf_main () { # {{{
   # Set trap
   trap "_sf_clear;_s_trapped=1;_s_stdin=0;_s_ret=1;_sf_finalize;exit" HUP INT QUIT ABRT SEGV TERM
 
-  # Initializatoin
+  # Initialization
   _sf_initialize
 
   # Get arguments
