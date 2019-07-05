@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
 #
 #
-SENTAKU_VERSION=v0.7.2
-SENTAKU_DATE="10/May/2019"
+SENTAKU_VERSION=v0.7.4
+SENTAKU_DATE="5/jul/2019"
 #
 # }}}
 
@@ -210,7 +210,7 @@ _sf_initialize_user () { # {{{
 _sf_finalize () { # {{{
   IFS=$_s_IFS
 
-  if [[ $_s_ret -eq 0 ]] && [[ $_s_current_n -ge 0 ]];then
+  if ((_s_ret == 0 && _s_current_n >= 0));then
     # Align values
     if [[ "$_s_search" != "" ]];then
       local val="${_s_inputs[$_s_current_n]}"
@@ -222,7 +222,7 @@ _sf_finalize () { # {{{
         local i
         local j=0
         for i in $(seq 0 $((_s_n-1)));do
-          if [[ "${_s_v_selected[$i]}" -eq 1 ]];then
+          if ((_s_v_selected[i] == 1 ));then
             selected[$j]=${_s_inputs[$i]}
             ((j++))
           fi
@@ -231,14 +231,14 @@ _sf_finalize () { # {{{
       _s_inputs=("${_s_pre_inputs_0[@]}")
       IFS=$_s_IFS
       _s_n=${#_s_inputs[@]}
-      if [[ $_s_visual -ne -1 ]];then
+      if ((_s_visual != -1));then
         local i
         for i in $(seq 0 $((_s_n-1)));do
           _s_v_selected[$i]=0
         done
       fi
       _s_current_n=0
-      if [[ $_s_visual -ne -1 ]];then
+      if ((_s_visual != -1));then
         local i
         local j
         for i in $(seq 0 $((_s_n-1)));do
@@ -264,16 +264,15 @@ _sf_finalize () { # {{{
     # Execution for selected value
     _sf_execute
 
-    [[ "$_s_align" -eq 1 && "$_s_stdin" -eq 0 ]] &&\
-      _sf_align_values "$_s_current_n" 0
+    ((_s_align != 1 && _s_stdin == 0)) && _sf_align_values "$_s_current_n" 0
   fi
 
-  if [[ "$_SENTAKU_CHILD" -eq 0 && "$_s_noshow" -eq 0 ]];then
+  if ((_SENTAKU_CHILD == 0 && _s_noshow == 0));then
     # Show cursor
     tput cnorm >/dev/tty 2>/dev/null || tput vs >/dev/tty 2>/dev/null
 
     # Enable echo input
-    if [[ $_s_stdin -eq 0 ]];then
+    if ((_s_stdin == 0));then
       if [[ "$_s_stty" != "" ]];then
         stty $_s_stty
         # followings are for fixing problems of previous commands...
@@ -281,7 +280,7 @@ _sf_finalize () { # {{{
       fi
     fi
   fi
-  if [[ $_s_trapped -eq 1 ]];then
+  if ((_s_trapped == 1));then
     # fixed at C-c
     stty echo 2>/dev/null
   fi
@@ -358,12 +357,12 @@ _sf_finalize_user () { # {{{
 } # }}}
 
 _sf_execute () { # {{{
-  if [[ $_s_visual -ne -1 ]];then
+  if ((_s_visual != -1));then
     local is_first=1
     local i
     for i in $(seq 0 $((_s_n-1)));do
-      if [[ ${_s_v_selected[$i]} -eq 1 ]];then
-        if [[ $is_first -eq 1 ]];then
+      if ((_s_v_selected[i] == 1));then
+        if ((is_first == 1));then
           printf "%s" "${_s_inputs[$i]}"
           is_first=0
         else
@@ -377,8 +376,8 @@ _sf_execute () { # {{{
 } # }}}
 
 _sf_hide () { # {{{
-  if [[ "$_SENTAKU_CHILD" -eq 0 && "$_s_noshow" -eq 0 ]];then
-    if [[ $_s_stdin -eq 0 ]];then
+  if ((_SENTAKU_CHILD == 0 && _s_noshow == 0));then
+    if ((_s_stdin == 0));then
       # Save current stty
       _s_stty=$(stty -g)
 
@@ -398,7 +397,7 @@ _sf_hide () { # {{{
 } # }}}
 
 _sf_clear () { # {{{
-  if [[ "$_SENTAKU_CHILD" -eq 0 && "$_s_noshow" -eq 0 ]];then
+  if ((_SENTAKU_CHILD == 0 && _s_noshow == 0));then
     # clear after selection
     clear >/dev/tty
 
@@ -410,15 +409,12 @@ _sf_clear () { # {{{
 } # }}}
 
 _sf_nth () { # {{{
-  if [[ "$1" -eq 1 ]];then
-    echo 1st
-  elif [[ "$1" -eq 2 ]];then
-    echo 2nd
-  elif [[ "$1" -eq 3 ]];then
-    echo 3rd
-  else
-    echo "${1}th"
-  fi
+  case $1 in
+    1)echo 1st;;
+    2)echo 2nd;;
+    3)echo 3rd;;
+    *)echo "${1}th";;
+  esac
 } # }}}
 
 _sf_read () { # {{{
@@ -521,7 +517,7 @@ Check \"$(basename "$0") -h\" for further information" >/dev/tty
 
 _sf_get_values_wrapper () { # {{{ _sf_get_values_wrapper [<is_stdin> [<is_check>]]
   _sf_get_values "$1" "$2"
-  if [[ "$_s_n" -eq 0 ]];then
+  if ((_s_n == 0));then
     return 1
   else
     _sf_setview
@@ -562,15 +558,15 @@ _sf_get_values () { # {{{ _sf_get_values [<is_stdin> [<is_check>]]
   fi
   _s_n=${#_s_inputs[@]}
 
-  if [[ "$check" -eq 1 && "$_s_n" -eq 0 ]];then
-    if [[ "$stdin" -eq 0 || "$_s_use_file" -eq 1 ]];then
+  if ((check == 1 && _s_n == 0));then
+    if ((stdin == 0 || _s_use_file == 1));then
       _sf_echoln "No value in $_s_file\\n"
     else
       _sf_echoln "No value in stdin\\n"
     fi
     _s_ret=1
     return
-  elif [[ "$_s_n" -gt 0 ]];then
+  elif ((_s_n > 0));then
     _s_v_selected=()
     local i
     for i in $(seq 0 $((_s_n-1)));do
@@ -606,9 +602,9 @@ _sf_delete () { # {{{
   local i
   local old_current_n=$_s_current_n
   for i in $(seq 0 $((_s_n-1)));do
-    if [[ ("$_s_visual" -ne -1 && "${_s_v_selected[$i]}" -eq 1 ) ||\
-          ("$_s_visual" -eq -1 && "$i" -eq "$old_current_n") ]];then
-      if [[ "$i" -lt "$old_current_n" ]];then
+    if (((_s_visual != -1 && _s_v_selected[i] == 1 ) ||\
+        (_s_visual == -1 && i == old_current_n)));then
+      if ((i <= old_current_n));then
         ((_s_current_n--))
       fi
       continue
@@ -624,9 +620,9 @@ _sf_remove () { # {{{
   local i
   local old_current_n=$_s_current_n
   for i in $(seq 0 $((_s_n-1)));do
-    if [[ ("$_s_visual" -ne -1 && "${_s_v_selected[$i]}" -eq 1) ||\
-          ("$_s_visual" -eq -1 && "$i" -eq "$old_current_n") ]];then
-      if [[ "$i" -lt "$old_current_n" ]];then
+    if (((_s_visual != -1 && _s_v_selected[i] -eq 1) ||\
+        (_s_visual -eq -1 && i == $old_current_n)));then
+      if ((i < old_current_n));then
         ((_s_current_n--))
       fi
       continue
@@ -641,29 +637,29 @@ _sf_remove () { # {{{
 } # }}}
 
 _sf_rm_del () { # {{{
-  if [[ $_s_delete -eq 0 || $_s_stdin -eq 1 ]];then
+  if ((_s_delete == 0 || _s_stdin == 1));then
     _sf_remove
   else
     _sf_delete
   fi
-  if [[ "$_s_n" -eq 0 ]];then
+  if ((_s_n == 0));then
     _sf_echoln "There are no remained entries"
     _s_ret=1
   fi
-  if [[ $_s_ret -ne 0 ]];then
+  if ((_s_ret != 0));then
     _sf_quit $_s_ret
     return
   fi
-  if [[ "$_s_current_n" -ge "$_s_n" ]];then
+  if ((_s_current_n >= _s_n));then
     _s_current_n=$((_s_n-1))
   fi
-  if [[ $_s_current_n -lt $_s_n_offset ]];then
+  if ((_s_current_n < _s_n_offset));then
     _s_n_offset=$_s_current_n
   fi
   local n_move
-  if [[ $((_s_n)) -lt $((_s_lines-_s_ext_row+_s_n_offset)) ]];then
+  if ((_s_n < (_s_lines-_s_ext_row+_s_n_offset)));then
     local n_move=$((_s_lines-_s_ext_row+_s_n_offset-_s_n))
-    if [[ $n_move -gt $_s_n_offset ]];then
+    if ((n_move > _s_n_offset));then
       n_move=$_s_n_offset
     fi
     _s_n_offset=$((_s_n_offset-n_move))
@@ -680,8 +676,8 @@ _sf_add_spaces () { # {{{ _sf_add_spaces <var> <n> [is_prepend]
   local var=$1
   local n=$2
   local prepend=${3:-0}
-  while [[ "$n" -gt 0 ]];do
-    if [[ "$prepend" -eq 1 ]];then
+  while ((n > 0));do
+    if ((prepend == 1));then
       eval "$var=\" \$$var\""
     else
       eval "$var=\"\$$var \""
@@ -698,7 +694,7 @@ _sf_cut_word () { # {{{ _sf_cut_word <var> <max_length> [<is_last_show>]
     eval "_sf_add_spaces $var \$(($max_length-\${#$var}))"
     return
   fi
-  if [[ "$is_last_show" -eq 0 ]];then
+  if ((is_last_show == 0));then
     eval "$var=\${$var: 0: $max_length}"
     return
   else
@@ -716,7 +712,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   if [[ "$_s_search_words" != "" ]];then
     local ignore_case=0
     local search_words=$_s_search_words
-    if [[ "$_s_search_opt" -eq 0 ]] || [[ "$_s_search_opt" -eq 2 ]];then
+    if ((_s_search_opt == 0 || _s_search_opt == 2));then
       if [[ -n "$ZSH_VERSION" ]];then
         local words_lower=$_s_search_words:l
       elif [[ -n ${BASH_VERSINFO[0]} ]] && [[ ${BASH_VERSINFO[0]} -ge 4 ]];then
@@ -731,16 +727,16 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
     fi
 
     local negative=""
-    if [[ "$is_selected" -eq 1 ]];then
+    if ((is_selected == 1));then
       negative=";7"
     fi
 
-    if [[ "$_s_search_opt" -le 1 ]];then
+    if ((_s_search_opt < 1));then
       local -a words
       words=($search_words)
       local w
       for w in "${words[@]}";do
-        if [[ $ignore_case -eq 1 ]];then
+        if ((ignore_case == 1));then
           # Similar replace can be done by GNU sed, BSD sed doesn't support ignore case option
           _s_show=$(echo "$_s_show"|perl -pe "s|($w)|\\e[31${negative}m\\1\\e[0${negative}m|gi")
         else
@@ -748,7 +744,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
         fi
       done
     else
-      if [[ $ignore_case -eq 1 ]];then
+      if ((ignore_case == 1));then
         _s_show=$(echo "$_s_show"|perl -pe "s|(^$search_words)|\\e[31${negative}m\\1\\e[0${negative}m|gi")
       else
         _s_show="\\e[31${negative}m$search_words\\e[${negative}m${_s_show#$search_words}"
@@ -763,11 +759,11 @@ _sf_printline () { # usage: _sf_printline is_selected n_line n_input {{{
   local n_input=$3
 
   local color=""
-  if [[ ${_s_v_selected[$n_input]} -eq 1 ]];then
+  if ((_s_v_selected[n_input] == 1));then
     color="[36m"
   fi
-  if [[ "$is_selected" -eq 1 ]];then
-    if [[ "$_s_line_highlight" -eq 1 ]];then
+  if ((is_selected == 1));then
+    if ((_s_line_highlight == 1));then
       color="${color}[7m"
     else
       color="${color}[4m"
@@ -782,7 +778,7 @@ _sf_printline () { # usage: _sf_printline is_selected n_line n_input {{{
   tput cup "$n_line" 0 >/dev/tty
   local n_show=$_s_cols
   _s_num=""
-  if [[ $_s_nonumber -eq 0 ]];then
+  if ((_s_nonumber == 0));then
     local nmax=$((_s_n-1))
     local num_width=${#nmax}
     n_show=$((_s_cols-num_width-2))
@@ -790,7 +786,7 @@ _sf_printline () { # usage: _sf_printline is_selected n_line n_input {{{
     _s_num="$_s_num$n_input: "
   fi
   _sf_show "$is_selected" "$n_show"
-  if [[ "$_s_col_n_only" -eq 1 ]];then
+  if ((_s_col_n_only == 1));then
     printf "${color}${_s_num}[m${_s_show}" >/dev/tty
   else
     printf "${color}${_s_num}${_s_show}[m" >/dev/tty
@@ -804,7 +800,8 @@ _sf_print_current_line () { # print current line {{{
 
 _sf_printall () { # usage: _sf_printall [not force] {{{
   # if any argument is given, check if echoed or not.
-  if [[ $# -ge 1 && $_s_is_print -eq 0 ]];then
+  local n=$#
+  if ((n >= 1 && _s_is_print == 0));then
     return
   fi
 
@@ -815,7 +812,7 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
 
   _sf_setview
 
-  if [[ "$lines" -ne "$_s_lines" || "$cols" -ne "$_s_cols" ]];then
+  if ((lines != _s_lines || cols != _s_cols));then
     _s_current_n=0
     _s_n_offset=0
   fi
@@ -827,8 +824,8 @@ _sf_printall () { # usage: _sf_printall [not force] {{{
 
   local i
   for i in $(seq 0 $((_s_max_show-1)));do
-    if [[ $((i+_s_n_offset)) -ge "$_s_n" ]];then break;fi
-    if [[ $((i+_s_n_offset)) -eq $_s_current_n ]];then
+    if (((i+_s_n_offset) >= _s_n));then break;fi
+    if (((i+_s_n_offset) == _s_current_n));then
       _sf_print_current_line
     else
       _sf_printline 0 $((i+_s_ext_row)) $((i+_s_n_offset))
@@ -842,9 +839,9 @@ _sf_print () { # {{{
 } # }}}
 
 _sf_echo () { # {{{
-  if [[ $_s_noshow -eq 1 ]];then
+  if ((_s_noshow == 1));then
     :
-  elif [[ $_s_normal_echo -eq 1 ]];then
+  elif ((_s_normal_echo == 1));then
     _sf_print "$*"
   else
     clear >/dev/tty
@@ -863,7 +860,7 @@ _sf_echo_debug () { # {{{
     # Temporarily use default value for debug_echo before initialization.
     _s_debug=$_SENTAKU_DEBUG
   fi
-  if [[ "$_s_debug" -gt 0 ]];then
+  if ((_s_debug > 0));then
     _sf_echo "$*"
   fi
 } # }}}
@@ -879,27 +876,27 @@ _sf_echo_printall () { # {{{
 
 _sf_set_header () { # {{{
   _s_header="\\e[43;30m$_s_n values in total\\e[0m "
-  if [[ "$_s_noheader" = 1 ]];then
+  if ((_s_noheader == 1));then
     return
   fi
-  if [[ $_s_delete -eq 1 ]];then
+  if ((_s_delete == 1));then
     local delete_key="d(delete), "
   else
     local delete_key=""
   fi
-  if [[ $_s_keymode -eq 0 ]];then
-    if [[ "$_s_cols" -ge 68 ]];then
+  if ((_s_keymode == 0));then
+    if ((_s_cols >= 68));then
       _s_header="$_s_header
   [n]j(n-down), [n]k(n-up), gg(top), G(bottom), [n]gg/G, (go to n)
   ^D(Half page down), ^U(Half page up), ^F(Page down), ^B(Page Up)
   ${delete_key}/(search), Enter/Space(select), q(quit)"
-    elif [[ "$_s_cols" -ge 41 ]];then
+    elif ((_s_cols >= 41));then
       _s_header="$_s_header
   vimike updown, e.g)j:down, k:up, gg/G
   ${delete_key}Enter/Space(select), q(quit)"
     fi
   else
-    if [[ "$_s_cols" -ge 51 ]];then
+    if ((_s_cols >= 51));then
       _s_header="$_s_header
   C-n(down), C-j(up), C-v(Page down), M-v(Page up)
   Enter(select), C-x(quit)
@@ -909,10 +906,10 @@ _sf_set_header () { # {{{
 }  # }}}
 
 _sf_setview () { # {{{
-  if [[ "$_s_lines" -le "$((_s_min_show))" ]];then
+  if ((_s_lines <= _s_min_show));then
     _s_header=""
     _s_ext_row=0
-  elif [[ "$_s_lines" -eq "$((_s_min_show+1))" ]];then
+  elif ((_s_lines == (_s_min_show+1)));then
     _s_header="${_s_search}"
     _s_ext_row=1
   else
@@ -925,102 +922,102 @@ _sf_setview () { # {{{
   fi
 
   _s_max_show=$_s_n
-  if [[ "$_s_n" -gt $((_s_lines-_s_ext_row)) ]];then
+  if ((_s_n > (_s_lines-_s_ext_row)));then
     _s_max_show=$((_s_lines-_s_ext_row))
   fi
 } # }}}
 
 _sf_n_down () { # The line goes Down. (Increase the line number) {{{
-  [[ $_s_n_move -le 0 ]] && _s_n_move=1
+  ((_s_n_move <= 0)) && _s_n_move=1
   local all=0
   local old_current_n=$_s_current_n
   local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
   _s_current_n=$((_s_current_n+_s_n_move))
-  [[ "$_s_current_n" -ge "$_s_n" ]] && _s_n_move=-1 && _s_current_n=$((_s_n-1))
+  ((_s_current_n >= _s_n)) && _s_n_move=-1 && _s_current_n=$((_s_n-1))
   _s_g=0
   _s_n_move=-1
-  [[ $_s_current_n -eq $old_current_n ]] && return
-  if [[ $((_s_current_n+1-_s_max_show)) -gt $_s_n_offset ]];then
-    if [[ "$_s_page_change" -eq 0 ]];then
+  ((_s_current_n == old_current_n)) && return
+  if (((_s_current_n+1-_s_max_show) > _s_n_offset));then
+    if ((_s_page_change == 0));then
       _s_n_offset=$((_s_current_n+1-_s_max_show))
     else
       _s_n_offset=$((_s_current_n-(_s_current_n)%_s_max_show))
     fi
     all=1
   fi
-  if [[ $all -eq 1 ]];then
+  if ((all == 1));then
     _s_is_print=1
-  elif [[ $_s_visual -lt 0 ]];then
+  elif ((_s_visual < 0));then
     _sf_printline 0 $old_cursor_r $old_current_n
     _sf_print_current_line
   fi
-  if [[ $_s_visual -ge 0 ]];then
+  if ((_s_visual >= 0));then
     local tmp_r=$old_cursor_r
     local tmp_n=$old_current_n
-    while [[ $tmp_n -lt $_s_current_n ]];do
-      if [[ $tmp_n -lt $_s_visual ]];then
+    while ((tmp_n < _s_current_n));do
+      if ((tmp_n < _s_visual));then
         _s_v_selected[$tmp_n]=0
       else
         _s_v_selected[$tmp_n]=1
       fi
-      [[ $all -ne 1 ]] && _sf_printline 0 $tmp_r $tmp_n
+      ((all != 1)) && _sf_printline 0 $tmp_r $tmp_n
       ((tmp_r++));((tmp_n++))
     done
     _s_v_selected[$_s_current_n]=1
-    [[ $all -ne 1 ]] && _sf_print_current_line
+    ((all != 1)) && _sf_print_current_line
   fi
 } # }}}
 
 _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
-  [[ $_s_n_move -le 0 ]] && _s_n_move=1
+  ((_s_n_move <= 0)) && _s_n_move=1
   local all=0
   local old_current_n=$_s_current_n
   local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
   _s_current_n=$((_s_current_n-_s_n_move))
-  [[ $_s_current_n -lt 0 ]] && _s_current_n=0
+  ((_s_current_n < 0)) && _s_current_n=0
   _s_n_move=-1
   _s_g=0
-  [[ $_s_current_n -eq $old_current_n ]] && return
-  if [[ $_s_current_n -lt $_s_n_offset ]];then
-    if [[ "$_s_page_change" -eq 0 ]];then
+  ((_s_current_n == old_current_n)) && return
+  if ((_s_current_n < _s_n_offset));then
+    if ((_s_page_change == 0));then
       _s_n_offset=$_s_current_n
     else
       _s_n_offset=$((_s_current_n-(_s_current_n)%_s_max_show))
     fi
     all=1
   fi
-  if [[ $all -eq 1 ]];then
+  if ((all == 1));then
     _s_is_print=1
-  elif [[ $_s_visual -lt 0 ]];then
+  elif ((_s_visual << 0));then
     _sf_printline 0 $old_cursor_r $old_current_n
     _sf_print_current_line
   fi
-  if [[ $_s_visual -ge 0 ]];then
+  if ((_s_visual >= 0));then
     local tmp_r=$old_cursor_r
     local tmp_n=$old_current_n
-    while [[ $tmp_n -gt $_s_current_n ]];do
-      if [[ $tmp_n -gt $_s_visual ]];then
+    while ((tmp_n > _s_current_n));do
+      if ((tmp_n > _s_visual));then
         _s_v_selected[$tmp_n]=0
       else
         _s_v_selected[$tmp_n]=1
       fi
-      [[ $all -ne 1 ]] && _sf_printline 0 $tmp_r $tmp_n
+      ((all != 1)) && _sf_printline 0 $tmp_r $tmp_n
       ((tmp_r--));((tmp_n--))
     done
     _s_v_selected[$_s_current_n]=1
-    [[ $all -ne 1 ]] && _sf_print_current_line
+    ((all != 1)) && _sf_print_current_line
   fi
   _s_g=0
   _s_n_move=-1
 } # }}}
 
 _sf_item_move_up () { # {{{ Move the item up
-  [[ $_s_current_n -eq 0 ]] && return
+  ((_s_current_n == 0)) && return
 
-  [[ $_s_n_move -le 0 ]] && _s_n_move=1
+  ((_s_n_move <= 0)) && _s_n_move=1
 
   local replace=$((_s_current_n-_s_n_move))
-  [[ $replace -lt 0 ]] && replace=0
+  ((replace < 0)) && replace=0
 
   local v_current=${_s_inputs[$_s_current_n]}
   local v_replace=${_s_inputs[$replace]}
@@ -1033,17 +1030,17 @@ _sf_item_move_up () { # {{{ Move the item up
     _s_v_selected[$_s_current_n]=$s_replace
     _s_v_selected[$replace]=$s_current
   fi
-  [[ $_s_stdin -eq 0 ]] && _sf_align_values 0 0
+  ((_s_stdin == 0)) && _sf_align_values 0 0
   _sf_n_up
 } # }}}
 
 _sf_item_move_down () { # {{{ Move the item down
-  [[ $_s_current_n -eq $((_s_n-1)) ]] && return
+  ((_s_current_n == _s_n-1)) && return
 
-  [[ $_s_n_move -le 0 ]] && _s_n_move=1
+  ((_s_n_move <= 0)) && _s_n_move=1
 
   local replace=$((_s_current_n+_s_n_move))
-  [[ $replace -gt $((_s_n-1)) ]] && replace=$((_s_n-1))
+  ((replace > _s_n-1)) && replace=$((_s_n-1))
 
   local v_current=${_s_inputs[$_s_current_n]}
   local v_replace=${_s_inputs[$replace]}
@@ -1056,12 +1053,13 @@ _sf_item_move_down () { # {{{ Move the item down
     _s_v_selected[$_s_current_n]=$s_replace
     _s_v_selected[$replace]=$s_current
   fi
-  [[ $_s_stdin -eq 0 ]] && _sf_align_values 0 0
+  ((_s_stdin == 0)) && _sf_align_values 0 0
   _sf_n_down
 } # }}}
 
 _sf_quit () { # {{{
-  [[ $# -gt 0 ]] && _s_ret=$1
+  local n=$#
+  ((n > 0)) && _s_ret=$1
   _s_current_n=-1
   _s_break=1
 } # }}}
@@ -1071,7 +1069,7 @@ _sf_select () { # {{{
 } # }}}
 
 _sf_search () { # {{{
-  if [[ "$_s_ext_row" -eq 0 ]];then
+  if ((_s_ext_row == 0));then
     _sf_echo "Too few lines for search mode."
     return
   fi
@@ -1111,7 +1109,7 @@ _sf_search () { # {{{
               continue
             fi
           fi
-          if [[ "$_s_n" -eq 0 || "$_s_keymode" -eq 1 ]];then
+          if ((_s_n == 0 || _s_keymode == 1));then
             _s_inputs=("${_s_pre_inputs_0[@]}")
             _s_n=${#_s_inputs[@]}
             _s_search=""
@@ -1176,7 +1174,7 @@ _sf_search () { # {{{
     if [[ "$_s_search_words" = "" ]];then
       _s_inputs=("${_s_pre_inputs_0[@]}")
       _s_n=${#_s_inputs[@]}
-    elif [[ $del -eq 1 ]];then
+    elif ((del == 1));then
       :
     else
       local -a inputs
@@ -1203,7 +1201,7 @@ _sf_search_check () { # {{{
   local input="$1"
   local search_words=$_s_search_words
 
-  if [[ "$_s_search_opt" -eq 0 || "$_s_search_opt" -eq 2 ]];then
+  if ((_s_search_opt == 0 || _s_search_opt == 2));then
     if [[ -n "$ZSH_VERSION" ]];then
       local input_lower=$input:l
       local words_lower=$_s_search_words:l
@@ -1219,12 +1217,12 @@ _sf_search_check () { # {{{
       search_words=$words_lower
     fi
   fi
-  if [[ "$_s_search_opt" -le 1 ]];then
+  if ((_s_search_opt <= 1));then
     local -a words
     words=(${search_words})
     local w
     for w in "${words[@]}";do
-      if [[ "$_s_search_opt" -le 1 ]];then
+      if ((_s_search_opt <= 1));then
         if [[ ! $input = *$w* ]];then
           return 1
         fi
@@ -1254,7 +1252,7 @@ _sf_reset () { # {{{
 } # }}}
 
 _sf_visual_start () { # {{{
-  if [[ $_s_visual -ge 0 ]];then
+  if ((_s_visual >= 0));then
     _s_visual=-2
   else
     _s_v_selected[$_s_current_n]=1
@@ -1265,10 +1263,10 @@ _sf_visual_start () { # {{{
 
 _sf_gG () { # {{{
   _s_n_move=$((_s_n_move-_s_current_n))
-  if [[ $_s_n_move -eq 0 ]];then
+  if ((_s_n_move == 0));then
     return
   fi
-  if [[ $_s_n_move -lt 0 ]];then
+  if ((_s_n_move < 0));then
     _s_n_move=$((0-_s_n_move))
     _sf_n_up
   else
@@ -1278,7 +1276,7 @@ _sf_gG () { # {{{
 
 _sf_n_move_inc () { # {{{
   local n=${1:-"0"}
-  [[ $_s_n_move -gt 0 ]] && _s_n_move="$_s_n_move""$n" || _s_n_move=$n
+  ((_s_n_move > 0)) && _s_n_move="$_s_n_move""$n" || _s_n_move=$n
 } # }}}
 
 # function for 0-9 {{{
@@ -1334,11 +1332,11 @@ _sf_f () { # {{{
   :
 } # }}}
 _sf_g () { # {{{
-  if [[ $_s_g -eq 0 ]];then
+  if ((_s_g == 0));then
     _s_g=1
     return
   fi
-  if [[ "$_s_n_move" -lt 0 ]];then
+  if (($_s_n_move < 0));then
     _s_n_move=0
   fi
   _sf_gG
@@ -1424,7 +1422,7 @@ _sf_F () { # {{{
   :
 } # }}}
 _sf_G () { # {{{
-  if [[ $_s_n_move -lt 0 ]];then
+  if ((_s_n_move < 0));then
     _s_n_move=$_s_n
   fi
   _sf_gG
@@ -1600,7 +1598,7 @@ _sf_esc () { # {{{
       return
     fi
   fi
-  if [[ $_s_visual -ne -1 ]];then
+  if ((_s_visual != -1));then
     _s_visual=-1
     local i
     for i in $(seq 0 $((_s_n-1)));do
@@ -1619,7 +1617,7 @@ _sf_esc () { # {{{
 
 _sf_space () { # {{{
   # Space to start visual
-  if [[ ${_s_v_selected[$_s_current_n]} -eq 1 ]];then
+  if ((_s_v_selected[_s_current_n] == 1));then
     _s_v_selected[$_s_current_n]=0
   else
     _s_v_selected[$_s_current_n]=1
@@ -1640,7 +1638,7 @@ _sf_push () { # {{{
   # Set input
   local input="$*"
   shift $#
-  if [[ $_s_stdin -eq 1 ]];then
+  if ((_s_stdin == 1));then
     input=$(cat -)
   fi
 
@@ -1671,11 +1669,11 @@ _sf_main () { # {{{
   # Get arguments
   _sf_check_args "$@"
   _s_ret=$?
-  if [[ $_s_ret -ne 0 ]];then
+  if ((_s_ret != 0));then
     _sf_finalize
     return $?
   fi
-  if [[ $_s_continue -eq 0 ]];then
+  if ((_s_continue == 0));then
     _sf_finalize
     return $?
   fi
@@ -1683,13 +1681,13 @@ _sf_main () { # {{{
   # Get values
   _sf_get_values_wrapper
   _s_ret=$?
-  if [[ $_s_ret -ne 0 ]];then
+  if ((_s_ret != 0));then
     _sf_finalize
     return $?
   fi
 
   # Return nth
-  if [[ $_s_current_n -ge 0 ]];then
+  if ((_s_current_n >= 0));then
     _sf_finalize
     return $?
   fi
@@ -1737,7 +1735,7 @@ _sf_main () { # {{{
 
       # Differences for difference modes.
       * )
-        if [[ $_s_keymode -eq 0 ]];then
+        if ((_s_keymode == 0));then
           case $r in
             # Vim mode
             "0" ) _sf_0;;
@@ -1809,7 +1807,7 @@ _sf_main () { # {{{
         fi
         ;;
     esac
-    [[ $_s_break -eq 1 ]] && break
+    ((_s_break == 1)) && break
   done
 
   # Clear (Show cursor, Restore display, Enable echo input)
