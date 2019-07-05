@@ -1026,6 +1026,13 @@ _sf_item_move_up () { # {{{ Move the item up
   local v_replace=${_s_inputs[$replace]}
   _s_inputs[$_s_current_n]=$v_replace
   _s_inputs[$replace]=$v_current
+  ((_s_visual>=0)) && _s_visual=-2
+  if ((_s_visual!=-1)); then
+    local s_current=${_s_v_selected[$_s_current_n]}
+    local s_replace=${_s_v_selected[$replace]}
+    _s_v_selected[$_s_current_n]=$s_replace
+    _s_v_selected[$replace]=$s_current
+  fi
   [[ $_s_stdin -eq 0 ]] && _sf_align_values 0 0
   _sf_n_up
 } # }}}
@@ -1042,6 +1049,13 @@ _sf_item_move_down () { # {{{ Move the item down
   local v_replace=${_s_inputs[$replace]}
   _s_inputs[$_s_current_n]=$v_replace
   _s_inputs[$replace]=$v_current
+  ((_s_visual>=0)) && _s_visual=-2
+  if ((_s_visual!=-1)); then
+    local s_current=${_s_v_selected[$_s_current_n]}
+    local s_replace=${_s_v_selected[$replace]}
+    _s_v_selected[$_s_current_n]=$s_replace
+    _s_v_selected[$replace]=$s_current
+  fi
   [[ $_s_stdin -eq 0 ]] && _sf_align_values 0 0
   _sf_n_down
 } # }}}
