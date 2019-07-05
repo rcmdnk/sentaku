@@ -937,11 +937,9 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
   local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
   _s_current_n=$((_s_current_n+_s_n_move))
   [[ "$_s_current_n" -ge "$_s_n" ]] && _s_n_move=-1 && _s_current_n=$((_s_n-1))
-  if [[ $_s_current_n -eq $old_current_n ]];then
-    _s_g=0
-    _s_n_move=-1
-    return
-  fi
+  _s_g=0
+  _s_n_move=-1
+  [[ $_s_current_n -eq $old_current_n ]] && return
   if [[ $((_s_current_n+1-_s_max_show)) -gt $_s_n_offset ]];then
     if [[ "$_s_page_change" -eq 0 ]];then
       _s_n_offset=$((_s_current_n+1-_s_max_show))
@@ -971,8 +969,6 @@ _sf_n_down () { # The line goes Down. (Increase the line number) {{{
     _s_v_selected[$_s_current_n]=1
     [[ $all -ne 1 ]] && _sf_print_current_line
   fi
-  _s_g=0
-  _s_n_move=-1
 } # }}}
 
 _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
@@ -982,11 +978,9 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
   local old_cursor_r=$((_s_current_n-_s_n_offset+_s_ext_row))
   _s_current_n=$((_s_current_n-_s_n_move))
   [[ $_s_current_n -lt 0 ]] && _s_current_n=0
-  if [[ $_s_current_n -eq $old_current_n ]];then
-    _s_g=0
-    _s_n_move=-1
-    return
-  fi
+  _s_n_move=-1
+  _s_g=0
+  [[ $_s_current_n -eq $old_current_n ]] && return
   if [[ $_s_current_n -lt $_s_n_offset ]];then
     if [[ "$_s_page_change" -eq 0 ]];then
       _s_n_offset=$_s_current_n
@@ -1034,7 +1028,6 @@ _sf_item_move_up () { # {{{ Move the item up
   _s_inputs[$replace]=$v_current
   [[ $_s_stdin -eq 0 ]] && _sf_align_values 0 0
   _sf_n_up
-  _sf_printall
 } # }}}
 
 _sf_item_move_down () { # {{{ Move the item down
@@ -1051,7 +1044,6 @@ _sf_item_move_down () { # {{{ Move the item down
   _s_inputs[$replace]=$v_current
   [[ $_s_stdin -eq 0 ]] && _sf_align_values 0 0
   _sf_n_down
-  _sf_printall
 } # }}}
 
 _sf_quit () { # {{{
