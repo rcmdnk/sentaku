@@ -10,7 +10,7 @@
 #
 #
 SENTAKU_VERSION=v0.7.4
-SENTAKU_DATE="5/jul/2019"
+SENTAKU_DATE="8/Jul/2019"
 #
 # }}}
 
@@ -604,7 +604,7 @@ _sf_delete () { # {{{
   for i in $(seq 0 $((_s_n-1)));do
     if (((_s_visual != -1 && _s_v_selected[i] == 1 ) ||\
         (_s_visual == -1 && i == old_current_n)));then
-      if ((i <= old_current_n));then
+      if ((i < old_current_n));then
         ((_s_current_n--))
       fi
       continue
@@ -731,7 +731,7 @@ _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
       negative=";7"
     fi
 
-    if ((_s_search_opt < 1));then
+    if ((_s_search_opt <= 1));then
       local -a words
       words=($search_words)
       local w
@@ -988,7 +988,7 @@ _sf_n_up () { # The line goes up. (Decrease the line Number!) {{{
   fi
   if ((all == 1));then
     _s_is_print=1
-  elif ((_s_visual << 0));then
+  elif ((_s_visual < 0));then
     _sf_printline 0 $old_cursor_r $old_current_n
     _sf_print_current_line
   fi
