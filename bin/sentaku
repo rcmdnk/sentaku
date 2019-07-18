@@ -264,7 +264,7 @@ _sf_finalize () { # {{{
     # Execution for selected value
     _sf_execute
 
-    ((_s_align != 1 && _s_stdin == 0)) && _sf_align_values "$_s_current_n" 0
+    ((_s_align == 1 && _s_stdin == 0)) && _sf_align_values "$_s_current_n" 0
   fi
 
   if ((_SENTAKU_CHILD == 0 && _s_noshow == 0));then
@@ -620,8 +620,8 @@ _sf_remove () { # {{{
   local i
   local old_current_n=$_s_current_n
   for i in $(seq 0 $((_s_n-1)));do
-    if (((_s_visual != -1 && _s_v_selected[i] -eq 1) ||\
-        (_s_visual -eq -1 && i == $old_current_n)));then
+    if (((_s_visual != -1 && _s_v_selected[i] == 1) ||\
+        (_s_visual -eq -1 && i == old_current_n)));then
       if ((i < old_current_n));then
         ((_s_current_n--))
       fi
