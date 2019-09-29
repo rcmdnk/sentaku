@@ -9,8 +9,8 @@
 # Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
 #
 #
-SENTAKU_VERSION=v0.7.4
-SENTAKU_DATE="8/Jul/2019"
+SENTAKU_VERSION=v0.8.0
+SENTAKU_DATE="30/Sep/2019"
 #
 # }}}
 
@@ -46,6 +46,8 @@ _SENTAKU_MIN_SHOW=${_SENTAKU_MIN_SHOW:-3}
 _SENTAKU_NOHEADER=${_SENTAKU_NOHEADER:-0}
 _SENTAKU_NONUMBER=${_SENTAKU_NONUMBER:-0}
 _SENTAKU_SHOWLAST=${_SENTAKU_SHOWLAST:-0}
+_SENTAKU_CONTENT_LINES=${_SENTAKU_CONTENT_LINES:-10}
+_SENTAKU_CONTENT_SHOW_UNDER=${_SENTAKU_CONTENT_SHOW_UNDER:-0}
 _SENTAKU_CHILD=${_SENTAKU_CHILD:-0}
 # 0: AND (smart case), 1: AND (case sensitive), 2: starts with (smart case), 3: starts with (case sensitive)
 _SENTAKU_SEARCH_OPT=${_SENTAKU_SEARCH_OPT:-0}
@@ -85,6 +87,11 @@ _sf_initialize () { # {{{
   _s_noheader=${SENTAKU_NOHEADER:-$_SENTAKU_NOHEADER}
   _s_nonumber=${SENTAKU_NONUMBER:-$_SENTAKU_NONUMBER}
   _s_showlast=${SENTAKU_SHOWLAST:-$_SENTAKU_SHOWLAST}
+  _s_content_view=0
+  _s_s_content=0
+  _s_show_content=0
+  _s_content_lines=${SENTAKU_CONTENT_LINES:-$_SENTAKU_CONTENT_LINES}
+  _s_content_show_under=${SENTAKU_CONTENT_SHOW_UNDER:-$_SENTAKU_CONTENT_SHOW_UNDER}
   _s_search_opt=${SENTAKU_SEARCH_OPT:-$_SENTAKU_SEARCH_OPT}
   _s_page_change=${SENTAKU_PAGE_CHANGE:-$_SENTAKU_PAGE_CHANGE}
   _s_keymode=${SENTAKU_KEYMODE:-$_SENTAKU_KEYMODE}
@@ -129,7 +136,7 @@ _sf_initialize () { # {{{
   _s_ret=0
 
   # Help
-  _s_help=${_s_help:-"Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
+  _s_help=${_s_help:-"Usage: sentaku [-HNulapEVcCURLSnvh] [-f <file>] [-s <sep>] [-r <n>] [input variables]
 
 Arguments:
   -f <file>  Set input file
@@ -137,7 +144,7 @@ Arguments:
              If <sep> is \"line\", \$'\\n' is set as a separator.
   -H         Force to show a header at sentaku window.
   -N         No numbers are shown.
-  -U         Use underline to show selected line, instead of highlighting.
+  -u         Use underline to show selected line, instead of highlighting.
   -l         Show last words instead of starting words for longer lines.
   -a         Align input list (set selected one to the first).
   -r <n>     Return nth value directly.
@@ -145,6 +152,12 @@ Arguments:
   -E         Use Emacs mode
   -V         Use Vim mode
   -c         Load functions as a child process in other sentaku process.
+  -C         Show the file content at the list view
+  -R         Show the file content in the right (default: right)
+  -U         Show the file content under the list (default: right)
+  -L         Number of lines to show the file content under the list (default: ${SENTAKU_CONTENT_LINES:-$_SENTAKU_CONTENT_LINES})
+  -S         Open the file under the cursor by \${VISUAL:-less} at s
+             instead of showing full line of the selected one
   -n         Don't run functions, to just source this file
   -v         Show version
   -h         Print this HELP and exit
@@ -299,6 +312,11 @@ _sf_finalize () { # {{{
   unset _s_noheader
   unset _s_nonumber
   unset _s_showlast
+  unset _s_content_view
+  unset _s_s_content
+  unset _s_show_content
+  unset _s_content_lines
+  unset _s_content_show_under
   unset _s_search_opt
   unset _s_page_change
   unset _s_keymode
@@ -451,7 +469,7 @@ _sf_check_args () { # {{{
   _s_continue=0
   while [[ $# -gt 0 ]];do
     case $1 in
-      "-f"|"-F" ) # Use file
+      "-f") # Use file
         _s_file=$2
         _s_use_file=1
         if [[ "$_s_file" = "" ]];then
@@ -460,7 +478,7 @@ _sf_check_args () { # {{{
         fi
         shift
         ;;
-      "-s" ) # Set separator
+      "-s") # Set separator
         _s_s=$2
         if [[ "$_s_s" = "line" ]];then
           _s_s=$'\n'
@@ -474,7 +492,7 @@ _sf_check_args () { # {{{
         ;;
       "-H" ) _s_noheader=0;;
       "-N" ) _s_nonumber=1;;
-      "-U" ) _s_line_highlight=0;;
+      "-u" ) _s_line_highlight=0;;
       "-l" ) _s_showlast=1;;
       "-a" ) _s_align=1;;
       "-m" ) ;;
@@ -495,6 +513,12 @@ _sf_check_args () { # {{{
       "-E" ) _s_keymode=1;;
       "-V" ) _s_keymode=0;;
       "-c" ) _SENTAKU_CHILD=1;;
+      "-C" ) _s_show_content=1;;
+      "-R" ) _s_show_content=1;_s_content_show_under=0;;
+      "-U" ) _s_show_content=1;_s_content_show_under=1;;
+      "-L" ) _s_content_lines=$2;shift;;
+      "-S" ) _s_s_content=1;;
+      "-n" ) ;;
       "-v" ) echo "$(basename "$0") $SENTAKU_VERSION $SENTAKU_DATE" >/dev/tty; return 0;;
       "-h" )
         _sf_help
@@ -621,7 +645,7 @@ _sf_remove () { # {{{
   local old_current_n=$_s_current_n
   for i in $(seq 0 $((_s_n-1)));do
     if (((_s_visual != -1 && _s_v_selected[i] == 1) ||\
-        (_s_visual -eq -1 && i == old_current_n)));then
+        (_s_visual == -1 && i == old_current_n)));then
       if ((i < old_current_n));then
         ((_s_current_n--))
       fi
@@ -702,6 +726,68 @@ _sf_cut_word () { # {{{ _sf_cut_word <var> <max_length> [<is_last_show>]
     return
   fi
 } # }}}
+
+_sf_get_content () {
+  if ! file "${_s_inputs[$_s_current_n]}"|grep -q text;then
+    echo "Not a text file"
+  else
+    cat "${_s_inputs[$_s_current_n]}"
+  fi
+}
+
+_sf_content () {
+  if ((_s_content_view == 0));then
+    return
+  fi
+  local i
+  local start_line=$((_s_lines+1))
+  local end_line=$(($(tput lines)-1))
+  local start_col=0
+  local n_cols=$_s_cols
+
+  if ((_s_content_show_under == 0));then
+    start_line=0
+    start_col=$_s_cols
+    n_cols=$_s_content_cols
+  fi
+
+  for i in $(seq $start_line $end_line);do
+    tput cup "$i" "$start_col" >/dev/tty
+    printf "%-${n_cols}s" "" >/dev/tty
+  done
+
+  if ((_s_content_show_under == 1));then
+    tput cup "$_s_lines" 0 >/dev/tty
+    printf -- "---"
+  fi
+
+  i=$start_line
+  while read -r line;do
+    if ((_s_content_show_under == 0));then
+      line="|$line"
+    fi
+    if ((${#line} >= n_cols));then
+      if [ "x$ZSH_VERSION" != "x" ];then
+        line="${line[0,$((n_cols-1))]}"
+      else
+        line="${line: 0: $n_cols}"
+      fi
+    fi
+    tput cup "$i" "$start_col" >/dev/tty
+    printf "%s" "$line"
+    ((i++))
+    if [ $i -gt $end_line ];then
+      break
+    fi
+  done < <(_sf_get_content)
+  if ((_s_content_show_under == 0));then
+    while ((i < end_line));do
+      tput cup "$i" "$start_col" >/dev/tty
+      printf "|"
+      ((i++))
+    done
+  fi
+}
 
 _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   local is_selected=${1:-0}
@@ -796,6 +882,7 @@ _sf_printline () { # usage: _sf_printline is_selected n_line n_input {{{
 
 _sf_print_current_line () { # print current line {{{
   _sf_printline 1 $((_s_current_n-_s_n_offset+_s_ext_row)) $_s_current_n
+  _sf_content
 } # }}}
 
 _sf_printall () { # usage: _sf_printall [not force] {{{
@@ -906,6 +993,13 @@ _sf_set_header () { # {{{
 }  # }}}
 
 _sf_setview () { # {{{
+  if ((_s_show_content)) && ((_s_content_show_under == 0 ));then
+    _s_content_view=1
+    local full_cols=$_s_cols
+    _s_cols=$((full_cols/2))
+    _s_content_cols=$((full_cols-_s_cols))
+  fi
+
   if ((_s_lines <= _s_min_show));then
     _s_header=""
     _s_ext_row=0
@@ -919,6 +1013,15 @@ _sf_setview () { # {{{
       _s_header="\e[43;30m$_s_n values in total\e[0m\n${_s_search}"
     fi
     _s_ext_row=$(printf "%b\n" "$_s_header"|grep -c ^)
+  fi
+
+  if ((_s_show_content == 1)) && ((_s_content_show_under == 1));then
+    if ((_s_lines - _s_ext_row - _s_content_lines - 1 >= 0));then
+      _s_lines=$((_s_lines-_s_content_lines-1))
+      _s_content_view=1
+    else
+      _s_content_view=0
+    fi
   fi
 
   _s_max_show=$_s_n
@@ -1336,7 +1439,7 @@ _sf_g () { # {{{
     _s_g=1
     return
   fi
-  if (($_s_n_move < 0));then
+  if ((_s_n_move < 0));then
     _s_n_move=0
   fi
   _sf_gG
@@ -1375,9 +1478,23 @@ _sf_r () { # {{{
   :
 } # }}}
 _sf_s () { # {{{
-  _sf_echo "$(_sf_nth $((_s_current_n))) value:
+  if ((_s_s_content == 1));then
+    if [ ! -f "${_s_inputs[$_s_current_n]}" ];then
+      output="$(_sf_nth $((_s_current_n))) value: ${_s_inputs[$_s_current_n]}
+===============
+Not a file.
+"
+    _sf_echo "$output"
+    else
+      clear >/dev/tty
+      ${VISUAL:-less} "${_s_inputs[$_s_current_n]}" >/dev/tty </dev/tty
+      _s_is_print=1
+    fi
+  else
+    _sf_echo "$(_sf_nth $((_s_current_n))) value:
 
 ${_s_inputs[$_s_current_n]}\n"
+  fi
 } # }}}
 _sf_t () { # {{{
   :
