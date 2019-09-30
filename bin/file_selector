@@ -40,14 +40,14 @@ _sf_file_content () {
 
   if ! file "${_s_inputs[$_s_current_n]}"|grep -q text;then
     if [ $_s_content_show_under -eq 0 ];then
-      if [ $n_cols -ge 15 ];then
+      if [ $n_cols -ge 16 ];then
         tput cup "$start_line" "$start_col" >/dev/tty
-        printf "Not a text file"
+        printf "|Not a text file"
       fi
     else
       if [ $n_cols -ge 16 ];then
         tput cup "$start_line" "$start_col" >/dev/tty
-        printf "|Not a text file"
+        printf "Not a text file"
       fi
     fi
   else

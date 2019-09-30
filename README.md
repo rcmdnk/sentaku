@@ -82,14 +82,15 @@ use `sentaku -F <file>`.
 
 Other options and key operations at sentaku window are:
 
-    Usage: sentaku [-HNladnh] [-f <file>] [-s <sep>] [input variables]
+    Usage: sentaku [-HNulapEVcCURLSnvh] [-f <file>] [-s <sep>] [-r <n>] [input variables]
 
     Arguments:
       -f <file>  Set input file
-      -s <sep>   Set separator (default: ${SENTAKU_SEPARATOR:-$_SENTAKU_SEPARATOR})
+      -s <sep>   Set separator (default: $IFS)
                  If <sep> is \"line\", \$'\\n' is set as a separator.
       -H         Force to show a header at sentaku window.
       -N         No numbers are shown.
+      -u         Use underline to show selected line, instead of highlighting.
       -l         Show last words instead of starting words for longer lines.
       -a         Align input list (set selected one to the first).
       -r <n>     Return nth value directly.
@@ -97,6 +98,12 @@ Other options and key operations at sentaku window are:
       -E         Use Emacs mode
       -V         Use Vim mode
       -c         Load functions as a child process in other sentaku process.
+      -C         Show the file content at the list view
+      -R         Show the file content in the right (default: right)
+      -U         Show the file content under the list (default: right)
+      -L         Number of lines to show the file content under the list (default: 10)
+      -S         Open the file under the cursor by ${VISUAL:-less} at s
+                 instead of full line of the selected one
       -n         Don't run functions, to just source this file
       -v         Show version
       -h         Print this HELP and exit
@@ -145,6 +152,8 @@ SENTAKU_MAX|Max number to be written to the file (non-stdin usage).|20
 SENTAKU_NOHEADER|Don't show the header (overwritten by -H). 0: show, 1: don't show.|0 (1 for noheader)
 SENTAKU_NONUMBER|Don't show the line number (overwritten by -N). 0: show, 1: don't show.|0 (1 for nonumber)
 SENTAKU_SHOWLAST|Show the number at the end of the line, too (overwritten by -l). 0: don't show, 1: show.|0
+SENTAKU_CONTENT_LINES|Set number of lines to show the file content under the list|10
+SENTAKU_CONTENT_SHOW_UNDER|Set 1 to set default view of the file content as under the list|0
 SENTAKU_CHILD|If this sentaku is child process of parent sentaku or not.|0
 SENTAKU_SEARCH_OPT|Search option, 0: AND (ignore case), 1: AND (case sensitive), 2: starts with (ignore case), 3: starts with (case sensitive).|1
 SENTAKU_KEYMODE|Vim Mode or Emacs Mode, 0: Vim Mode, 1: Emacs Mode (overwritten by -V/-E).| 0
@@ -210,13 +219,17 @@ you can start/stop to choose multi-line.
 
 Output will be separated by `SENTAKU_SEPARATOR` (default is $IFS).
 
-:new:
-
 You can choose non-sequential lines.
 
 In addition, you can toggle lines by `Space`.
 
 ![sentaku_multi](http://rcmdnk.github.io/images/post/20140926_sentaku_multi.gif)
+
+#### Content view
+
+![sentaku_multi](http://rcmdnk.github.io/images/post/20190930_sentakucontentview.gif)
+
+* [sentakuでファイルの中身を選択中に表示する](http://rcmdnk.github.io/blog/2019/09/30/computer-bash-zsh-sentaku/)
 
 ### Use as a library
 
@@ -264,6 +277,31 @@ Save this script as `my_sentaku.sh`, then you can use it as same as
 original sentaku command.
 In addition, you can see `You pushed a!` when you push `a`.
 To show something, use `_sf_echo` instead of `echo`.
+
+You can define functions instead of making scripts, too.
+
+In **.bashrc** or **.zshrc**,
+add
+
+``` sh
+my_sentaku () {
+  (
+    . sentaku -n
+
+    _sf_a () {
+      _sf_echo "You pushed a!"
+    }
+
+    _sf_main "$@"
+  )
+}
+```
+
+then you can use `my_sentaku` with your `_sf_a` instead of `sentaku`.
+
+Note: Use sub shell (define function content in `()`)
+because `. sentaku -n` loads a lot of functions
+and it is better to avoid making current environment dirty.
 
 More examples can be found below.
 
