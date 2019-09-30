@@ -727,15 +727,15 @@ _sf_cut_word () { # {{{ _sf_cut_word <var> <max_length> [<is_last_show>]
   fi
 } # }}}
 
-_sf_get_content () {
+_sf_get_content () { # {{{
   if ! file "${_s_inputs[$_s_current_n]}"|grep -q text;then
     echo "Not a text file"
   else
     cat "${_s_inputs[$_s_current_n]}"
   fi
-}
+} # }}}
 
-_sf_content () {
+_sf_content () { # {{{
   if ((_s_content_view == 0));then
     return
   fi
@@ -787,7 +787,7 @@ _sf_content () {
       ((i++))
     done
   fi
-}
+} # }}}
 
 _sf_show () { # _sf_show [<is_selected>] [<n_show>] {{{
   local is_selected=${1:-0}
