@@ -1,0 +1,17 @@
+name: CI
+
+on: [push]
+
+jobs:
+  function_test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - run: sudo apt install bats
+    - run: cd tests && ./get_bats_libs.sh
+    - run: |
+        export PATH=$PWD/bin:$PATH
+        export TERM=dumb
+        ./tests/function_check.bats
